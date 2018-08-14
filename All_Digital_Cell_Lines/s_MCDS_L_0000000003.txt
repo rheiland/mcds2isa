@@ -1,0 +1,3 @@
+Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000003.0	URL: http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-1000-SOP-052814_508.pdf	0001939
+	0007599	Homo Sapiens	Mammary gland; Breast	Fibrocystic disease; nontumorigenic	N/A	Normoxia	MCDS_L_0000000003.0.0

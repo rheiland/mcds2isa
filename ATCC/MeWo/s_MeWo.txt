@@ -1,0 +1,3 @@
+Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000022.0	URL: http://physics.cancer.gov/docs/bioresource/skin/NCI-PBCF-HTB65_MeWo_SOP-508.pdf	0003301
+	0007687	Homo Sapiens	Skin	Malignant melanoma	Fibroblast-like	Normoxia	MCDS_L_0000000022.0.0

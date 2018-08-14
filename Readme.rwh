@@ -1,0 +1,22 @@
+
+~/Documents/Paul/FNLCR/ISA_MCDS$ python isaTABModelledFiles/mcds_dcl2isa.py Digital_Cell_Lines-master/All_Digital_Cell_Lines/MCDS_L_0000000001.xml
+
+---------------
+In [18]: pwd
+Out[18]: '/Users/heiland/Documents/Paul/projects/FNLCR/ISA_MCDS/Digital_Cell_Lines-master'
+
+In [18]: for root, dirs, files in os.walk("."):
+    ...:     path = root.split(os.sep)
+    ...:     #print((len(path) - 1) * '---', os.path.basename(root))
+    ...:     for file in files:
+    ...:       if (file[-3:] == 'xml'):
+    ...: #        os.chdir(root)
+    ...:         print(root)
+    ...:         print(file)
+    ...:         count += 1
+    ...:         cmd = "python ../isaTABModelledFiles/mcds_dcl2isa.py " + os.path.join(root,file)
+    ...:         print(cmd)
+    ...:         os.system(cmd)
+    ...:         if (count < 0):
+    ...:           sys.exit()
+

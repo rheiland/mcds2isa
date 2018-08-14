@@ -1,0 +1,6 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	"NCIT"	"UO"	"NCBITAXON"	"EDDA"
+Term Source File	"https://ncit.nci.nih.gov/ncitbrowser/"	"https://bioportal.bioontology.org/ontologies/UO"	"http://purl.obolibrary.org/obo/NCBITaxon_1"	"http://bioportal.bioontology.org/ontologies/EDDA"
+Term Source Version	"17.02d"	""	""	"2.0"
+Term Source Description	"NCI Thesarus"	""	""	"Evidence in Documents, Discovery, and Analytics (EDDA)"
+INVESTIGATION

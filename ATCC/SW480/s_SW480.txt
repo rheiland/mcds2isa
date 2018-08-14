@@ -1,0 +1,3 @@
+Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000035.0	URL: http://physics.cancer.gov/docs/bioresource/colorectal/NCI-PBCF-CCL228_SW480_SOP-508.pdf	0000038
+	0009218	Homo Sapiens	Colon	colorectal adenocarcinoma  - Dukes' type B '	N/A	Normoxia	MCDS_L_0000000035.0.0

@@ -1,0 +1,3 @@
+Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000010.0	URL: http://physics.cancer.gov/docs/bioresource/pancreas/NCI-PBCF-HTB79_Capan-1_SOP-508.pdf	0002744
+	0002197	Homo Sapiens	Pancreas	Adenocarinoma - liver	N/A	Normoxia	MCDS_L_0000000010.0.0
