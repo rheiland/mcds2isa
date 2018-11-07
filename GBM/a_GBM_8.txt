@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Data File
-MCDS_L_0000000073.0.0		GBM_8.xml

@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000038.0	URL: http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-HTB133_T-47D_SOP-508.pdf	0001248
-	0009251	Homo Sapiens	Mammary gland; Breast	ductal carcinoma - pleural effusion	N/A	Normoxia	MCDS_L_0000000038.0.0

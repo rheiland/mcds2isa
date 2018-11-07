@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000008.0	URL: http://physics.cancer.gov/docs/bioresource/colorectal/NCI-PBCF-HTB37_Caco-2_SOP-508.pdf	0000195
-	0002172	Homo Sapiens	Colon	colorectal adenocarcinoma	N/A	Normoxia	MCDS_L_0000000008.0.0

@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Data File
-MCDS_L_0000000132.0.0		GBM_TCGA-02-0064.xml

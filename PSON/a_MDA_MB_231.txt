@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Parameter Value[oxygen.concentration] 	Unit	Data File
-MCDS_L_0000000002.0.0	microenvironment.measurement	160	mmHg	MDA_MB_231.xml

@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000015.0	URL: http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-CRL4010_hTERT-HME1_SOP-508.pdf	000000
-	0004291	Homo Sapiens	Mammary gland; Breast	N/A	Epithelial immortalized with hTERT'	Normoxia	MCDS_L_0000000015.0.0

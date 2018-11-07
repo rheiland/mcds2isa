@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000009.0	URL: http://physics.cancer.gov/docs/bioresource/ovary/NCI-PBCF-HTB75_Caov-3_SOP-508.pdf	0000814
-	0002195	Homo Sapiens	Ovary	Adenocarcinoma	Epithelial	Normoxia	MCDS_L_0000000009.0.0

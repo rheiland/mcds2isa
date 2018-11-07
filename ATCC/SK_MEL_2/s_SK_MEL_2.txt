@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000033.0	URL: http://physics.cancer.gov/docs/bioresource/skin/NCI-PBCF-HTB68_SK-MEL-2_SOP-508.pdf	0003476
-	0009041	Homo Sapiens	Skin	Malignant melanoma - Skin of thigh - Mesenchyme	Epithelial-like	Normoxia	MCDS_L_0000000033.0.0

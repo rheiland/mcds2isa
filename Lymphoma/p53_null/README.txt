@@ -1,5 +1,0 @@
-Digital cell line for Eu-myc/p53-/- cells, generated from Frieboes et al.. These are Lymphoma  drug-resistant cells.
-
-Created by Edwin Juarez <juarezro[at]usc[dot]edu>
-
-Last updated [2015-08-12T15:17:40-07:00]

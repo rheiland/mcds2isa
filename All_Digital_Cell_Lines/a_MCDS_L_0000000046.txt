@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Parameter Value[Oxygen] 	Unit	Data File
-MCDS_L_0000000046.0.0	microenvironment.measurement	160		MCDS_L_0000000046.xml

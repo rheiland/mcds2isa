@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000024.0	URL: http://physics.cancer.gov/docs/bioresource/lung/NCI-PBCF-CCL256.1_NCI-BL2126_v1.0_SOP-508.pdf	000000
-	0003648	Homo Sapiens	Peripheral blood	N/A	B lymphoblast; Epstein-Barr virus (EBV) transformed	Normoxia	MCDS_L_0000000024.0.0
