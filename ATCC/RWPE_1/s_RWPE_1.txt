@@ -1,0 +1,3 @@
+Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000032.0	URL: http://physics.cancer.gov/docs/bioresource/prostate/NCI-PBCF-CRL11609_RWPE-1_SOP-508.pdf	0003709
+	0008905	Homo Sapiens	Prostate	Normal	Epithelial	Normoxia	MCDS_L_0000000032.0.0

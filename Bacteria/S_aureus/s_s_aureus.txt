@@ -1,0 +1,2 @@
+Source Name	Comment[citation]	Characteristics[species]	Characteristics[strain]	Factor Value[phenotype_dataset]	Sample Name
+MCDS_L_0000000046.0	Staphylococcus aureus	NCTC 8532	normal	MCDS_L_0000000046.0.0
