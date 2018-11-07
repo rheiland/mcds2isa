@@ -11,13 +11,13 @@ Investigation Submission Date	""
 Investigation Public Release Date 	 "" 
 Comment [MultiCellDS/cell_line/metadata/citation/text]	"If this digital cell line is used in a publication, cite it as:"We used digital cell line arf_null [1] version 1 (MultiCellDB_ID: MCDS_L_0000000047), created with data and contributions from [2][1] S. H. Friedman et al., MultiCellDS: a standard and a community for sharing multicellular data (2016, submitted)[2] Frieboes HB, Smith BR, Wang Z, Kotsuma M, Ito K, Day A, et al. (2015) Predictive Modeling of Drug Response in Non-Hodgkin's Lymphoma. PLoS ONE 10(6): e0129433. doi:10.1371/journal.pone.0129433"
 INVESTIGATION PUBLICATIONS
-Investigation PubMed ID
-Investigation Publication DOI	""	""	""
-Investigation Publication Author List
-Investigation Publication Title
-Investigation Publication Status
-Investigation Publication Status Term Accession
-Investigation Publication Status Term Source REF
+Investigation PubMed ID	
+Investigation Publication DOI		""	""	""
+Investigation Publication Author List	
+Investigation Publication Title	
+Investigation Publication Status	
+Investigation Publication Status Term Accession	
+Investigation Publication Status Term Source REF	
 INVESTIGATION CONTACTS
 Investigation Person Last Name	"Frieboes"	
 Investigation Person First Name	"Hermann B."
@@ -45,13 +45,13 @@ Study Design Type	""
 Study Design Type Term Accession Number	""
 Study Design Type Term Source REF	""
 STUDY PUBLICATIONS
-Study PubMed ID
-Study Publication DOI	""	""	""	
-Study Publication Author List
-Study Publication Title
-Study Publication Status	
-Study Publication Status Term Accession Number	
-Study Publication Status Term Source REF
+Study PubMed ID	
+Study Publication DOI		""	""	""	
+Study Publication Author List	
+Study Publication Title	
+Study Publication Status		
+Study Publication Status Term Accession Number		
+Study Publication Status Term Source REF	
 STUDY FACTORS			
 Study Factor Name	"phenotype_dataset"
 Study Factor Type	""
