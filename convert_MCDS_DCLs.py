@@ -21,6 +21,7 @@ for root, dirs, files in os.walk("."):
          print(root)
          print(file)
          count += 1
+         # edit the following path accordingly
          cmd = "python ../isaTABModelledFiles/mcds_dcl2isa.py " + os.path.join(root,file)
          print(cmd)
          os.system(cmd)
