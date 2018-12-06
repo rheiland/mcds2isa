@@ -85,16 +85,17 @@ for xf in xml_:
   idx += 1
 
 
+# step through all files in our lists, zip them together, and move them into their own directory (/zip_files)
 idx = 0
 cwd = os.getcwd()
 zip_dir =  os.path.join(cwd,"zip_files")
  
 for xf in xml_:
-  print(xf)
+  print('xml file=',xf)
   print(os.path.basename(xf))
   zfile = os.path.basename(xf)[:-3] + "zip"
   print(zfile)
-  fns = [i_[idx], s_[idx], a_[idx]]
+  fns = [xf, i_[idx], s_[idx], a_[idx]]
 #  print(idx, fns)
   print(os.path.expanduser(fns[0]))
 
@@ -105,15 +106,14 @@ for xf in xml_:
   os.chdir(dirp)
 
   with zipfile.ZipFile(zfile, 'w') as myzip:
-#    for f in glob.glob(file_xml):
+#    myzip.write(f)
     for f in isafiles:
-#      myzip.write(f, os.path.basename(f)) # 2nd arg avoids full filename path in the archive
       myzip.write(f)
 
   shutil.move(zfile, zip_dir)
   os.chdir(cwd)
 
-  if (idx > 513):
+  if (idx > 500):
     sys.exit(1)
 
   idx += 1
