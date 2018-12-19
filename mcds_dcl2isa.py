@@ -113,8 +113,8 @@ for elm in uep.findall('data_origin'):
       url_value = url_ptr.text
       url.append(url_value)
 
-print("(post data_origin) pmid=",pmid)
-print("(post data_origin) url=",url)
+#print("(post data_origin) pmid=",pmid)
+#print("(post data_origin) url=",url)
 
 uep = xml_root.find('.//metadata')
 for elm in uep.findall('data_analysis'):
@@ -137,7 +137,7 @@ for elm in uep.findall('data_analysis'):
     pmid.append(pmid_value)
 #  pmid.append(pmid_value)
 
-print("(post data_analysis) pmid=",pmid)
+#print("(post data_analysis) pmid=",pmid)
 
 sep_char_sq = sep_char + '"'   # tab + single quote
 
@@ -356,7 +356,10 @@ cell_origin_characteristics = []
 if (uep):
   for elm in uep.getchildren():
     fp.write('Characteristics[' + elm.tag + ']' + sep_char)
-    cell_origin_characteristics.append(elm.text)
+    text_val = elm.text
+    text_val = ' '.join(text_val.split())   # strip out tabs and newlines
+    cell_origin_characteristics.append(text_val)
+#    print("cell_origin_characteristics----->",cell_origin_characteristics,"<-------")
 
 fp.write('Factor Value[phenotype_dataset]' + sep_char + 'Sample Name\n')
 
@@ -373,7 +376,7 @@ for elm in uep.findall('phenotype_dataset'):
     for p in url:
       row_str += 'URL: ' + p + sep_char
 
-  print("cell_origin_characteristics=",cell_origin_characteristics)
+#  print("cell_origin_characteristics=",cell_origin_characteristics)
   for c in cell_origin_characteristics:
     row_str += c + sep_char 
   row_str += elm.attrib['keywords'] + sep_char + source_name + '.' + str(suffix)
@@ -397,6 +400,10 @@ MCDS_L_0000000052.0.3 microenvironment.measurement  52  mmHg              MCDS_L
 MCDS_L_0000000052.0.4 microenvironment.measurement  5 mmHg              MCDS_L_0000000052.xml
 """
 
+# We will do a two-pass approach:
+
+# 1st pass: parse the first instance of the <variables> element to generate the header row
+#
 # Columns' titles
 fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char )
 uep = xml_root.find('.//variables')  # TODO: also req: keywords="viable"?
@@ -416,12 +423,16 @@ if (uep):
 fp.write('Data File\n')
 #print('num_vars=',num_vars)
 
+
+# 2nd pass: for each <phenotype_dataset>, each <variables>, and each <variable>, extract a row of relevant
+#           info to match the column headings.
 count = 0
 # TODO: am I making too many assumptions about elements - existence, ordering, etc.?
 id = xml_root.find(".//metadata").find(".//ID").text
 uep = xml_root.find('.//cell_line')
 for elm in uep.findall('phenotype_dataset'):
   vs = elm.find('.//variables') 
+#  print("----- found <variables>, count=",count)
   nvar = 0
 #  for ma in v.findall('material_amount'):
   if vs:
@@ -432,10 +443,15 @@ for elm in uep.findall('phenotype_dataset'):
   #    print(v.attrib['units'])
   #    print(v.find('.//material_amount').text)
 
+      # Need to strip out tabs here (sometimes)
+      text_val = v.find('.//material_amount').text
+#      print('------ text_val --->',text_val,'<---------')
+      text_val = ' '.join(text_val.split())
+#      print('------ text_val --->',text_val,'<---------')
       if ('units' in v.attrib.keys()):  # TODO: what's desired format if missing?
-        comment_str += sep_char + v.find('.//material_amount').text + sep_char + v.attrib['units']
+        comment_str += sep_char + text_val + sep_char + v.attrib['units']
       else:
-        comment_str += sep_char + v.find('.//material_amount').text + sep_char + ""
+        comment_str += sep_char + text_val + sep_char + ""
 
 #      comment_str += sep_char + v.find('.//material_amount').text + sep_char + v.attrib['units']
   #  print(comment_str)
@@ -448,6 +464,7 @@ for elm in uep.findall('phenotype_dataset'):
         fp.write(sep_char)
   #  fp.write(comment_str + sep_char + xml_file + '\n')
 #    fp.write(xml_file + '\n')
+#    print("----- ",xml_base_filename, " + CR")
     fp.write(xml_base_filename + '\n')
     count += 1
 
