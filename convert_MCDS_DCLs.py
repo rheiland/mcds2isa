@@ -17,17 +17,19 @@ for root, dirs, files in os.walk("."):
     #print((len(path) - 1) * '---', os.path.basename(root))
     for file in files:
       if (file[-3:] == 'xml'):
-#        os.chdir(root)
-         print(root)
-         print(file)
+#        os.chdir(root)  # let's NOT attempt this approach
+
+#         print(root)
+#         print(file)
          count += 1
          # edit the following path accordingly
-         cmd = "python ../isaTABModelledFiles/mcds_dcl2isa.py " + os.path.join(root,file)
+#         cmd = "python ../isaTABModelledFiles/mcds_dcl2isa.py " + os.path.join(root,file)
+         cmd = "python mcds_dcl2isa.py " + os.path.join(root,file)
          print(cmd)
          os.system(cmd)
          for isa_file in glob.glob(r'*.txt'):
-#            print(isa_file)
+#            print("mv ",isa_file,root)
             shutil.move(isa_file,root)
 #         if (count > 5):
-#          sys.exit()
+#         sys.exit()
 
