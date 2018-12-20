@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000039.0	URL: http://physics.cancer.gov/docs/bioresource/brain/NCI-PBCF-HTB14_U-87_MG_SOP-508.pdf	0002036
-	0009464	Homo Sapiens	Brain	glioblastoma; astrocytoma; classified as grade IV as of 2007	N/A	Normoxia	MCDS_L_0000000039.0.0

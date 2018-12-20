@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000013.0	URL: http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-CRL2336_HCC1937_v1.0_SOP-508.pdf	0003323
-	0003645	Homo Sapiens	Breast	Primary ductal carcinoma	Epithelial-like	Normoxia	MCDS_L_0000000013.0.0

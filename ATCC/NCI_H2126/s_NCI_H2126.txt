@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000026.0	URL: http://physics.cancer.gov/docs/bioresource/lung/NCI-PBCF-CCL256_NCI-H2126_v1.0_SOP-508.pdf	0003240
-	0008056	Homo Sapiens	Lung	Adenocarcinoma; non-small cell lung cancer - pleural effusion	N/A	Normoxia	MCDS_L_0000000026.0.0

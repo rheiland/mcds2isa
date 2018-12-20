@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Parameter Value[oxygen.concentration] 	Unit	Data File
-MCDS_L_0000000003.0.0	microenvironment.measurement	0.2	mmHg	MCF10A_JSB.xml

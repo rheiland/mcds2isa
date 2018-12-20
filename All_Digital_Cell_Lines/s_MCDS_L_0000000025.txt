@@ -1,3 +1,0 @@
-Source Name	Comment[citation]	Characteristics[BTO_ID]	Characteristics[CLO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000025.0	URL: http://physics.cancer.gov/docs/bioresource/lung/NCI-PBCF-CRL5922_NCI-H2087_SOP-508.pdf	0003241
-	0008048	Homo Sapiens	Lung	adenocarcinoma; non-small cell lung cancer; stage 1 - lymph node	N/A	Normoxia	MCDS_L_0000000025.0.0

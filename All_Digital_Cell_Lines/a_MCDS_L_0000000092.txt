@@ -1,2 +1,0 @@
-Sample Name	Protocol REF	Data File
-MCDS_L_0000000092.0.0		MCDS_L_0000000092.xml

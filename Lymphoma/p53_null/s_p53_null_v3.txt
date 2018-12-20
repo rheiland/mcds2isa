@@ -1,2 +1,0 @@
-Source Name	Comment[citation]	Comment[citation]	Comment[citation]	Characteristics[BTO_ID]	Characteristics[species]	Characteristics[organ]	Characteristics[disease]	Characteristics[morphology]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000048.0	URL: http://www.ncbi.nlm.nih.gov/pubmed/26061425	URL: http://www.drugbank.ca/drugs/DB00997	0002904	mouse	lymphoma	Non-Hodgins' Lymphoma	Drug-resistant tumorgenic	normoxic	MCDS_L_0000000048.0.0

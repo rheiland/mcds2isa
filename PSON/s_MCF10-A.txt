@@ -1,2 +1,0 @@
-Source Name	Comment[citation]	Comment[citation]	Factor Value[phenotype_dataset]	Sample Name
-MCDS_L_0000000001.0	URL: http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-1000-SOP-052814_508.pdf	normoxic	MCDS_L_0000000001.0.0
