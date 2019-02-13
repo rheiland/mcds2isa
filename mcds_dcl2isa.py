@@ -181,7 +181,7 @@ fp.write('Comment[Investigation Person REF]' + sep_char + '""\n')
 
 fp.write('STUDY\n')
 fp.write('Study Identifier\t' + i_identifier + '\n')
-fp.write('Study Title\t' + i_title + '\n')
+fp.write('Study Title\t' + i_title + ' Digital Cell Line\n')
 fp.write('Study Description\t' + i_desc + '\n')
 fp.write('Comment[Study Grant Number]\t""\n')
 fp.write('Comment[Study Funding Agency]\t""\n')
