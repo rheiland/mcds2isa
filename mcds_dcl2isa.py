@@ -62,12 +62,13 @@ fp.write(header + '\n')
 fp.write('INVESTIGATION\n')
 #print(xml_root.find(".//MultiCellDB").find(".//ID").text)
 i_identifier = '"' + xml_root.find(".//metadata").find(".//ID").text + '"'
-i_title = '"' + xml_root.find(".//metadata").find(".//name").text + '"'
+#i_title = '"' + xml_root.find(".//metadata").find(".//name").text + '"'
+i_title = '"' + xml_root.find(".//metadata").find(".//name").text + ' Digital Cell Line"'
 i_desc = '"' + xml_root.find(".//metadata").find(".//description").text + '"'
 i_desc = re.sub('\t','',i_desc)
 i_desc = re.sub('\n','',i_desc)
 fp.write('Investigation Identifier' + sep_char + i_identifier + '\n')
-fp.write('Investigation Title' + sep_char +  i_title + ' Digital Cell Line\n')
+fp.write('Investigation Title' + sep_char +  i_title + '\n')
 fp.write('Investigation Description' + sep_char + i_desc + '\n')
 fp.write('Investigation Submission Date' + sep_char + '""\n')
 fp.write('Investigation Public Release Date \t "" \n') 
@@ -181,7 +182,7 @@ fp.write('Comment[Investigation Person REF]' + sep_char + '""\n')
 
 fp.write('STUDY\n')
 fp.write('Study Identifier\t' + i_identifier + '\n')
-fp.write('Study Title\t' + i_title + ' Digital Cell Line\n')
+fp.write('Study Title\t' + i_title + '\n')
 fp.write('Study Description\t' + i_desc + '\n')
 fp.write('Comment[Study Grant Number]\t""\n')
 fp.write('Comment[Study Funding Agency]\t""\n')
