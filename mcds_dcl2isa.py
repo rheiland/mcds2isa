@@ -51,6 +51,7 @@ investigation_filename = "i_" + xml_base_filename[:-4] + ".txt"
 study_filename = "s_" + xml_base_filename[:-4] + ".txt"
 assay_filename = "a_" + xml_base_filename[:-4] + ".txt"
 
+#=======================================================================
 fp = open(investigation_filename, 'w')
 
 tree = ET.parse(xml_file)  # TODO: relative path using env var?
@@ -403,24 +404,34 @@ MCDS_L_0000000052.0.4 microenvironment.measurement  5 mmHg              MCDS_L_0
 
 # We will do a two-pass approach:
 
-# 1st pass: parse the first instance of the <variables> element to generate the header row
+# 1st pass: parse all <variables> elements to generate the header row. Keep a running list of unique [name.type] attribute pairs.
 #
 # Columns' titles
 fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char )
-uep = xml_root.find('.//variables')  # TODO: also req: keywords="viable"?
-# TODO: what to do if there are no
-if (uep):
-  num_vars = 0
-  for elm in uep.findall('variable'):
+#uep = xml_root.find('.//variables')  # TODO: also req: keywords="viable"?
 
-    if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
-      pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
-    else:
-      pval_str = elm.attrib['name'] 
+pval_list = []
+uep = xml_root.find('.//cell_line')
+num_vars = 0
+for pheno in uep.findall('phenotype_dataset'):
+  vs = pheno.find('.//variables') 
+  # TODO: what to do if there are none
+  if (vs):   # uep):
+    for elm in vs.findall('variable'):
 
-#    pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
-    fp.write('Parameter Value[' + pval_str + '] ' + sep_char + 'Unit' + sep_char)
-    num_vars += 1
+      # TODO: what about case-sensitive text?
+      if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
+        pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
+      else:
+        pval_str = elm.attrib['name'] 
+
+      if pval_str not in pval_list:
+        pval_list.append(pval_str)
+        # print(pval_list)
+
+        # pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
+        fp.write('Parameter Value[' + pval_str + '] ' + sep_char + 'Unit' + sep_char)
+        num_vars += 1
 fp.write('Data File\n')
 #print('num_vars=',num_vars)
 
@@ -431,7 +442,10 @@ count = 0
 # TODO: am I making too many assumptions about elements - existence, ordering, etc.?
 id = xml_root.find(".//metadata").find(".//ID").text
 uep = xml_root.find('.//cell_line')
-for elm in uep.findall('phenotype_dataset'):
+for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each 
+  param_unit_list = len(pval_list)*[sep_char,"",sep_char,""]  # create a dummy list of Param/Unit entries and fill in if present
+  param_unit_str = ""
+
   vs = elm.find('.//variables') 
 #  print("----- found <variables>, count=",count)
   nvar = 0
@@ -439,34 +453,53 @@ for elm in uep.findall('phenotype_dataset'):
   if vs:
     comment_str = id + '.0.' + str(count) + '\t' + 'microenvironment.measurement' 
 #   print(comment_str)
-    for v in vs.findall('variable'):
+    for v in vs.findall('variable'):  
       nvar += 1
   #    print(v.attrib['units'])
   #    print(v.find('.//material_amount').text)
+
+      if ('type' in v.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
+        pval_str = v.attrib['name'] + '.' + v.attrib['type']
+      else:
+        pval_str= v.attrib['name'] 
+
+      var_idx = pval_list.index(pval_str)  # get the index of this Parameter Value in our list
+      # print(pval_str,' index = ',var_idx)
 
       # Need to strip out tabs here (sometimes)
       text_val = v.find('.//material_amount').text
 #      print('------ text_val --->',text_val,'<---------')
       text_val = ' '.join(text_val.split())
 #      print('------ text_val --->',text_val,'<---------')
+
+      param_unit_str.join(param_unit_list) 
+
       if ('units' in v.attrib.keys()):  # TODO: what's desired format if missing?
-        comment_str += sep_char + text_val + sep_char + v.attrib['units']
+        param_unit_list[4*var_idx + 1] = text_val
+        param_unit_list[4*var_idx + 3] = v.attrib['units']
+        # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + v.attrib['units']
       else:
-        comment_str += sep_char + text_val + sep_char + ""
+        param_unit_list[4*var_idx + 1] = text_val
+        # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + ""
+      # print(param_unit_list)
 
 #      comment_str += sep_char + v.find('.//material_amount').text + sep_char + v.attrib['units']
   #  print(comment_str)
   #  print('nvar=',nvar)
+    comment_str += param_unit_str.join(param_unit_list)
+    comment_str += sep_char + xml_base_filename + '\n'
     fp.write(comment_str)
-    if (nvar == num_vars):
-      fp.write(sep_char)
-    else:
-      for idx in range(nvar,2*num_vars):
-        fp.write(sep_char)
+
+    # if (nvar == num_vars):
+    #   fp.write(sep_char)
+    # else:
+    #   for idx in range(nvar,2*num_vars):
+    #     fp.write(sep_char)
   #  fp.write(comment_str + sep_char + xml_file + '\n')
 #    fp.write(xml_file + '\n')
 #    print("----- ",xml_base_filename, " + CR")
-    fp.write(xml_base_filename + '\n')
+
+    # fp.write(xml_base_filename + '\n')
     count += 1
 
   else:  # if no 'variables' present, just print minimal info
