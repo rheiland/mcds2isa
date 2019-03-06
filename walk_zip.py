@@ -1,3 +1,8 @@
+# Walk through all subdirs and bundle an "archive" for *each* DCL. 
+# Each archive file (.zip) consists of 4 files: the original MCDS file (.xml), and the 3 generated ISA (i_,s_,a_) files.
+#
+# Author: Randy Heiland
+#
 import fnmatch
 import os
 import sys
@@ -41,48 +46,34 @@ for root, dirnames, filenames in os.walk("."):
 print('# a_ =',len(a_))
 
 
-# --- Verify we have an i_,s_,a_ (.txt) triple for each .xml 
-# (if not, remove those that don't)
-idx=0
+print("\n---- Verifying filenames found in all 4 lists")
+count = 0
 for xf in xml_:
+  # print('\n',xf)
   s= xf[:-4]
+  # print(s)
   jdx = s.rfind('/')  # assume *nix system
+#  kdx = s.find('/')  # assume *nix system
   bname = s[jdx+1:]  # base name
-
-#  print('---- check i_ filename match for: ',xf)
-  # check that an "i_" name matches the base name
-  s= i_[idx]
-  s= s[:-4]
-  jdx = s.rfind('/')
-  iname = s[jdx+3:]
-#  print(bname,'--->',iname)
-  if (bname != iname):
-    print('arrgh: ',bname,iname,xf)
+  i_name = s[:jdx+1] + "i_" + bname + ".txt"
+  s_name = s[:jdx+1] + "s_" + bname + ".txt"
+  a_name = s[:jdx+1] + "a_" + bname + ".txt"
+#  print('bname=',bname)
+#  print('i_name=',i_name)
+  if i_name not in i_:
+    print(count,") missing ",i_name)
+    sys.exit(1)
+  if s_name not in s_:
+    print(count,") missing ",s_name)
+    sys.exit(1)
+  if a_name not in a_:
+    print(count,") missing ",a_name)
     sys.exit(1)
 
-#  print('---- check s_ filename match')
-  # check that an "s_" name matches the base name
-  s= s_[idx]
-  s= s[:-4]
-  jdx = s.rfind('/')
-  sname = s[jdx+3:]
-#  print(bname,'--->',sname)
-  if (bname != iname):
-    print('arrgh: ',bname,sname,xf)
-    sys.exit(1)
+  count += 1
+#  if idx > 5:
+#    break
 
-#  print('---- check a_ filename match')
-  # check that an "a_" name matches the base name
-  s= a_[idx]
-  s= s[:-4]
-  jdx = s.rfind('/')
-  aname = s[jdx+3:]
-#  print(bname,'--->',iname)
-  if (bname != iname):
-    print('arrgh: ',bname,iname,xf)
-    sys.exit(1)
-
-  idx += 1
 
 
 # step through all files in our lists, zip them together, and move them into their own directory (/zip_files)
@@ -90,19 +81,38 @@ idx = 0
 cwd = os.getcwd()
 zip_dir =  os.path.join(cwd,"zip_files")
  
+#   For example, we want: 
+# xml file= ./PSON/MCF10-A.xml
+# MCF10-A.xml
+# MCF10-A.zip
+# ./PSON/MCF10-A.xml
+# isafiles= ['MCF10-A.xml', 'i_MCF10-A.txt', 's_MCF10-A.txt', 'a_MCF10-A.txt']
+
 for xf in xml_:
-  print('xml file=',xf)
-  print(os.path.basename(xf))
-  zfile = os.path.basename(xf)[:-3] + "zip"
-  print(zfile)
-  fns = [xf, i_[idx], s_[idx], a_[idx]]
+#  print('xml file=',xf)
+  #bname= os.path.basename(xf)
+  bname= os.path.basename(xf)[:-4]
+#  print("bname=",bname)
+#  zfile = os.path.basename(xf)[:-3] + ".zip"
+  zfile = bname + ".zip"
+#  print("zfile=",zfile)
+#  fns = [xf, i_[idx], s_[idx], a_[idx]]
+
+#  s= xf[:-4]
+  i_name = "i_" + bname + ".txt"
+  s_name = "s_" + bname + ".txt"
+  a_name = "a_" + bname + ".txt"
+  fns = [xf, i_name, s_name, a_name]
 #  print(idx, fns)
-  print(os.path.expanduser(fns[0]))
 
-  isafiles=list(map(os.path.basename, fns))
-  print(isafiles)
+#  print(os.path.expanduser(fns[0]))
 
-  dirp=os.path.dirname(fns[0])
+  isafiles = list(map(os.path.basename, fns))
+  print("isafiles=",isafiles)
+
+  dirp = os.path.dirname(fns[0])
+#  print('dirp=',dirp)
+#  sys.exit(0)
   os.chdir(dirp)
 
   with zipfile.ZipFile(zfile, 'w') as myzip:
@@ -117,5 +127,3 @@ for xf in xml_:
     sys.exit(1)
 
   idx += 1
-
-
