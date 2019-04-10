@@ -30,6 +30,8 @@ else:
 # for testing, just set it
 #xml_file = "MCDS_L_0000000052.xml"
 
+dqte = '"'
+
 header = '\
 ONTOLOGY SOURCE REFERENCE\n\
 Term Source Name	"NCIT"	"UO"	"NCBITAXON"	"EDDA"\n\
@@ -222,7 +224,7 @@ for elm in uep.findall('phenotype_dataset'):
 #  print(comment_str)
 fp.write(comment_str[:-2] + '"\n')
 
-
+# TODO: fill these in with something meaningful
 fp.write('STUDY ASSAYS\t\n')
 fp.write('Study Assay Measurement Type\t""\n')
 fp.write('Study Assay Measurement Type Term Accession Number\t""\n')
@@ -335,59 +337,111 @@ print(' --> ' + investigation_filename)
 
 
 #=======================================================================
-fp = open(study_filename, 'w')
+""" example of column headers (12)
+"Source Name"	"Comment[data_origin/citation]"	"Comment[data_origin/citation]"	"Comment[data_origin/citation]"	"Comment[data_origin/citation]"	
+"Characteristics[BTO_ID]"	"Characteristics[CLO_ID]"	"Characteristics[species]"	"Characteristics[organ]"	"Characteristics[custom]"	
+"Factor Value[phenotype_dataset]"	"Sample Name"
+"""
+fp_s = open(study_filename, 'w')
 
-# row #1 (column titles)
-fp.write('Source Name' + sep_char)
+# ------- row #1 (column titles)
+#fp.write('Source Name' + sep_char)
+fp_s.write('"Source Name"' + sep_char)
 source_name = i_identifier[1:-1] + '.0'
 
 uep = xml_root.find('.//data_origins')  # uep = unique entry point
 for elm in uep.findall('data_origin'):
   for elm2 in elm.findall('citation'):
-    fp.write('Comment[citation]' + sep_char)
+    # fp_s.write('Comment[citation]' + sep_char)
+    # fp_s.write('"Comment[citation]"' + sep_char)
+    fp_s.write('"Comment[data_origin/citation]"' + sep_char)
     # TODO: why did I insert the following line?
     # pmid_origin = elm.find('.//PMID').text
 
 uep = xml_root.find('.//metadata')
 for elm in uep.findall('data_analysis'):
   for elm2 in elm.findall('citation'):
-    fp.write('Comment[citation]' + sep_char)
+    # fp_s.write('Comment[citation]' + sep_char)
+    # fp_s.write('"Comment[citation]"' + sep_char)
+    # fp_s.write('"Comment[metadata/data_analysis/citation]"' + sep_char)
+    print("--------> Need to do:  Comment[metadata/data_analysis/citation]")
 
 uep = xml_root.find('.//cell_origin')
 cell_origin_characteristics = []
 if (uep):
   for elm in uep.getchildren():
-    fp.write('Characteristics[' + elm.tag + ']' + sep_char)
+    # fp_s.write('Characteristics[' + elm.tag + ']' + sep_char)
+    fp_s.write('"Characteristics[cell_origin/' + elm.tag + ']"' + sep_char)
     text_val = elm.text
     text_val = ' '.join(text_val.split())   # strip out tabs and newlines
     cell_origin_characteristics.append(text_val)
 #    print("cell_origin_characteristics----->",cell_origin_characteristics,"<-------")
 
-fp.write('Factor Value[phenotype_dataset]' + sep_char + 'Sample Name\n')
+print("cell_origin_characteristics----->",cell_origin_characteristics,"<-------")
+#fp_s.write('Factor Value[phenotype_dataset]' + sep_char + 'Sample Name\n')
+fp_s.write('"Factor Value[phenotype_dataset]"' + sep_char + '"Sample Name"\n')
 
-# remaining rows
-uep = xml_root.find('.//cell_line')
+#-------------------------------
+# ------- remaining rows (after header; need to match the # of entries in each row with # entries in header)
+uep = xml_root.find('.//cell_line')  # uep = unique entry point
+#for pd_elm in uep.findall('phenotype_dataset'):
 suffix = 0
-for elm in uep.findall('phenotype_dataset'):
-  row_str = source_name + sep_char 
-  # do we want a hierarchy of preferred citation types? (e.g., PMID,PMCID,DOI,URL)
-  if (len(pmid) > 0):
-    for p in pmid:
-      row_str += 'PMID: ' + p + sep_char
-  elif (len(url) > 0):
-    for p in url:
-      row_str += 'URL: ' + p + sep_char
+for pd_elm in uep.findall('phenotype_dataset'):
+  print("====> phenotype_dataset")
+  row_str = dqte + source_name + dqte + sep_char 
+  # row_str = ""
+  fp_s.write(row_str)
 
-#  print("cell_origin_characteristics=",cell_origin_characteristics)
+  uep = xml_root.find('.//data_origins')  # uep = unique entry point
+  for elm in uep.findall('data_origin'):
+    for elm2 in elm.findall('citation'):
+      cite_str = ""
+      for cite in elm2.getchildren():
+        text_val = cite.text
+        text_val = ' '.join(text_val.split())   # strip out tabs and newlines
+        text_val = text_val.replace('"', '')
+        cite_str += str(text_val) + ','
+      fp_s.write('"' + cite_str + '"' + sep_char)
+
+  uep = xml_root.find('.//metadata')
+  for elm in uep.findall('data_analysis'):
+    for elm2 in elm.findall('citation'):
+      # fp_s.write('Comment[citation]' + sep_char)
+      # fp_s.write('"Comment[citation]"' + sep_char)
+      # fp_s.write('"Comment[metadata/data_analysis/citation]"' + sep_char)
+      print("---> Need row entry for: Comment[metadata/data_analysis/citation]")
+
+  #uep = xml_root.find('.//cell_line')
+  uep = xml_root.find('.//cell_origin')
+  # suffix = 0
+  #for elm in uep.findall('phenotype_dataset'):
+  # for elm in uep.getchildren():
+  #  row_str = dqte + source_name + dqte + sep_char 
+    # do we want a hierarchy of preferred citation types? (e.g., PMID,PMCID,DOI,URL)
+    # if (len(pmid) > 0):
+    #   for p in pmid:
+    #     row_str += '"PMID: ' + p + dqte + sep_char
+    # elif (len(url) > 0):
+    #   for p in url:
+    #     row_str += '"URL: ' + p + dqte + sep_char
+
+  #  print("cell_origin_characteristics=",cell_origin_characteristics)
+    # for c in cell_origin_characteristics:
+  row_str = ""
   for c in cell_origin_characteristics:
-    row_str += c + sep_char 
-  row_str += elm.attrib['keywords'] + sep_char + source_name + '.' + str(suffix)
-              
-  suffix += 1
-#  print(row_str)
-  fp.write(row_str + '\n')
+      row_str += dqte + c + dqte + sep_char 
+    # row_str += dqte + elm.attrib['keywords'] + dqte + sep_char + dqte + source_name + '.' + str(suffix) + dqte
+                
+#     suffix += 1
+  #  print(row_str)
+    # fp_s.write(row_str + '\n')
 
-fp.close()
+
+  suffix += 1   # WHAT? just doing this causes invalid results in Metadata Utility???????
+  row_str += dqte + pd_elm.attrib['keywords'] + dqte + sep_char + dqte + source_name + '.' + str(suffix) + dqte
+  fp_s.write(row_str + '\n')
+
+fp_s.close()
 print(' --> ' + study_filename)
 
 
@@ -511,3 +565,62 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
 fp.close()
 print(' --> ' + assay_filename)
+
+
+#=======================================================================
+# Hackish, but let's open the i_ file again and append more Study info to the end.
+print('---------  make another pass to create more Assay files... ')
+fp_i = open(investigation_filename, 'a')
+#fp_a = open(investigation_filename, 'w')
+
+assay_basename = assay_filename[:-4]
+
+count = 0
+uep = xml_root.find('.//cell_line')
+for pheno_data in uep.findall('phenotype_dataset'):
+  # print('-phenotype_dataset')
+  # for pheno in pheno_data.findall('phenotype/cell_cycle/cell_cycle_phase/duration'):
+  for pheno in pheno_data.findall('phenotype'):
+    for cycle in pheno.findall('cell_cycle'):
+      # print(cycle.attrib['model'],'.',end='')
+      for phase in cycle.findall('cell_cycle_phase'):
+        # print(phase.attrib['name'],'.',end='')
+        for duration in phase.findall('duration'):
+          measure_type = "phenotype cell_cycle cell_cycle_phase duration"
+          # print('---phenotype/cell_cycle/cell_cycle_phase/duration', end="")
+          print(measure_type, ", ",end="")
+          print(duration.attrib['units'],'.',float(duration.text))
+
+          count += 1
+          # if (count > 3):
+            # break
+          assay_filename  = assay_basename + "-" + str(count) + ".txt"
+          print("---> ",assay_filename)
+          # Create a new Assay file
+          fp_a = open(assay_filename, 'w')
+          write_title = True
+
+          # Append info onto the existing Investigation file
+          fp_i.write('STUDY ASSAYS\t\n')
+          fp_i.write('Study Assay File Name\t' + '"' + assay_filename + '"\n')
+          # fp_i.write('Study Assay Measurement Type\t""\n')
+          line = 'Study Assay Measurement Type\t"' + measure_type + '"\n'
+          fp_i.write(line)
+          fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
+          fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
+          fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
+          fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
+          fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
+          fp_i.write('Study Assay Technology Platform\t""\n')
+
+          # Columns' titles
+          if write_title:
+            fp_a.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + '\n')
+            write_title = False
+          
+          sample_name = measure_type + str(count)
+          duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
+          fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
+          fp_a.close()
+
+fp_i.close()
