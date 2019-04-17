@@ -225,15 +225,15 @@ for elm in uep.findall('phenotype_dataset'):
 fp.write(comment_str[:-2] + '"\n')
 
 # TODO: fill these in with something meaningful
-fp.write('STUDY ASSAYS\t\n')
-fp.write('Study Assay Measurement Type\t""\n')
-fp.write('Study Assay Measurement Type Term Accession Number\t""\n')
-fp.write('Study Assay Measurement Type Term Source REF\t""\n')
-fp.write('Study Assay Technology Type\t"Digital Cell Line"\n')
-fp.write('Study Assay Technology Type Term Accession Number\t""\n')
-fp.write('Study Assay Technology Type Term Source REF\t""\n')
-fp.write('Study Assay Technology Platform\t""\n')
-fp.write('Study Assay File Name\t' + '"' + assay_filename + '"\n')
+# fp.write('STUDY ASSAYS\t\n')
+# fp.write('Study Assay Measurement Type\t"phenotype cell_cycle cell_cycle_phase duration"\n')
+# fp.write('Study Assay Measurement Type Term Accession Number\t""\n')
+# fp.write('Study Assay Measurement Type Term Source REF\t""\n')
+# fp.write('Study Assay Technology Type\t"Digital Cell Line"\n')
+# fp.write('Study Assay Technology Type Term Accession Number\t""\n')
+# fp.write('Study Assay Technology Type Term Source REF\t""\n')
+# fp.write('Study Assay Technology Platform\t""\n')
+# fp.write('Study Assay File Name\t' + '"' + assay_filename + '"\n')
 
 
 fp.write('STUDY PROTOCOLS\t\n')
@@ -569,58 +569,82 @@ print(' --> ' + assay_filename)
 
 #=======================================================================
 # Hackish, but let's open the i_ file again and append more Study info to the end.
-print('---------  make another pass to create more Assay files... ')
-fp_i = open(investigation_filename, 'a')
-#fp_a = open(investigation_filename, 'w')
+if True:
+  print('---------  make another pass to create more Assay files... ')
+  fp_i = open(investigation_filename, 'a')
+  #fp_a = open(investigation_filename, 'w')
 
-assay_basename = assay_filename[:-4]
+  assay_basename = assay_filename[:-4]
 
-count = 0
-uep = xml_root.find('.//cell_line')
-for pheno_data in uep.findall('phenotype_dataset'):
-  # print('-phenotype_dataset')
-  # for pheno in pheno_data.findall('phenotype/cell_cycle/cell_cycle_phase/duration'):
-  for pheno in pheno_data.findall('phenotype'):
-    for cycle in pheno.findall('cell_cycle'):
-      # print(cycle.attrib['model'],'.',end='')
-      for phase in cycle.findall('cell_cycle_phase'):
-        # print(phase.attrib['name'],'.',end='')
-        for duration in phase.findall('duration'):
-          measure_type = "phenotype cell_cycle cell_cycle_phase duration"
-          # print('---phenotype/cell_cycle/cell_cycle_phase/duration', end="")
-          print(measure_type, ", ",end="")
-          print(duration.attrib['units'],'.',float(duration.text))
+  assay_filenames_str = sep_char + assay_filename
+  measure_types_str = ""
 
-          count += 1
-          # if (count > 3):
-            # break
-          assay_filename  = assay_basename + "-" + str(count) + ".txt"
-          print("---> ",assay_filename)
-          # Create a new Assay file
-          fp_a = open(assay_filename, 'w')
-          write_title = True
+  count = 0
+  uep = xml_root.find('.//cell_line')
+  for pheno_data in uep.findall('phenotype_dataset'):
+    # print('-phenotype_dataset')
+    # for pheno in pheno_data.findall('phenotype/cell_cycle/cell_cycle_phase/duration'):
+    for pheno in pheno_data.findall('phenotype'):
+      for cycle in pheno.findall('cell_cycle'):
+        # print(cycle.attrib['model'],'.',end='')
+        for phase in cycle.findall('cell_cycle_phase'):
+          # print(phase.attrib['name'],'.',end='')
+          for duration in phase.findall('duration'):
+            measure_type = "phenotype cell_cycle cell_cycle_phase duration"
+            # print('---phenotype/cell_cycle/cell_cycle_phase/duration', end="")
+            print(measure_type, ", ",end="")
+            print(duration.attrib['units'],'.',float(duration.text))
 
-          # Append info onto the existing Investigation file
-          fp_i.write('STUDY ASSAYS\t\n')
-          fp_i.write('Study Assay File Name\t' + '"' + assay_filename + '"\n')
-          # fp_i.write('Study Assay Measurement Type\t""\n')
-          line = 'Study Assay Measurement Type\t"' + measure_type + '"\n'
-          fp_i.write(line)
-          fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
-          fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
-          fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
-          fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
-          fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
-          fp_i.write('Study Assay Technology Platform\t""\n')
+            count += 1
+            # if (count > 3):
+              # break
+            assay_filename  = assay_basename + "-" + str(count) + ".txt"
+            print("---> ",assay_filename)
+            # Create a new Assay file
+            fp_a = open(assay_filename, 'w')
+            write_title = True
 
-          # Columns' titles
-          if write_title:
-            fp_a.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + '\n')
-            write_title = False
-          
-          sample_name = measure_type + str(count)
-          duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
-          fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
-          fp_a.close()
+            # Append info onto the existing Investigation file
+            # fp_i.write('STUDY ASSAYS\t\n')
+            # fp_i.write('Study Assay File Name\t' + '"' + assay_filename + '"\n')
+            # fp_i.write('Study Assay Measurement Type\t""\n')
+            # line = 'Study Assay Measurement Type\t"' + measure_type + '"\n'
 
-fp_i.close()
+            assay_filenames_str += sep_char + assay_filename
+            measure_types_str += sep_char + measure_type
+
+            # fp_i.write(line)
+            # fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
+            # fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
+            # fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
+            # fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
+            # fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
+            # fp_i.write('Study Assay Technology Platform\t""\n')
+
+            # Columns' titles
+            if write_title:
+              fp_a.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + '\n')
+              write_title = False
+            
+            sample_name = measure_type + str(count)
+            duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
+            fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
+            fp_a.close()
+
+  # Append info onto the existing Investigation file
+  fp_i.write('STUDY ASSAYS\t\n')
+  # TODO: check if any were found; need to have quotes around strings??
+  # fp_i.write('Study Assay File Name\t' + '"' + assay_filenames_str + '"\n')
+  fp_i.write('Study Assay File Name' + assay_filenames_str + '\n')
+  # fp_i.write('Study Assay Measurement Type\t""\n')
+  # line = 'Study Assay Measurement Type\t"' + measure_types_str + '"\n'
+  line = 'Study Assay Measurement Type' + measure_types_str + '\n'
+  fp_i.write(line)
+  fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
+  fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
+  fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
+  fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
+  fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
+  fp_i.write('Study Assay Technology Platform\t""\n')
+
+  fp_i.close()
