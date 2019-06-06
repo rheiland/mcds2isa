@@ -51,7 +51,7 @@ else:
 
 investigation_filename = "i_" + xml_base_filename[:-4] + ".txt"
 study_filename = "s_" + xml_base_filename[:-4] + ".txt"
-assay_filename = "a_" + xml_base_filename[:-4] + ".txt"
+assay_filename1 = "a_" + xml_base_filename[:-4] + "-1.txt"
 
 #=======================================================================
 fp = open(investigation_filename, 'w')
@@ -446,7 +446,7 @@ print(' --> ' + study_filename)
 
 
 #=======================================================================
-fp = open(assay_filename, 'w')
+fp = open(assay_filename1, 'w')
 """
 Sample Name Protocol REF  Parameter Value[oxygen.partial_pressure]  Unit  Parameter Value[DCIS_cell_density(2D).surface_density]  Unit  Parameter Value[DCIS_cell_area_fraction.area_fraction]  Unit  Parameter Value[DCIS_cell_volume_fraction.volume_fraction]  Unit  Data File
 MCDS_L_0000000052.0.0 microenvironment.measurement  6.17  mmHg  0.00883 1/micron^2  0.8 dimensionless 0.8 dimensionless MCDS_L_0000000052.xml
@@ -564,20 +564,144 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
 
 fp.close()
-print(' --> ' + assay_filename)
+print(' --> ' + assay_filename1)
+assay_filenames_str = assay_filename1
+  
+#=======================================================================
+assay_filename2 = "a_" + xml_base_filename[:-4] + "-2.txt"
+fp = open(assay_filename2, 'w')
 
+# The header (column titles) is known in advance this time.
+fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + 'Parameter Value[cell_cycle.model]' + 
+  sep_char + 'Parameter Value[cell_cycle_phase.name]' +
+  sep_char + 'Parameter Value[duration]' +
+  sep_char + 'Units' + 
+  sep_char + 'Parameter Value[duration.measurement_type]' +
+  sep_char + 'Parameter Value[net_birth_rate]' +
+  sep_char + 'Units' +
+  sep_char + 'Parameter Value[net_birth_rate.measurement_type]' +
+  sep_char + 'Parameter Value[net_birth_rate.standard_error_of_the_mean]' +
+  sep_char + 'Data File\n' )
+
+
+# For each <phenotype_dataset>, each <phenotype>, extract a row of relevant info to match the column headings.
+count = 0
+# TODO: am I making too many assumptions about elements - existence, ordering, etc.?
+id = xml_root.find(".//metadata").find(".//ID").text
+uep = xml_root.find('.//cell_line')
+for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each 
+  # param_unit_list = len(pval_list)*[sep_char,"",sep_char,""]  # create a dummy list of Param/Unit entries and fill in if present
+  # param_unit_str = ""
+
+  phenotype = elm.find('.//phenotype')   # TODO: use 'type' attrib?
+#  print("----- found <variables>, count=",count)
+  # nvar = 0
+#  for ma in v.findall('material_amount'):
+  if phenotype:
+    # comment_str = id + '.0.' + str(count) + '\t' + 'phenotype.cell_cycle'    # start of a new row of info
+#   print(comment_str)
+    # if (not phenotype.find('cell_cycle'):
+    #     comment_str += sep_char
+    # else:
+    for cell_cycle in phenotype.findall('cell_cycle'):  
+      comment_str = id + '.0.' + str(count) + '\t' + 'phenotype.cell_cycle'    # start of a new row of info
+      # nvar += 1
+  #    print(v.attrib['units'])
+  #    print(v.find('.//material_amount').text)
+
+      if ('model' in cell_cycle.attrib.keys()):  # TODO: what's desired format if attribute is missing?
+        # pval_str = v.attrib['model'] + '.' + v.attrib['type']
+        comment_str += sep_char + cell_cycle.attrib['model'] 
+      else:
+        comment_str += sep_char
+
+      for cell_cycle_phase in cell_cycle.findall('cell_cycle_phase'):  
+        if ('name' in cell_cycle_phase.attrib.keys()):  
+          comment_str += sep_char + cell_cycle_phase.attrib['name'] 
+        else:
+          comment_str += sep_char 
+
+        for duration in cell_cycle_phase.findall('duration'):  
+          text_val = ' '.join(duration.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in duration.attrib.keys()):  
+            comment_str += sep_char + duration.attrib['units'] 
+          else:
+            comment_str += sep_char 
+          if ('measurement_type' in duration.attrib.keys()):  
+            comment_str += sep_char + duration.attrib['measurement_type'] 
+          else:
+            comment_str += sep_char 
+          # text_val = duration.text
+          # comment_str += sep_char + duration.text
+
+        for net_birth_rate in cell_cycle_phase.findall('net_birth_rate'):  
+          text_val = ' '.join(net_birth_rate.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in net_birth_rate.attrib.keys()):  
+            comment_str += sep_char + net_birth_rate.attrib['units'] 
+          else:
+            comment_str += sep_char 
+          if ('measurement_type' in net_birth_rate.attrib.keys()):  
+            comment_str += sep_char + net_birth_rate.attrib['measurement_type'] 
+          else:
+            comment_str += sep_char 
+          if ('standard_error_of_the_mean' in net_birth_rate.attrib.keys()):  
+            comment_str += sep_char + net_birth_rate.attrib['standard_error_of_the_mean'] 
+          else:
+            comment_str += sep_char 
+
+
+      # var_idx = pval_list.index(pval_str)  # get the index of this Parameter Value in our list
+      # print(pval_str,' index = ',var_idx)
+
+      # Need to strip out tabs here (sometimes)
+      # text_val = cell_cycle.find('.//material_amount').text
+#      print('------ text_val --->',text_val,'<---------')
+      # text_val = ' '.join(text_val.split())
+#      print('------ text_val --->',text_val,'<---------')
+
+      # param_unit_str.join(param_unit_list) 
+
+    comment_str += sep_char + xml_base_filename + '\n'
+    fp.write(comment_str)
+
+    # if (nvar == num_vars):
+    #   fp.write(sep_char)
+    # else:
+    #   for idx in range(nvar,2*num_vars):
+    #     fp.write(sep_char)
+  #  fp.write(comment_str + sep_char + xml_file + '\n')
+#    fp.write(xml_file + '\n')
+#    print("----- ",xml_base_filename, " + CR")
+
+    # fp.write(xml_base_filename + '\n')
+    count += 1
+
+#   else:  # if no 'variables' present, just print minimal info
+# #    comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_file + '\n' 
+#     comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_base_filename + '\n' 
+#     count += 1
+#     fp.write(comment_str)
+
+
+fp.close()
+print(' --> ' + assay_filename2)
+
+assay_filenames_str += sep_char + assay_filename2
 
 #=======================================================================
 # Hackish, but let's open the i_ file again and append more Study info to the end.
-if True:
+if False:
   print('---------  make another pass to create more Assay files... ')
-  fp_i = open(investigation_filename, 'a')
+  # fp_i = open(investigation_filename, 'a')
   #fp_a = open(investigation_filename, 'w')
 
-  assay_basename = assay_filename[:-4]
+  # assay_basename = assay_filename[:-4]
 
-  assay_filenames_str = sep_char + assay_filename
+  # assay_filenames_str = sep_char + assay_filename
   measure_types_str = ""
+  assay_tech_types_str = ""
 
   count = 0
   uep = xml_root.find('.//cell_line')
@@ -598,10 +722,10 @@ if True:
             count += 1
             # if (count > 3):
               # break
-            assay_filename  = assay_basename + "-" + str(count) + ".txt"
-            print("---> ",assay_filename)
+            # assay_filename  = assay_basename + "-" + str(count) + ".txt"
+            # print("---> ",assay_filename)
             # Create a new Assay file
-            fp_a = open(assay_filename, 'w')
+            # fp_a = open(assay_filename, 'w')
             write_title = True
 
             # Append info onto the existing Investigation file
@@ -610,8 +734,9 @@ if True:
             # fp_i.write('Study Assay Measurement Type\t""\n')
             # line = 'Study Assay Measurement Type\t"' + measure_type + '"\n'
 
-            assay_filenames_str += sep_char + assay_filename
+            # assay_filenames_str += sep_char + assay_filename
             measure_types_str += sep_char + measure_type
+            assay_tech_types_str += sep_char + "Digital Cell Line"  # jus duplicate - is it necessary to have one in each column?
 
             # fp_i.write(line)
             # fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
@@ -622,29 +747,41 @@ if True:
             # fp_i.write('Study Assay Technology Platform\t""\n')
 
             # Columns' titles
-            if write_title:
-              fp_a.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + '\n')
-              write_title = False
+            # if write_title:
+            #   fp_a.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + '\n')
+            #   write_title = False
             
-            sample_name = measure_type + str(count)
-            duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
-            fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
-            fp_a.close()
+            # sample_name = measure_type + str(count)
+            # duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
+            # fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
+            # fp_a.close()
 
-  # Append info onto the existing Investigation file
-  fp_i.write('STUDY ASSAYS\t\n')
-  # TODO: check if any were found; need to have quotes around strings??
-  # fp_i.write('Study Assay File Name\t' + '"' + assay_filenames_str + '"\n')
-  fp_i.write('Study Assay File Name' + assay_filenames_str + '\n')
-  # fp_i.write('Study Assay Measurement Type\t""\n')
-  # line = 'Study Assay Measurement Type\t"' + measure_types_str + '"\n'
-  line = 'Study Assay Measurement Type' + measure_types_str + '\n'
-  fp_i.write(line)
-  fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
-  fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
-  fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
-  fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
-  fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
-  fp_i.write('Study Assay Technology Platform\t""\n')
+# Append info onto the existing Investigation file
+# duplicate, for each Assay file
+measure_types = sep_char + "phenotype cell_cycle cell_cycle_phase duration"
+measure_types += sep_char + "phenotype cell_cycle cell_cycle_phase duration"
 
-  fp_i.close()
+tech_types = sep_char + "Digital Cell Line"
+tech_types += sep_char + "Digital Cell Line"
+
+fp_i = open(investigation_filename, 'a')
+fp_i.write('STUDY ASSAYS\t\n')
+# TODO: check if any were found; need to have quotes around strings??
+# fp_i.write('Study Assay File Name\t' + '"' + assay_filenames_str + '"\n')
+#fp_i.write('Study Assay File Name' + assay_filenames_str + '\n')
+fp_i.write('Study Assay File Name' + sep_char + assay_filenames_str + '\n')
+# fp_i.write('Study Assay Measurement Type\t""\n')
+# line = 'Study Assay Measurement Type\t"' + measure_types_str + '"\n'
+line = 'Study Assay Measurement Type' + measure_types + '\n'
+fp_i.write(line)
+fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
+fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
+#fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
+#line = 'Study Assay Technology Type' + assay_tech_types_str + '\n'
+line = 'Study Assay Technology Type' + tech_types + '\n'
+fp_i.write(line)
+fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
+fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
+fp_i.write('Study Assay Technology Platform\t""\n')
+
+fp_i.close()
