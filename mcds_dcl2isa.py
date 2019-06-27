@@ -40,6 +40,26 @@ Term Source Version	"17.02d"	""	""	"2.0"\n\
 Term Source Description	"NCI Thesarus"	""	""	"Evidence in Documents, Discovery, and Analytics (EDDA)"\
 '
 
+sep_char = '\t'  # tab
+
+tree = ET.parse(xml_file)  # TODO: relative path using env var?
+xml_root = tree.getroot()
+
+#------------------------------------------
+def data_analyis_comments():
+  uep = xml_root.find('.//metadata')
+  for elm in uep.findall('data_analysis'):
+    for child in elm.getchildren():
+#      print("-------- data_analysis_comment:",child)
+      print("-------- data_analysis_comment:",child.tag)
+      c_str = "Comment[data-analysis_" + child.tag + "]" + sep_char 
+      text_str = child.text
+      c_str += ' '.join(text_str.split())   # strip out tabs and newlines. sigh.
+      c_str += '\n'
+      fp.write(c_str)
+
+
+#------------------------------------------
 if not Path(xml_file).is_file():
 	print(xml_file + 'does not exist!')
 	sys.exit(-1)
@@ -54,11 +74,6 @@ study_filename = "s_" + xml_base_filename[:-4] + ".txt"
 
 #=======================================================================
 fp = open(investigation_filename, 'w')
-
-tree = ET.parse(xml_file)  # TODO: relative path using env var?
-xml_root = tree.getroot()
-
-sep_char = '\t'  # tab
 
 fp.write(header + '\n')
 fp.write('INVESTIGATION\n')
@@ -89,56 +104,96 @@ fp.write('INVESTIGATION PUBLICATIONS\n')
 # TODO? will we have matching # of each?
 pmid = []
 doi = []
-url = []
+url = []   # TODO: perhaps use later
 uep = xml_root.find('.//data_origins')  # uep = unique entry point
-for elm in uep.findall('data_origin'):
+for elm1 in uep.findall('data_origin'):
+  print("-----------found data_origin")
+  for elm in elm1.findall('citation'):
+    print("-----------found citation")
+    cite_pair = ['','']
+    valid_citation = False
+    for child in elm:
+#      print("child.tag = ",child.tag)
+      if (child.tag == 'DOI'):
+        valid_citation = True
+        doi_value = child.text
+        doi_value = ' '.join(doi_value.split())   # strip out tabs and newlines. sigh.
+        print("-----------found DOI = ", doi_value)
+        cite_pair[0] = doi_value
+#        doi.append(doi_value)  # do we want to append "" if none??
+      elif (child.tag == 'PMID'):
+        valid_citation = True
+        pmid_value = child.text
+        pmid_value = ' '.join(pmid_value.split())   # strip out tabs and newlines. sigh.
+        print("-----------found PMID = ", pmid_value)
+#        pmid.append(pmid_value)  # do we want to append "" if none??
+        cite_pair[1] = pmid_value
+      # elif (child.tag == 'URL'):   # not currently using
+      #   url_value = child.text
+      #   url_value = ' '.join(url_value.split())   # strip out tabs and newlines. sigh.
+      #   print("-----------found URL = ", url_value)
+      #   url.append(url_value)  # do we want to append "" if none??
+
+    if valid_citation:
+      doi.append(cite_pair[0])
+      pmid.append(cite_pair[1])
+
+      # Why doesn't this work??????????
 #    doi.append(elm.find('.//DOI').text)
-    doi_ptr = elm.find('.//DOI')
-    if (doi_ptr == None):
-      doi_value = ""
-    else:
-      doi_value = doi_ptr.text
-    doi.append(doi_value)  # do we want to append "" if none??
+#     if (elm.find('.//DOI')):
+#       print("-----------found DOI")
+#     if (elm.find('.//PMID')):
+#       print("-----------found PMID")
+#     doi_ptr = elm.find('.//DOI')
+# #    if (doi_ptr == None):
+# #      doi_value = ""
+# #    else:
+#     if (doi_ptr):
+#       print('    -- found DOI')
+#       doi_value = doi_ptr.text
+#     # doi.append(doi_value)  # do we want to append "" if none??
+#       doi.append(doi_value)  # do we want to append "" if none??
 
 #    pmid.append(elm.find('.//PMID').text)
-    pmid_ptr = elm.find('.//PMID')
-    if (pmid_ptr == None):
-      pmid_value = ""
-    else:
-      pmid_value = pmid_ptr.text
-      pmid.append(pmid_value)
-#    pmid.append(pmid_value)
+#     pmid_ptr = elm.find('.//PMID')
+#     if (pmid_ptr == None):
+#       pmid_value = ""
+#     else:
+#       pmid_value = pmid_ptr.text
+#       pmid.append(pmid_value)
+# #    pmid.append(pmid_value)
 
-    url_ptr = elm.find('.//URL')
-    if (url_ptr == None):
-      url_value = ""
-    else:
-      url_value = url_ptr.text
-      url.append(url_value)
+#     url_ptr = elm.find('.//URL')
+#     if (url_ptr == None):
+#       url_value = ""
+#     else:
+#       url_value = url_ptr.text
+#       url.append(url_value)
 
 #print("(post data_origin) pmid=",pmid)
 #print("(post data_origin) url=",url)
 
 uep = xml_root.find('.//metadata')
 for elm in uep.findall('data_analysis'):
-#    print(' "' + el.find('.//PMID').text + '"', end='')
-#  doi.append(elm.find('.//DOI').text)
-#  pmid.append(elm.find('.//PMID').text)
-  doi_ptr = elm.find('.//DOI')
-  if (doi_ptr == None):
-    doi_value = ""
-  else:
-    doi_value = doi_ptr.text
-  doi.append(doi_value)  # do we want to append "" if none??
-
-#    pmid.append(elm.find('.//PMID').text)
-  pmid_ptr = elm.find('.//PMID')
-  if (pmid_ptr == None):
-    pmid_value = ""
-  else:
-    pmid_value = pmid_ptr.text
-    pmid.append(pmid_value)
-#  pmid.append(pmid_value)
+  if False:  # skip for now (TODO later??)
+    print("-----------found data_analysis")
+    for child in elm:
+      print(child.tag)
+      if (child.tag == 'DOI'):
+        doi_value = child.text
+        doi_value = ' '.join(doi_value.split())   # strip out tabs and newlines. sigh.
+        print("-----------found DOI = ", doi_value)
+        doi.append(doi_value)  # do we want to append "" if none??
+      elif (child.tag == 'PMID'):
+        pmid_value = child.text
+        pmid_value = ' '.join(pmid_value.split())   # strip out tabs and newlines. sigh.
+        print("-----------found PMID = ", pmid_value)
+        pmid.append(pmid_value)  # do we want to append "" if none??
+      # elif (child.tag == 'URL'):
+      #   url_value = child.text
+      #   url_value = ' '.join(url_value.split())   # strip out tabs and newlines. sigh.
+      #   print("-----------found URL = ", url_value)
+      #   url.append(url_value)  # do we want to append "" if none??
 
 #print("(post data_analysis) pmid=",pmid)
 
@@ -147,12 +202,17 @@ sep_char_sq = sep_char + '"'   # tab + single quote
 pmid_str = ''
 for elm in pmid:
   pmid_str += sep_char + '"' + elm + '"'
-fp.write('Investigation PubMed ID' + sep_char + pmid_str + '\n')
+print("--------- pmid_str = ",pmid_str)
+#fp.write('Investigation PubMed ID' + sep_char + pmid_str + '\n')
+fp.write('Investigation PubMed ID' + pmid_str + '\n')
 
 doi_str = ''
+print("--------- len(doi) = ",len(doi))
 for elm in doi:
   doi_str += sep_char + '"' + elm + '"'
-fp.write('Investigation Publication DOI' + sep_char + doi_str + '\n')
+print("--------- doi_str = ",doi_str)
+#fp.write('Investigation Publication DOI' + sep_char + doi_str + '\n')
+fp.write('Investigation Publication DOI' + doi_str + '\n')
 
 empty_str = ''.join(sep_char + '""' for x in pmid) 
 fp.write('Investigation Publication Author List' + sep_char + empty_str + '\n')
@@ -188,6 +248,7 @@ fp.write('Study Title\t' + i_title + '\n')
 fp.write('Study Description\t' + i_desc + '\n')
 fp.write('Comment[Study Grant Number]\t""\n')
 fp.write('Comment[Study Funding Agency]\t""\n')
+data_analyis_comments()
 fp.write('Study Submission Date\t""\n')
 fp.write('Study Public Release Date\t""\n')
 fp.write('Study File Name\t' + '"' + study_filename + '"\n')
