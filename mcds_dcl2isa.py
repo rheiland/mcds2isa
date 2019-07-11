@@ -199,32 +199,52 @@ for elm in uep.findall('data_analysis'):
 
 sep_char_sq = sep_char + '"'   # tab + single quote
 
-pmid_str = ''
-for elm in pmid:
-  pmid_str += sep_char + '"' + elm + '"'
+#print("----------- len(pmid) = ",len(pmid))
+if len(pmid) == 0:
+  pmid_str = sep_char + '""'
+else:
+  pmid_str = ''
+  for elm in pmid:
+    pmid_str += sep_char + '"' + elm + '"'
 print("--------- pmid_str = ",pmid_str)
 #fp.write('Investigation PubMed ID' + sep_char + pmid_str + '\n')
 fp.write('Investigation PubMed ID' + pmid_str + '\n')
 
-doi_str = ''
 print("--------- len(doi) = ",len(doi))
-for elm in doi:
-  doi_str += sep_char + '"' + elm + '"'
+if len(doi) == 0:
+  doi_str = sep_char + '""'
+else:
+  doi_str = ''
+  for elm in pmid:
+    doi_str += sep_char + '"' + elm + '"'
 print("--------- doi_str = ",doi_str)
 #fp.write('Investigation Publication DOI' + sep_char + doi_str + '\n')
 fp.write('Investigation Publication DOI' + doi_str + '\n')
 
-empty_str = ''.join(sep_char + '""' for x in pmid) 
+if len(pmid) == 0:
+  empty_str = '""'
+else:
+  empty_str = ''.join(sep_char + '""' for x in pmid) 
 fp.write('Investigation Publication Author List' + sep_char + empty_str + '\n')
 fp.write('Investigation Publication Title' + sep_char + empty_str + '\n')
 
-pub_status_str = ''.join('\t"Published"' for x in pmid) 
-pub_title_str = ''.join('\t""' for x in pmid) 
-fp.write('Investigation Publication Status' + sep_char + pub_status_str + '\n')
-pub_status_TA_str = ''.join('\t"C19026"' for x in pmid) 
-fp.write('Investigation Publication Status Term Accession' + sep_char + pub_status_TA_str + '\n')
-pub_status_TSR_str = ''.join('\t"NCIT"' for x in pmid) 
-fp.write('Investigation Publication Status Term Source REF' + sep_char + pub_status_TSR_str + '\n')
+if len(pmid) == 0:
+  pub_status_str = sep_char + '""'
+  pub_title_str = sep_char + '""'
+  pub_status_TA_str = sep_char + '""'
+  pub_status_TSR_str = sep_char + '""'
+else:
+  pub_status_str = ''.join(sep_char + '"Published"' for x in pmid) 
+  pub_title_str = ''.join(sep_char + '""' for x in pmid)   # used later
+  pub_status_TA_str = ''.join('\t"C19026"' for x in pmid) 
+  pub_status_TSR_str = ''.join('\t"NCIT"' for x in pmid) 
+
+#fp.write('Investigation Publication Status' + sep_char + pub_status_str + '\n')
+#fp.write('Investigation Publication Status Term Accession' + sep_char + pub_status_TA_str + '\n')
+#fp.write('Investigation Publication Status Term Source REF' + sep_char + pub_status_TSR_str + '\n')
+fp.write('Investigation Publication Status' + pub_status_str + '\n')
+fp.write('Investigation Publication Status Term Accession' + pub_status_TA_str + '\n')
+fp.write('Investigation Publication Status Term Source REF' + pub_status_TSR_str + '\n')
 
 fp.write('INVESTIGATION CONTACTS\n') 
 fp.write('Investigation Person Last Name' + sep_char_sq + xml_root.find(".//current_contact").find(".//family-name").text + '"\t\n') 
@@ -630,6 +650,11 @@ fp.close()
 print(' --> ' + assay_filename1)
   
 #=======================================================================
+# For appending onto the "i_" file at the end
+measure_types = sep_char + "microenvironment"
+tech_types = sep_char + "Digital Cell Line"
+empty_types = sep_char + '""'
+
 #assay_filename2 = "a_" + xml_base_filename[:-4] + "-2.txt"
 assay_filename2 = "a_" + xml_base_filename[:-4] + "-cellCycleAssay.txt"
 #fp = open(assay_filename2, 'w')
@@ -659,6 +684,10 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
+        measure_types += sep_char + "phenotype cell_cycle cell_cycle_phase duration"
+        tech_types += sep_char + "Digital Cell Line"
+        empty_types += sep_char + '""'
+
         fp = open(assay_filename2, 'w')
         assay_filenames_str += sep_char + assay_filename2
         # The header (column titles) is known in advance 
@@ -781,6 +810,10 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
+        measure_types += sep_char + "phenotype cell_death"
+        tech_types += sep_char + "Digital Cell Line"
+        empty_types += sep_char + '""'
+
         fp = open(assay_filename3, 'w')
         assay_filenames_str += sep_char + assay_filename3
         # The header (column titles) is known in advance 
@@ -844,6 +877,10 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
+        measure_types += sep_char + "phenotype mechanics"
+        tech_types += sep_char + "Digital Cell Line"
+        empty_types += sep_char + '""'
+
         fp = open(assay_filename4, 'w')
         assay_filenames_str += sep_char + assay_filename4
 
@@ -926,6 +963,10 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
+        measure_types += sep_char + "phenotype motility"
+        tech_types += sep_char + "Digital Cell Line"
+        empty_types += sep_char + '""'
+
         assay_filenames_str += sep_char + assay_filename5
         fp = open(assay_filename5, 'w')
 
@@ -1059,6 +1100,7 @@ else:
 
 #=======================================================================
 # Hackish, but let's open the i_ file again and append more Study info to the end.
+'''
 if False:
   print('---------  make another pass to create more Assay files... ')
   # fp_i = open(investigation_filename, 'a')
@@ -1122,9 +1164,11 @@ if False:
             # duration_str = ' '.join(duration.text.split())   # strip out tabs and newlines
             # fp_a.write(dqte + sample_name + dqte + sep_char + dqte + duration_str + dqte + '\n')
             # fp_a.close()
+'''
 
 # Append info onto the existing Investigation file
 # duplicate, for each Assay file
+'''
 measure_types = sep_char + "microenvironment"
 measure_types += sep_char + "phenotype cell_cycle cell_cycle_phase duration"
 measure_types += sep_char + "phenotype cell_death"
@@ -1136,6 +1180,7 @@ tech_types += sep_char + "Digital Cell Line"
 tech_types += sep_char + "Digital Cell Line"
 tech_types += sep_char + "Digital Cell Line"
 tech_types += sep_char + "Digital Cell Line"
+'''
 
 fp_i = open(investigation_filename, 'a')
 fp_i.write('STUDY ASSAYS\t\n')
@@ -1151,14 +1196,19 @@ fp_i.write('Study Assay File Name' + sep_char + assay_filenames_str + '\n')
 # line = 'Study Assay Measurement Type\t"' + measure_types_str + '"\n'
 line = 'Study Assay Measurement Type' + measure_types + '\n'
 fp_i.write(line)
-fp_i.write('Study Assay Measurement Type Term Accession Number\t""\n')
-fp_i.write('Study Assay Measurement Type Term Source REF\t""\n')
+line = 'Study Assay Measurement Type Term Accession Number' + empty_types + '\n'
+fp_i.write(line)
+line = 'Study Assay Measurement Type Term Source REF' + empty_types + '\n'
+fp_i.write(line)
 #fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
 #line = 'Study Assay Technology Type' + assay_tech_types_str + '\n'
 line = 'Study Assay Technology Type' + tech_types + '\n'
 fp_i.write(line)
-fp_i.write('Study Assay Technology Type Term Accession Number\t""\n')
-fp_i.write('Study Assay Technology Type Term Source REF\t""\n')
-fp_i.write('Study Assay Technology Platform\t""\n')
+line = 'Study Assay Technology Type Term Accession Number' + empty_types + '\n'
+fp_i.write(line)
+line = 'Study Assay Technology Type Term Source REF' + empty_types + '\n'
+fp_i.write(line)
+line = 'Study Assay Technology Platform' + empty_types + '\n'
+fp_i.write(line)
 
 fp_i.close()
