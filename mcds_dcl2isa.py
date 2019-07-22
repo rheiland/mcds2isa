@@ -13,6 +13,7 @@
 # Date:
 #   v0.1 - May 2018
 #   v0.2 - Oct 2018 : add more tab sep_char in various rows
+#   v0.3 - July 2019 : add more info from MCDS files into ISA-Tab files. Generate multiple a_ files.
 # 
 
 import os
@@ -54,6 +55,8 @@ def data_analyis_comments():
       print("-------- data_analysis_comment:",child.tag)
       c_str = "Comment[data-analysis_" + child.tag + "]" + sep_char 
       text_str = child.text
+      if text_str is None:
+        continue
       c_str += ' '.join(text_str.split())   # strip out tabs and newlines. sigh.
       c_str += '\n'
       fp.write(c_str)
