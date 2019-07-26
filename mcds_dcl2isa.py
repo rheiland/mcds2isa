@@ -520,8 +520,9 @@ for pd_elm in uep.findall('phenotype_dataset'):
     # fp_s.write(row_str + '\n')
 
 
-  suffix += 1   # WHAT? just doing this causes invalid results in Metadata Utility???????
+#  suffix += 1   # WHAT? just doing this causes invalid results in Metadata Utility???????
   row_str += dqte + pd_elm.attrib['keywords'] + dqte + sep_char + dqte + source_name + '.' + str(suffix) + dqte
+  suffix += 1   # WHAT? just doing this causes invalid results in Metadata Utility???????
   fp_s.write(row_str + '\n')
 
 fp_s.close()
@@ -529,133 +530,143 @@ print(' --> ' + study_filename)
 
 
 #=======================================================================
-#assay_filename1 = "a_" + xml_base_filename[:-4] + "-1.txt"
-assay_filename1 = "a_" + xml_base_filename[:-4] + "-cellMicroenvironmentAssay.txt"
-assay_filenames_str = assay_filename1
-fp = open(assay_filename1, 'w')
-"""
-Sample Name Protocol REF  Parameter Value[oxygen.partial_pressure]  Unit  Parameter Value[DCIS_cell_density(2D).surface_density]  Unit  Parameter Value[DCIS_cell_area_fraction.area_fraction]  Unit  Parameter Value[DCIS_cell_volume_fraction.volume_fraction]  Unit  Data File
-MCDS_L_0000000052.0.0 microenvironment.measurement  6.17  mmHg  0.00883 1/micron^2  0.8 dimensionless 0.8 dimensionless MCDS_L_0000000052.xml
-MCDS_L_0000000052.0.1 microenvironment.measurement  8 mmHg              MCDS_L_0000000052.xml
-MCDS_L_0000000052.0.2 microenvironment.measurement  38  mmHg              MCDS_L_0000000052.xml
-MCDS_L_0000000052.0.3 microenvironment.measurement  52  mmHg              MCDS_L_0000000052.xml
-MCDS_L_0000000052.0.4 microenvironment.measurement  5 mmHg              MCDS_L_0000000052.xml
-"""
+# NOTE: Cannot assume this a_ will be created. E.g., MCDS_L_0000000083.xml doesn't have <microenvironment> or <variables>.
 
-# We will do a two-pass approach:
+assay_filenames_str = ""
+#measure_types = sep_char 
+#measure_types = "" 
+measure_types = []
+assay_filenames = []
+if (xml_root.find('.//microenvironment')):
 
-# 1st pass: parse all <variables> elements to generate the header row. Keep a running list of unique [name.type] attribute pairs.
-#
-# Columns' titles
-fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char )
-#uep = xml_root.find('.//variables')  # TODO: also req: keywords="viable"?
+  measure_types.append("microenvironment")
 
-pval_list = []
-uep = xml_root.find('.//cell_line')
-num_vars = 0
-for pheno in uep.findall('phenotype_dataset'):
-  vs = pheno.find('.//variables') 
-  # TODO: what to do if there are none
-  if (vs):   # uep):
-    for elm in vs.findall('variable'):
+  #assay_filename1 = "a_" + xml_base_filename[:-4] + "-1.txt"
+  assay_filename1 = "a_" + xml_base_filename[:-4] + "-cellMicroenvironmentAssay.txt"
+  assay_filenames.append(assay_filename1)
+  fp = open(assay_filename1, 'w')
+  """
+  Sample Name Protocol REF  Parameter Value[oxygen.partial_pressure]  Unit  Parameter Value[DCIS_cell_density(2D).surface_density]  Unit  Parameter Value[DCIS_cell_area_fraction.area_fraction]  Unit  Parameter Value[DCIS_cell_volume_fraction.volume_fraction]  Unit  Data File
+  MCDS_L_0000000052.0.0 microenvironment.measurement  6.17  mmHg  0.00883 1/micron^2  0.8 dimensionless 0.8 dimensionless MCDS_L_0000000052.xml
+  MCDS_L_0000000052.0.1 microenvironment.measurement  8 mmHg              MCDS_L_0000000052.xml
+  MCDS_L_0000000052.0.2 microenvironment.measurement  38  mmHg              MCDS_L_0000000052.xml
+  MCDS_L_0000000052.0.3 microenvironment.measurement  52  mmHg              MCDS_L_0000000052.xml
+  MCDS_L_0000000052.0.4 microenvironment.measurement  5 mmHg              MCDS_L_0000000052.xml
+  """
 
-      # TODO: what about case-sensitive text?
-      if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
-        pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
-      else:
-        pval_str = elm.attrib['name'] 
+  # We will do a two-pass approach:
 
-      if pval_str not in pval_list:
-        pval_list.append(pval_str)
-        # print(pval_list)
+  # 1st pass: parse all <variables> elements to generate the header row. Keep a running list of unique [name.type] attribute pairs.
+  #
+  # Columns' titles
+  fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char )
+  #uep = xml_root.find('.//variables')  # TODO: also req: keywords="viable"?
 
-        # pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
-        fp.write('Parameter Value[' + pval_str + '] ' + sep_char + 'Unit' + sep_char)
-        num_vars += 1
-fp.write('Data File\n')
-#print('num_vars=',num_vars)
+  pval_list = []
+  uep = xml_root.find('.//cell_line')
+  num_vars = 0
+  for pheno in uep.findall('phenotype_dataset'):
+    vs = pheno.find('.//variables') 
+    # TODO: what to do if there are none
+    if (vs):   # uep):
+      for elm in vs.findall('variable'):
 
+        # TODO: what about case-sensitive text?
+        if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
+          pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
+        else:
+          pval_str = elm.attrib['name'] 
 
-# 2nd pass: for each <phenotype_dataset>, each <variables>, and each <variable>, extract a row of relevant
-#           info to match the column headings.
-count = 0
-# TODO: am I making too many assumptions about elements - existence, ordering, etc.?
-id = xml_root.find(".//metadata").find(".//ID").text
-uep = xml_root.find('.//cell_line')
-for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each 
-  param_unit_list = len(pval_list)*[sep_char,"",sep_char,""]  # create a dummy list of Param/Unit entries and fill in if present
-  param_unit_str = ""
+        if pval_str not in pval_list:
+          pval_list.append(pval_str)
+          # print(pval_list)
 
-  vs = elm.find('.//variables') 
-#  print("----- found <variables>, count=",count)
-  nvar = 0
-#  for ma in v.findall('material_amount'):
-  if vs:
-    comment_str = id + '.0.' + str(count) + '\t' + 'microenvironment.measurement' 
-#   print(comment_str)
-    for v in vs.findall('variable'):  
-      nvar += 1
-  #    print(v.attrib['units'])
-  #    print(v.find('.//material_amount').text)
-
-      if ('type' in v.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
-        pval_str = v.attrib['name'] + '.' + v.attrib['type']
-      else:
-        pval_str= v.attrib['name'] 
-
-      var_idx = pval_list.index(pval_str)  # get the index of this Parameter Value in our list
-      # print(pval_str,' index = ',var_idx)
-
-      # Need to strip out tabs here (sometimes)
-      text_val = v.find('.//material_amount').text
-#      print('------ text_val --->',text_val,'<---------')
-      text_val = ' '.join(text_val.split())
-#      print('------ text_val --->',text_val,'<---------')
-
-      param_unit_str.join(param_unit_list) 
-
-      if ('units' in v.attrib.keys()):  # TODO: what's desired format if missing?
-        param_unit_list[4*var_idx + 1] = text_val
-        param_unit_list[4*var_idx + 3] = v.attrib['units']
-        # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + v.attrib['units']
-      else:
-        param_unit_list[4*var_idx + 1] = text_val
-        # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + ""
-      # print(param_unit_list)
-
-#      comment_str += sep_char + v.find('.//material_amount').text + sep_char + v.attrib['units']
-  #  print(comment_str)
-  #  print('nvar=',nvar)
-    comment_str += param_unit_str.join(param_unit_list)
-    comment_str += sep_char + xml_base_filename + '\n'
-    fp.write(comment_str)
-
-    # if (nvar == num_vars):
-    #   fp.write(sep_char)
-    # else:
-    #   for idx in range(nvar,2*num_vars):
-    #     fp.write(sep_char)
-  #  fp.write(comment_str + sep_char + xml_file + '\n')
-#    fp.write(xml_file + '\n')
-#    print("----- ",xml_base_filename, " + CR")
-
-    # fp.write(xml_base_filename + '\n')
-    count += 1
-
-  else:  # if no 'variables' present, just print minimal info
-#    comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_file + '\n' 
-    comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_base_filename + '\n' 
-    count += 1
-    fp.write(comment_str)
+          # pval_str = elm.attrib['name'] + '.' + elm.attrib['type']
+          fp.write('Parameter Value[' + pval_str + '] ' + sep_char + 'Unit' + sep_char)
+          num_vars += 1
+  fp.write('Data File\n')
+  #print('num_vars=',num_vars)
 
 
-fp.close()
-print(' --> ' + assay_filename1)
+  # 2nd pass: for each <phenotype_dataset>, each <variables>, and each <variable>, extract a row of relevant
+  #           info to match the column headings.
+  count = 0
+  # TODO: am I making too many assumptions about elements - existence, ordering, etc.?
+  id = xml_root.find(".//metadata").find(".//ID").text
+  uep = xml_root.find('.//cell_line')
+  for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each 
+    param_unit_list = len(pval_list)*[sep_char,"",sep_char,""]  # create a dummy list of Param/Unit entries and fill in if present
+    param_unit_str = ""
+
+    vs = elm.find('.//variables') 
+  #  print("----- found <variables>, count=",count)
+    nvar = 0
+  #  for ma in v.findall('material_amount'):
+    if vs:
+      comment_str = id + '.0.' + str(count) + '\t' + 'microenvironment.measurement' 
+  #   print(comment_str)
+      for v in vs.findall('variable'):  
+        nvar += 1
+    #    print(v.attrib['units'])
+    #    print(v.find('.//material_amount').text)
+
+        if ('type' in v.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
+          pval_str = v.attrib['name'] + '.' + v.attrib['type']
+        else:
+          pval_str= v.attrib['name'] 
+
+        var_idx = pval_list.index(pval_str)  # get the index of this Parameter Value in our list
+        # print(pval_str,' index = ',var_idx)
+
+        # Need to strip out tabs here (sometimes)
+        text_val = v.find('.//material_amount').text
+  #      print('------ text_val --->',text_val,'<---------')
+        text_val = ' '.join(text_val.split())
+  #      print('------ text_val --->',text_val,'<---------')
+
+        param_unit_str.join(param_unit_list) 
+
+        if ('units' in v.attrib.keys()):  # TODO: what's desired format if missing?
+          param_unit_list[4*var_idx + 1] = text_val
+          param_unit_list[4*var_idx + 3] = v.attrib['units']
+          # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + v.attrib['units']
+        else:
+          param_unit_list[4*var_idx + 1] = text_val
+          # comment_str += (2*var_idx + 1)*sep_char + text_val + sep_char + ""
+        # print(param_unit_list)
+
+  #      comment_str += sep_char + v.find('.//material_amount').text + sep_char + v.attrib['units']
+    #  print(comment_str)
+    #  print('nvar=',nvar)
+      comment_str += param_unit_str.join(param_unit_list)
+      comment_str += sep_char + xml_base_filename + '\n'
+      fp.write(comment_str)
+
+      # if (nvar == num_vars):
+      #   fp.write(sep_char)
+      # else:
+      #   for idx in range(nvar,2*num_vars):
+      #     fp.write(sep_char)
+    #  fp.write(comment_str + sep_char + xml_file + '\n')
+  #    fp.write(xml_file + '\n')
+  #    print("----- ",xml_base_filename, " + CR")
+
+      # fp.write(xml_base_filename + '\n')
+      count += 1
+
+    else:  # if no 'variables' present, just print minimal info
+  #    comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_file + '\n' 
+      comment_str = id + '.0.' + str(count) + '\t' + '' + '\t' + xml_base_filename + '\n' 
+      count += 1
+      fp.write(comment_str)
+
+
+  fp.close()
+  print(' --> ' + assay_filename1)
   
 #=======================================================================
 # For appending onto the "i_" file at the end
-measure_types = sep_char + "microenvironment"
-tech_types = sep_char + "Digital Cell Line"
+#tech_types = sep_char + "Digital Cell Line"
 empty_types = sep_char + '""'
 
 #assay_filename2 = "a_" + xml_base_filename[:-4] + "-2.txt"
@@ -687,12 +698,12 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
-        measure_types += sep_char + "phenotype cell_cycle cell_cycle_phase duration"
-        tech_types += sep_char + "Digital Cell Line"
+        measure_types.append("phenotype cell_cycle cell_cycle_phase duration")
+        # tech_types += sep_char + "Digital Cell Line"
         empty_types += sep_char + '""'
 
         fp = open(assay_filename2, 'w')
-        assay_filenames_str += sep_char + assay_filename2
+        assay_filenames.append(assay_filename2)
         # The header (column titles) is known in advance 
         fp.write('Sample Name' + sep_char + 'Protocol REF' + sep_char + 'Parameter Value[cell_cycle.model]' + 
           sep_char + 'Parameter Value[cell_cycle_phase.name]' +
@@ -716,13 +727,28 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
       else:
         comment_str += sep_char
 
+#          *083
+				# <cell_cycle ID="0" model="total">
+				# 	<cell_cycle_phase ID="0" name="total">
+				# 		<net_birth_rate measurement_type="inferred" units="1/year">28.468</net_birth_rate>
+				# 		<cell_cycle_arrest>
+				# 			<condition measurement_type="estimated" type="maximum_cell_density" units="cells/mm^3">250000.0</condition>
+				# 		</cell_cycle_arrest>
+				# 	</cell_cycle_phase>
+				# 	<custom>
+				# 		<velocity units="mm/year">65.136</velocity>
+				# 	</custom>
+				# </cell_cycle>
+
       for cell_cycle_phase in cell_cycle.findall('cell_cycle_phase'):  
         if ('name' in cell_cycle_phase.attrib.keys()):  
           comment_str += sep_char + cell_cycle_phase.attrib['name'] 
         else:
           comment_str += sep_char 
 
+        found = False
         for duration in cell_cycle_phase.findall('duration'):  
+          found = True
           text_val = ' '.join(duration.text.split())
           comment_str += sep_char + text_val
           if ('units' in duration.attrib.keys()):  
@@ -735,8 +761,13 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
             comment_str += sep_char 
           # text_val = duration.text
           # comment_str += sep_char + duration.text
+        if (not found):
+          print("------ cell cyle: no duration found")
+          comment_str += sep_char + "" + sep_char + "" + sep_char + ""
 
+        found = False
         for net_birth_rate in cell_cycle_phase.findall('net_birth_rate'):  
+          found = True
           text_val = ' '.join(net_birth_rate.text.split())
           comment_str += sep_char + text_val
           if ('units' in net_birth_rate.attrib.keys()):  
@@ -751,6 +782,8 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
             comment_str += sep_char + net_birth_rate.attrib['standard_error_of_the_mean'] 
           else:
             comment_str += sep_char 
+        if (not found):
+          comment_str += sep_char + "" + sep_char + "" + sep_char + "" + sep_char + ""
 
 
       # var_idx = pval_list.index(pval_str)  # get the index of this Parameter Value in our list
@@ -813,12 +846,12 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
-        measure_types += sep_char + "phenotype cell_death"
-        tech_types += sep_char + "Digital Cell Line"
+        measure_types.append("phenotype cell_death")
+        # tech_types += sep_char + "Digital Cell Line"
         empty_types += sep_char + '""'
 
         fp = open(assay_filename3, 'w')
-        assay_filenames_str += sep_char + assay_filename3
+        assay_filenames.append(assay_filename3)
         # The header (column titles) is known in advance 
         fp.write('Sample Name' + sep_char + 'Protocol REF' + 
           sep_char + 'Parameter Value[cell_death.type]' +
@@ -880,12 +913,12 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
-        measure_types += sep_char + "phenotype mechanics"
-        tech_types += sep_char + "Digital Cell Line"
+        measure_types.append("phenotype mechanics")
+        # tech_types += sep_char + "Digital Cell Line"
         empty_types += sep_char + '""'
 
         fp = open(assay_filename4, 'w')
-        assay_filenames_str += sep_char + assay_filename4
+        assay_filenames.append(assay_filename4)
 
         # The header (column titles) is known in advance 
         fp.write('Sample Name' + sep_char + 'Protocol REF' + 
@@ -928,7 +961,10 @@ if has_content:
 else:
   print(' --> MISSING ' + assay_filename4)
 
-#=======================================================================
+#================================================================================
+# Question: can a cell line have BOTH <restricted> and  <unrestricted> motility??
+#
+# e.g., in  *043.xml:
 				# <motility>
 				# 	<restricted ID="0">
 				# 		<timescale units="hour">24</timescale>
@@ -949,6 +985,15 @@ else:
 				# 		<diffusion_coefficient units="10^-6 cm^2 / h" standard_deviation="0.71" number_obs="8">2.37</diffusion_coefficient>
 				# 	</restricted>
 				# </motility>
+
+# e.g., in  *083.xml:
+#                                <motility>
+#                                        <unrestricted ID="0">
+#                                                <timescale measurement_type="inferred" units="days">4.0</timescale>
+#                                                <diffusion_coefficient measurement_type="inferred" units="mm^2 / year">37.259</diffusion_coefficient>
+#                                        </unrestricted>
+#                                </motility>
+
 #assay_filename5 = "a_" + xml_base_filename[:-4] + "-5.txt"
 assay_filename5 = "a_" + xml_base_filename[:-4] + "-cellMotilityAssay.txt"
 
@@ -966,11 +1011,11 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
       if not has_content:
         has_content = True
-        measure_types += sep_char + "phenotype motility"
-        tech_types += sep_char + "Digital Cell Line"
+        measure_types.append("phenotype motility")
+        # tech_types += sep_char + "Digital Cell Line"
         empty_types += sep_char + '""'
 
-        assay_filenames_str += sep_char + assay_filename5
+        assay_filenames.append(assay_filename5)
         fp = open(assay_filename5, 'w')
 
         # The header (column titles) is known in advance 
@@ -994,6 +1039,7 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
           sep_char + 'Data File\n' )
 
 
+      #  -------- for <restricted> motility:
       for restricted in motility.findall('restricted'):  
         comment_str = id + '.0.' + str(count) + '\t' + 'phenotype.motility.restricted'    # start of a new row of info
 #        print('restricted: ', comment_str )
@@ -1069,6 +1115,100 @@ for elm in uep.findall('phenotype_dataset'):  # incr 'count' for each
 
         found = False
         for diffusion_coef in restricted.findall('diffusion_coefficient'):  
+          found = True
+          text_val = ' '.join(diffusion_coef.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in diffusion_coef.attrib.keys()):  
+            comment_str += sep_char + diffusion_coef.attrib['units'] 
+          else:
+            comment_str += sep_char 
+          if ('standard_deviation' in diffusion_coef.attrib.keys()):  
+            comment_str += sep_char + diffusion_coef.attrib['standard_deviation'] 
+          else:
+            comment_str += sep_char 
+          if ('number_obs' in diffusion_coef.attrib.keys()):  
+            comment_str += sep_char + diffusion_coef.attrib['number_obs'] 
+          else:
+            comment_str += sep_char 
+        if not found:
+          # comment_str += sep_char + "" + sep_char + ""
+          comment_str += sep_char + sep_char + sep_char + sep_char 
+
+        if has_content:
+          comment_str += sep_char + xml_base_filename + '\n'
+          fp.write(comment_str)
+
+        count += 1
+
+
+      #  -------- for <unrestricted> motility:
+      for unrestricted in motility.findall('unrestricted'):  
+        comment_str = id + '.0.' + str(count) + '\t' + 'phenotype.motility.unrestricted'    # start of a new row of info
+#        print('unrestricted: ', comment_str )
+
+        found = False
+        for timescale in unrestricted.findall('timescale'):  
+          text_val = ' '.join(timescale.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in timescale.attrib.keys()):  
+            comment_str += sep_char + timescale.attrib['units'] 
+          else:
+            comment_str += sep_char 
+
+
+          # the next 2 columns will be missing for <unrestricted>
+          comment_str += sep_char + "" + sep_char + ""
+
+        # ------ I don't think the following fields are present for <unrestricted>, but leave in place ------------
+				# 		<mean_speed units="micron / hour" standard_deviation="3.22" number_obs="11">15.25</mean_speed>
+				# 		<persistence units="hour" standard_deviation="0.85" number_obs="11">2.58</persistence>
+				# 		<diffusion_coefficient units="10^-6 cm^2 / h" standard_deviation="0.98" number_obs="11">3.00</diffusion_coefficient>
+        found = False
+        for mean_speed in unrestricted.findall('mean_speed'):  
+          found = True
+          text_val = ' '.join(mean_speed.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in mean_speed.attrib.keys()):  
+            comment_str += sep_char + mean_speed.attrib['units'] 
+          else:
+            comment_str += sep_char 
+          if ('standard_deviation' in mean_speed.attrib.keys()):  
+            comment_str += sep_char + mean_speed.attrib['standard_deviation'] 
+          else:
+            comment_str += sep_char 
+          if ('number_obs' in mean_speed.attrib.keys()):  
+            comment_str += sep_char + mean_speed.attrib['number_obs'] 
+          else:
+            comment_str += sep_char 
+        if not found:
+          # comment_str += sep_char + "" + sep_char + ""
+          comment_str += sep_char + sep_char + sep_char + sep_char 
+
+        found = False
+        for persistence in unrestricted.findall('persistence'):  
+          found = True
+          text_val = ' '.join(persistence.text.split())
+          comment_str += sep_char + text_val
+          if ('units' in persistence.attrib.keys()):  
+            comment_str += sep_char + persistence.attrib['units'] 
+          else:
+            comment_str += sep_char 
+          if ('standard_deviation' in persistence.attrib.keys()):  
+            comment_str += sep_char + persistence.attrib['standard_deviation'] 
+          else:
+            comment_str += sep_char 
+          if ('number_obs' in persistence.attrib.keys()):  
+            comment_str += sep_char + persistence.attrib['number_obs'] 
+          else:
+            comment_str += sep_char 
+        if not found:
+          # comment_str += sep_char + "" + sep_char + ""
+          comment_str += sep_char + sep_char + sep_char + sep_char 
+        # ------ ^^  leave in place ------------
+
+
+        found = False
+        for diffusion_coef in unrestricted.findall('diffusion_coefficient'):  
           found = True
           text_val = ' '.join(diffusion_coef.text.split())
           comment_str += sep_char + text_val
@@ -1194,19 +1334,41 @@ fp_i.write('STUDY ASSAYS\t\n')
 #assay_filenames_str = assay_filename1 + sep_char + assay_filename2+ sep_char + assay_filename3
 #assay_filenames_str += sep_char + assay_filename4 + sep_char + assay_filename5
 
-fp_i.write('Study Assay File Name' + sep_char + assay_filenames_str + '\n')
+#fp_i.write('Study Assay File Name' + sep_char + assay_filenames_str + '\n')
+line = 'Study Assay File Name' 
+for f in assay_filenames:
+  line += sep_char + f 
+line += '\n'
+fp_i.write(line)
+
 # fp_i.write('Study Assay Measurement Type\t""\n')
 # line = 'Study Assay Measurement Type\t"' + measure_types_str + '"\n'
-line = 'Study Assay Measurement Type' + measure_types + '\n'
+line = 'Study Assay Measurement Type' 
+first_time = True
+for m in measure_types:
+  line += sep_char + m 
+  if first_time:
+    first_time = False
+    empty_types = sep_char + '""'
+  else:
+    empty_types += sep_char + '""'
+line += '\n'
 fp_i.write(line)
+
 line = 'Study Assay Measurement Type Term Accession Number' + empty_types + '\n'
 fp_i.write(line)
 line = 'Study Assay Measurement Type Term Source REF' + empty_types + '\n'
 fp_i.write(line)
+
 #fp_i.write('Study Assay Technology Type\t"Digital Cell Line"\n')
 #line = 'Study Assay Technology Type' + assay_tech_types_str + '\n'
-line = 'Study Assay Technology Type' + tech_types + '\n'
+#line = 'Study Assay Technology Type' + tech_types + '\n'
+line = 'Study Assay Technology Type' 
+for m in measure_types:
+  line += sep_char + "Digital Cell Line" 
+line += '\n'
 fp_i.write(line)
+
 line = 'Study Assay Technology Type Term Accession Number' + empty_types + '\n'
 fp_i.write(line)
 line = 'Study Assay Technology Type Term Source REF' + empty_types + '\n'
