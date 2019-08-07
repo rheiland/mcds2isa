@@ -320,34 +320,80 @@ fp.write(comment_str[:-2] + '"\n')
 
 
 fp.write('STUDY PROTOCOLS\t\n')
-fp.write('Study Protocol Name\t"microenvironment.measurement"\n')
-fp.write('Study Protocol Type\t""\n')
-fp.write('Study Protocol Type Term Accession Number\t""\n')
-fp.write('Study Protocol Type Term Source REF\t""\n')
-fp.write('Study Protocol Description\t""\n')
-fp.write('Study Protocol URI\t""\n')
-fp.write('Study Protocol Version\t""\n')
-#fp.write('Study Protocol Parameters Name  "oxygen.partial_pressure; DCIS_cell_density(2D).surface_density; DCIS_cell_area_fraction.area_fraction; DCIS_cell_volume_fraction.volume_fraction"\n')
-comment_str = 'Study Protocol Parameters Name\t"'
-# TODO? search for all phenotype_dataset/microenvironment/domain/variables/...
-uep = xml_root.find('.//variables')
-if (uep):
-  for elm in uep.findall('variable'):
-    if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
-      comment_str += elm.attrib['name'] + '.' + elm.attrib['type'] + '; '
-    else:
-      comment_str += elm.attrib['name'] + '; '
-#      comment_str += '; '
-#  print(comment_str)
-  fp.write(comment_str[:-2] + '"\n')
+# fp.write('Study Protocol Name\t"microenvironment.measurement"\n')
+spn_str = "Study Protocol Name"
+study_protocol_names = []
+if xml_root.find('.//microenvironment'):
+  study_protocol_names.append("microenvironment.measurement")
+if xml_root.find('.//cell_line//phenotype_dataset//phenotype//cell_cycle'):
+  study_protocol_names.append("cell_cyles.measurement")
+if xml_root.find('.//cell_line//phenotype_dataset//phenotype//cell_death'):
+  study_protocol_names.append("cell_death.measurement")
+if xml_root.find('.//cell_line//phenotype_dataset//phenotype//mechanics'):
+  study_protocol_names.append("mechanics.measurement")
+if xml_root.find('.//cell_line//phenotype_dataset//phenotype//motility'):
+  study_protocol_names.append("motility.measurement")
 
-semicolon_sep_empty_str = ''.join('; ' for x in pmid)
-fp.write('Study Protocol Parameters Name Term Accession Number\t" ' + semicolon_sep_empty_str + ' "\n')
-fp.write('Study Protocol Parameters Name Term Source REF\t" ' + semicolon_sep_empty_str + ' "\n')
-fp.write('Study Protocol Components Name\t"' + semicolon_sep_empty_str + ' "\n')
-fp.write('Study Protocol Components Type\t"' + semicolon_sep_empty_str + ' "\n')
-fp.write('Study Protocol Components Type Term Accession Number\t"' + semicolon_sep_empty_str + ' "\n')
-fp.write('Study Protocol Components Type Term Source REF\t"' + semicolon_sep_empty_str + ' "\n')
+for spn in study_protocol_names:
+  spn_str += "\t" + spn 
+spn_str += "\n"
+fp.write(spn_str)
+
+
+#empty_cell = "N/A"
+empty_cell = ""
+empty_row = ''
+for spn in study_protocol_names:
+  empty_row += '\t' + empty_cell
+
+# one less, if <microenv*> column
+empty_row2 = ''
+for idx in range(len(study_protocol_names) - 1):
+  empty_row2 += '\t' + empty_cell
+
+#fp.write('Study Protocol Type\t""\n')
+fp.write('Study Protocol Type' + empty_row + '\n')
+fp.write('Study Protocol Type Term Accession Number' + empty_row + '\n')
+fp.write('Study Protocol Type Term Source REF' + empty_row + '\n')
+fp.write('Study Protocol Description' + empty_row + '\n')
+fp.write('Study Protocol URI' + empty_row + '\n')
+fp.write('Study Protocol Version' + empty_row + '\n')
+
+
+if xml_root.find('.//microenvironment'):
+  # for <microenvironment> 
+  #fp.write('Study Protocol Parameters Name  "oxygen.partial_pressure; DCIS_cell_density(2D).surface_density; DCIS_cell_area_fraction.area_fraction; DCIS_cell_volume_fraction.volume_fraction"\n')
+#  comment_str = 'Study Protocol Parameters Name\t"'
+  comment_str = 'Study Protocol Parameters Name\t'
+  # TODO? search for all phenotype_dataset/microenvironment/domain/variables/...
+  uep = xml_root.find('.//variables')
+  if (uep):
+    for elm in uep.findall('variable'):
+      if ('type' in elm.attrib.keys()):  # TODO: what's desired format if 'type' is missing?
+        comment_str += elm.attrib['name'] + '.' + elm.attrib['type'] + '; '
+      else:
+        comment_str += elm.attrib['name'] + '; '
+  #      comment_str += '; '
+  #  print(comment_str)
+#    fp.write(comment_str[:-2] + '"\n')
+    my_str = comment_str[:-2] + empty_row2 + '\n'
+#    my_str = comment_str[:-2] + empty_row + '\n'
+#    print("my_str=",my_str)
+    fp.write(my_str)
+else:
+  fp.write('Study Protocol Parameters Name' + empty_row + '\n')
+
+
+#print(" -------- len(pmid) = ",len(pmid))
+#semicolon_sep_empty_str = ''.join('; ' for x in pmid)
+
+#fp.write('Study Protocol Parameters Name Term Accession Number\t"' + semicolon_sep_empty_str + ' "\n')
+fp.write('Study Protocol Parameters Name Term Accession Number' + empty_row + '\n')
+fp.write('Study Protocol Parameters Name Term Source REF' + empty_row + '\n')
+fp.write('Study Protocol Components Name' + empty_row + '\n')
+fp.write('Study Protocol Components Type' + empty_row + '\n')
+fp.write('Study Protocol Components Type Term Accession Number' + empty_row + '\n')
+fp.write('Study Protocol Components Type Term Source REF' + empty_row + '\n')
 
 
 fp.write('STUDY CONTACTS\t\n')
@@ -1349,9 +1395,11 @@ for m in measure_types:
   line += sep_char + m 
   if first_time:
     first_time = False
-    empty_types = sep_char + '""'
+#    empty_types = sep_char + '""'
+    empty_types = sep_char + empty_cell
   else:
-    empty_types += sep_char + '""'
+#    empty_types += sep_char + '""'
+    empty_types += sep_char + empty_cell
 line += '\n'
 fp_i.write(line)
 
