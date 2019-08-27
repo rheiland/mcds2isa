@@ -9,11 +9,12 @@ import sys
 import zipfile
 import shutil
 
-ftypes=['*.xml', 'i_*.txt', 's_*.txt', 'a_*.txt']
-ftypes=['*.xml']
-ftypes=['i_*.txt']
-ftypes=['s_*.txt']
-ftypes=['a_*.txt']
+# No longer used.
+# ftypes=['*.xml', 'i_*.txt', 's_*.txt', 'a_*.txt']
+# ftypes=['*.xml']
+# ftypes=['i_*.txt']
+# ftypes=['s_*.txt']
+# ftypes=['a_*.txt']
 #matches =[]
 
 #  walk through all dirs and gather filenames into 4 lists
@@ -46,9 +47,11 @@ for root, dirnames, filenames in os.walk("."):
 print('# a_ =',len(a_))
 
 
-print("\n---- Verifying filenames found in all 4 lists")
-count = 0
-for xf in xml_:
+#------------ Don't both with this after going with 5 "a_*" files
+if False:
+ print("\n---- Verifying filenames found in all 4 lists")
+ count = 0
+ for xf in xml_:
   # print('\n',xf)
   s= xf[:-4]
   # print(s)
@@ -101,16 +104,37 @@ for xf in xml_:
 #  s= xf[:-4]
   i_name = "i_" + bname + ".txt"
   s_name = "s_" + bname + ".txt"
-  a_name = "a_" + bname + ".txt"
-  fns = [xf, i_name, s_name, a_name]
-#  print(idx, fns)
+  fns = [xf, i_name, s_name]
+
+  dirp = os.path.dirname(fns[0])   # get dir path to the .xml file
+  print('dirp=',dirp)
+
+#  a_name = "a_" + bname + ".txt"
+  a_name1 = "a_" + bname + "-cellMicroenvironmentAssay.txt"
+  a_name2 = "a_" + bname + "-cellCycleAssay.txt"
+  a_name3 = "a_" + bname + "-cellDeathAssay.txt"
+  a_name4 = "a_" + bname + "-cellMechanicsAssay.txt"
+  a_name5 = "a_" + bname + "-cellMotilityAssay.txt"
+  a_files = [a_name1,a_name2,a_name3,a_name4,a_name5]
+  for af in a_files:
+#    print("af=",af)
+    full_af =  os.path.join(dirp,af)
+#    print("full_af=",full_af)
+    if os.path.isfile(full_af):
+      fns.append(af)
+#    else:
+#      print('-- not a file?!')
+
+#  fns = [xf, i_name, s_name, a_name1,a_name2,a_name3,a_name4,a_name5 ]
+#  print("idx=",idx, ", fns=",fns)
 
 #  print(os.path.expanduser(fns[0]))
 
   isafiles = list(map(os.path.basename, fns))
-  print("isafiles=",isafiles)
+#  print()
+#  print("isafiles=",isafiles)
 
-  dirp = os.path.dirname(fns[0])
+#  dirp = os.path.dirname(fns[0])
 #  print('dirp=',dirp)
 #  sys.exit(0)
   os.chdir(dirp)
@@ -124,6 +148,7 @@ for xf in xml_:
   os.chdir(cwd)
 
   if (idx > 500):
+#  if (idx > 0):
     sys.exit(1)
 
   idx += 1
