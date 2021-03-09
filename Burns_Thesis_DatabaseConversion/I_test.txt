@@ -1,0 +1,34 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name
+Term Source File
+Term Source Version
+Term Source Description
+INVESTIGATION
+Investigation Identifier			"MCDS_L_0000000001"
+Investigation Title			"MCF10A_JSB"
+Investigation Description			"Digital cell line for MCF10A-JSB (sometimes referred to as MCF10A, MCF 10A, or MCF-10A) cells, generated from ATCC/PS-ON data (see below for sources). These are Breast epithelium (Mammary gland; Breast Non-tumorgenic) cells."
+Investigation Submission Date
+Investigation Public Release Date
+Comment [MuitiCellDS/cell_line/metadata/citation/text]			"If this digital cell line is used in a publication, cite it as:					"We used digital cell line MCF10A_JSB [1] version 1 (MultiCellDB_ID: MCDS_L_0000000001), created with data and contributions from [2]."									[1] S. H. Friedman et al., MultiCellDS: a standard and a community for sharing multicellular data (2016, submitted)					[2] Staunton, J.R., Fuhrmann, A., Ros, R. Mechanical Properties of MCF-10A and MDA-MB-231 Cells (PSON Wiki, Figure 2F)"
+Comment [MuitiCellDS/cell_line/metadata/citation/notes]			"Friedman SH et al., Recording microenvironment-dependent cell phenotypes as digital cell lines with MultiCellDS (2015, in preparation)"
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+Comment[Investigation Person REF]
