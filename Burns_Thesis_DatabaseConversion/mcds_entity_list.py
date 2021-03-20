@@ -12,7 +12,8 @@
 #   v0.1 - Feb 2021: Initial working script
 #   v0.2 - Feb 2021: Made writing to excel file more compact, added writing child.keys
 #   v0.3 - Feb 2021: Added separations for elements
-
+#   v0.4 - Mar 2021: Added separate column containing xPath with indices, changed getpath to getelementpath (provides
+#                   callable xPath without root), added column for multiple vs single values
 import os
 from lxml import etree
 import pandas as pd
@@ -25,7 +26,7 @@ DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 # Other user: remove line 21-23 and use line 24
 DCL_list = os.listdir(DCL_xml_dir)
 
-column_names = ["MCDS Entity", "xPath", "File Name", "Entity Type"]
+column_names = ["MCDS Entity", "xPath", "xPath - Index Removed", "File Name", "Entity Type"]
 # Define column names
 df = pd.DataFrame(columns=column_names)
 # Create empty Pandas dataframe
@@ -39,23 +40,27 @@ for XML_FileName in DCL_list:
     for child in root.iter():
         if type(child.text) == str:
             if len(child.text.strip()) > 0:
-                df = df.append(pd.Series([child.tag, re.sub(r"\[[0-9]]", "", tree.getpath(child)), XML_FileName, "Text Element"],
+                df = df.append(pd.Series([child.tag, tree.getelementpath(child), re.sub(r"\[[0-9]]", "", tree.getelementpath(child)), XML_FileName, "Text Element"],
                                      index=df.columns), ignore_index=True)
-                #contains text
+                #Write tags and xPaths of elements that contain text
             elif len(child.keys()) > 0:
-                df = df.append(pd.Series([child.tag, re.sub(r"\[[0-9]]", "", tree.getpath(child)), XML_FileName, "Attribute Element"],
+                df = df.append(pd.Series([child.tag, tree.getelementpath(child), re.sub(r"\[[0-9]]", "", tree.getelementpath(child)), XML_FileName, "Attribute Element"],
                                     index=df.columns), ignore_index=True)
-                #contains attributes
+                #Write tags and xPaths of elements that have attributes
             else:
-                df = df.append(pd.Series([child.tag, re.sub(r"\[[0-9]]", "", tree.getpath(child)), XML_FileName, "Parent Element"],
+                df = df.append(pd.Series([child.tag, tree.getelementpath(child), re.sub(r"\[[0-9]]", "", tree.getelementpath(child)), XML_FileName, "Parent Element"],
                               index=df.columns), ignore_index=True)
-                #contains only children, no direct text or attribute
+                #Parent - contains only children, no direct text or attribute
             for attr in child.keys():
-                df = df.append(pd.Series([attr, ("".join([re.sub(r"\[[0-9]]", "", tree.getpath(child)), "[@",attr,"]"])),
+                df = df.append(pd.Series([attr,(tree.getelementpath(child) + "[@" + attr + "]"),("".join([re.sub(r"\[[0-9]]", "", tree.getelementpath(child)), "[@",attr,"]"])),
                                           XML_FileName, "Attribute"], index=df.columns), ignore_index=True)
-            # Append all MCDS attributes for child, xPath with indexing removed, and XML file to list
+            # Append all MCDS attributes for child, xPath, xPath with indexing removed, and XML file to list
         else:
-            df = df.append(pd.Series([child.tag, re.sub(r"\[[0-9]]", "", tree.getpath(child)), XML_FileName, "Closed Tag"],
+            df = df.append(pd.Series([child.tag, tree.getelementpath(child), re.sub(r"\[[0-9]]", "", tree.getelementpath(child)), XML_FileName, "Closed Tag"],
                                      index=df.columns), ignore_index=True)
+
+#Write multiple to new column if xPath contains indexing, write single if xPath does not contain indexing
+df.loc[df['xPath'].str.contains(r"\[[0-9]]"), 'Multiple or Single'] = 'Multiple'
+df.loc[~df['xPath'].str.contains(r"\[[0-9]]"), 'Multiple or Single'] = 'Single'
 
 df.to_excel('MCDS_DCL_All_Entities.xlsx')
