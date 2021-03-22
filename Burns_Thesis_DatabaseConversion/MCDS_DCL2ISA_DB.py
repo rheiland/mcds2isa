@@ -28,8 +28,9 @@ db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
-DCL_in = os.path.join(DCL_xml_dir, DCL_list[40])
-print('Input file: ', DCL_list[40] )
+DCL_file = DCL_list[40]
+DCL_in = os.path.join(DCL_xml_dir, DCL_file)
+print('Input file: ', DCL_file)
 #DSS_in = os.path.join(cwd, 'All_Snapshots_MCDS_S_0000000001.xml')
 # txt_in = os.path.join(cwd, 'DCL File List, Indexed.txt')
 #TODO - Change to allow for multiple file input or create GUI to select folder/files
@@ -37,24 +38,12 @@ print('Input file: ', DCL_list[40] )
 parser = etree.XMLParser(remove_comments=True)
 tree = etree.parse(DCL_in, parser=parser)
 root = tree.getroot()
+#TODO - comment explanation, raise error (value errors or things of that nature)
 if root.get('type') != 'cell_line':
-    print("\n\033[1;31;40m Error: Input .xml is not a Digital Cell Line")
-    sys.exit()
+    sys.exit("\n\033[1;31;40m Error: Input .xml is not a Digital Cell Line")
 #TODO - Update to work with list of files
 #TODO - is a check for xml needed? Is it better to skip over non XML files and non cell_line XML's rather than throw error? Allow user to decide?
-
 #Intialize XML parser, check file type
-
-#Input: List of DCL files
-#Output: .txt file with file name and index in DCL list
-def dcl_input_indexed_list(DCL_list):
-    f_l = open("DCL File List, Indexed.txt", 'w')
-    dcl_ind = 0
-    for DCL in DCL_list:
-        f_l.write('List Index: ' + str(dcl_ind) + '\t\tFilename: ' + str(DCL) + '\t\tFile type: ' + str(root.get('type')) + '\n' )
-        dcl_ind +=1
-    f_l.close()
-# dcl_input_indexed_list(DCL_list)
 
 df = pd.read_excel(rF'{db}', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                       'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
@@ -68,7 +57,6 @@ df = pd.read_excel(rF'{db}', usecols=['ISA-Tab Entity', 'ISA File Location', 'IS
 #Output:
 #   One list that contains existing elements at xPath and blanks, in order of appearance in DCL xml input file
 def match_mult(x_in):
-    x_in = x_in.replace('/' + root.tag + '/','',1).strip()
     x_list = root.findall(x_in)
     #gives list of xPaths with existing elements
     x_elem_out = []
@@ -88,29 +76,32 @@ def match_mult(x_in):
         x_elem_out = x_list
     return(x_elem_out)
 
-
-#Inputs: 2 or more xPath's that are separated by +, signifying they should be concatenated, along with the index
-#Output: List of concatenated strings from the 2 or more xPaths that have been appended together
-#Operation: initialize variables, split xPaths to be concatenated, store values in array, concatenate by j counter
 def entity_concat(path,i):
+    '''
+    :param path: 2 or more xPaths with a separation variable in " ", signifying concatenation with the separation variable
+    :param i: index of xPaths
+    :return: list of concatenated strings generated from the 2 or more xPaths
+    Operation: initialize variables, split xPaths to be concatenated, store values in array, concatenate by j counter
+    '''
     concat_out = []
     matched_list = []
     concat_list = []
-    concat_paths = path.split('&')
+    concat_paths = path.split('"')[::2]
+    sep_vars = path.split('"')[1::2]
+    #TODO give error if len (concat_paths) is not = len(sep_vars)?
     j = len(concat_paths)
     k = 1
     # j = number of elements to concat, k = number of multiples, default 1 for single
     for concat in concat_paths:
-        rootless_concat = concat.replace('/' + root.tag + '/', '', 1).strip()
-        # remove root and "/" from beginning of xPath
+        concat = concat.strip()
         if 'Single' in str(df.at[i, 'Multiples for xPath']):
             try:
-                concat_list.append(root.find(rootless_concat).text.strip().replace('\n', ' ').replace('\t', ''))
+                concat_list.append(root.find(concat).text.strip().replace('\n', ' ').replace('\t', ''))
             except:
                 concat_list.append('')
                 print('Text Does Not Exist')
         elif 'Multiple' in str(df.at[i, 'Multiples for xPath']):
-            mult_list = match_mult(rootless_concat)
+            mult_list = match_mult(concat)
             for mult_elem in mult_list:
                 try:
                     concat_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
@@ -132,7 +123,7 @@ def entity_concat(path,i):
         matched_list.append(join_list)
     #Matched_list has nested lists of each item to be joined
     for num_mult in range(k):
-        concat_out.append(' - '.join(matched_list[num_mult]))
+        concat_out.append(sep_vars[0].join(matched_list[num_mult]))
     return concat_out
 
 def mcds_match(i):
@@ -142,12 +133,10 @@ def mcds_match(i):
     # If there is no value from input xml, put appropriate quotes for blank
 
     # Initialize string with spacing from entered ISA entity name
-    ISA_space = '\t\t'
     str_list = []
-    I_str = ISA_space
+    I_str = ''
     I_sep = '\t'
     I_blank = '""'
-    print("I file line: ", i + 1)
     # If statement checks to see whether xPath exists in relationship excel sheet.
     # If xPath does not exist, write appropriate number of "" to line in else statement
     if not pd.isnull(df.at[i,'MCDS-DCL Correlate X-Path']):
@@ -158,23 +147,20 @@ def mcds_match(i):
             xpaths = df.at[i,'MCDS-DCL Correlate X-Path'].split(",")
             #Pull xPaths from cell in xlsx file, separate multiple values into list to use in for loop
             for path in xpaths:
-                if '&' in path:
+                path = path.strip()
+                if '"' in path:
                     str_list.extend(entity_concat(path,i))
                 #'&' in xPath signifies that the xPaths should be concatenated to a single ISA value "text1 - text2..."
                 else:
-                    rootless = path.replace('/' + root.tag + '/','',1).strip()
-                    #remove root and "/" from beginning of xPath for root.find method
-
-                    if '@' in rootless:
+                    if '@' in path:
                     # '@' in xPath signifies this is an attribute
                     #Lines below: split input xPath into element xPath and attribute name
                     #Write value of attribute to str_list with appropriate "" if no result
-                        result = re.split(r"@", rootless)
-                        atPath = result[0].replace('[', '')
+                        result = re.split(r"@", path)
                         attr = result[1].replace(']', '')
                         if 'Single' in str(df.at[i,'Multiples for xPath']):
                             try:
-                                str_list.append(root.find(atPath).get(attr))
+                                str_list.append(root.find(path).attrib[attr])
                                 break
                             except:
                                 print('Attr Does Not Exist')
@@ -182,19 +168,19 @@ def mcds_match(i):
                             mult_list = match_mult(atPath)
                             for mult_elem in mult_list:
                                 try:
-                                   str_list.append(mult_elem.get(attr))
+                                   str_list.append(mult_elem.attrib[attr])
                                 except:
                                     str_list.append(I_blank)
                                     print('Attr Does Not Exist')
                         else:
                             f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
 
-                    elif '*' in rootless:
+                    elif '*' in path:
                         # '*' in xPath signifies this is a tag
                         # Lines below: remove '*' from xPath
                         # Write value of tag to str_list with appropriate "" if no result
-                        gen_count = rootless.count('*')
-                        result = rootless.replace('*', '')
+                        gen_count = path.count('*')
+                        result = path.replace('*', '')
                         if 'Single' in str(df.at[i,'Multiples for xPath']):
                             try:
                                 if gen_count == 1:
@@ -225,12 +211,12 @@ def mcds_match(i):
 
                         if 'Single' in str(df.at[i,'Multiples for xPath']):
                             try:
-                                str_list.append(root.find(rootless).text.strip().replace('\n', ' ').replace('\t', ''))
+                                str_list.append(root.find(path).text.strip().replace('\n', ' ').replace('\t', ''))
                                 break
                             except:
                                 print('Text Does Not Exist')
                         elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
-                            mult_list = match_mult(rootless)
+                            mult_list = match_mult(path)
                             for mult_elem in mult_list:
                                 try:
                                     str_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
@@ -249,19 +235,8 @@ def mcds_match(i):
                         I_str += I_sep + '"' + match + '"'
                     else:
                         I_str += I_sep + match
-
     else:
-        if 'Multiple' in str(df.at[i, 'Multiples for xPath']):
-            dep_index = int(df.at[i, 'Multiples for xPath'].replace('Multiple - ', ''))
-            dep_line = linecache.getline(filename, dep_index)
-            ent_count = int(dep_line.count('"') / 2)
-            for k in range(ent_count):
-                I_str += I_sep + I_blank
-            I_str += ' - NO XPATH'
-            #add a "" for each entity from dependent line in I file
-        else:
-        #default value is one ""
-            I_str += I_sep + '""' + ' - NO XPATH'
+        I_str += I_sep + '""'
         if pd.isnull(df.at[i,'Multiples for xPath']):
             f_E.write('\t\t\t (No xPath) Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
 
@@ -269,30 +244,139 @@ def mcds_match(i):
 
 error_file = "ErrorLog_DCL2ISA.txt"
 f_E = open(error_file, 'w')
-filename = 'I_test.txt'
-#f_I = open(filename, 'w')
-#f_I.close()
-# if os.path.exists(filename) == False:
-#     f_I = open(filename, 'w')
-#     f_I.close()
-f_I = open(filename, 'r+')
-#f_I.truncate(0)
-#TODO - why does this affect the number of "" for multiples?
-#Create file if it does not exist, then open in read + write mode (will overwrite). Issue: does not clear file
-
-for ind in df.index[:104]:
+file_base = '_test.txt'
+I_filename = 'I' + file_base
+f_I = open(I_filename, 'w')
+for ind in df.index[:102]:
     if df.at[ind,'ISA File Location'] == 'I' or 'I-S':
+        print("I file line: ", ind + 1)
         if df.at[ind,'ISA Entity Type'] == 'Header':
             f_I.write(df.at[ind,'ISA-Tab Entity'].upper() + '\n')
         else:
-            f_I.write(df.at[ind,'ISA-Tab Entity'])
+            f_I.write(df.at[ind,'ISA-Tab Entity'] + '\t\t')
             mcds_match(ind)
     #If type is I file, then write newline with I file. If header, write in all caps and go to next line. If type data,
     # write then /t, parse through xml with correlate xpath. If no data exists, "" then /n. If data exists, write in file. Continue for all x paths.
     # After doing for all xpaths in list, /n
+f_I.close()
+def fix_multi_blanks(filename):
+    '''
+    :param filename: Input file to modify
+    :return: Modified input file with correct number of quotes for ISA entities with no associated xPath,
+            based on number of entities on a separate line in the file
+    '''
+    f_I = open(filename, 'r')
+    file_data = f_I.readlines()
+    multi_dict = {}
+    multi_quantity = {}
+    for i in range(len(df['Multiples for xPath'])):
+        if 'Multiple' in str(df.at[i,'Multiples for xPath']):
+            dep_str = df.at[i, 'Multiples for xPath'].replace('Multiple', '').replace('-', '').strip()
+            if dep_str:
+                if dep_str in multi_dict:
+                    multi_dict[dep_str].append(str(df.at[i,'ISA-Tab Entity']))
+                else:
+                    multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
+                    multi_dict[dep_str] = [multi_dict[dep_str]]
+                # if dep_str in multi_dict:
+                #     multi_dict[dep_str].append(df.at[i, 'ISA-Tab Entity'])
+                # else:
+                #     multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
+
+    for key in multi_dict.keys():
+        f_I.seek(0)
+        for line in f_I:
+            if key in line:
+                multi_quantity[key] = int(line.count('"') / 2)
+        if multi_quantity[key] > 1:
+            for edit_line in multi_dict[key]:
+                f_I.seek(0)
+                for (line_num, line) in enumerate(f_I):
+                    if edit_line in line:
+                        quote_str = ''
+                        for i in range(multi_quantity[key]):
+                            quote_str += '\t""'
+                        file_data[line_num] = edit_line + '\t\t' + quote_str + '\n'
+    f_I = open(filename, 'w')
+    f_I.writelines(file_data)
+    f_I.close()
+
+fix_multi_blanks(I_filename)
+
+
+f_I = open(I_filename, 'r')
+file_data = f_I.readlines()
+f_I.seek(0)
+contact_info_list = []
+line_nums = []
+dup_ind_list = []
+for (line_num,line) in enumerate(f_I):
+    if 'Study Person' in line:
+        contact_info_list.append(line.replace('\n', '').split('\t'))
+        line_nums.append(line_num)
+for b in range(len(contact_info_list)):
+    contact_info_list[b] = list(filter(None, contact_info_list[b]))
+df_s = pd.DataFrame.transpose(pd.DataFrame(contact_info_list))
+df_s.columns=['A','B','C','D','E', 'F', 'G', 'H', 'I', 'J', 'K']
+#Last name and email columns
+for (index,dup) in enumerate(df_s.duplicated(subset = ['A','D'])):
+    if dup:
+        dup_ind_list.append(index)
+#Get list of rows with duplicates
+
+#Get string from dup, find row which it is a duplicate of, go to
+for j in dup_ind_list:
+    last = df_s.at[j,'A']
+    email = df_s.at[j,'D']
+    first_ind = df_s[(df_s.A == last) & (df_s.D == email)].index[0]
+    role = str(df_s.at[first_ind,'I']).strip('"')
+    new_role = str(df_s.at[j,'I']).strip('"')
+    df_s.at[first_ind,'I'] = '"' + role + ';' + new_role + '"'
+
+df_s = df_s.drop(dup_ind_list).transpose()
+col_list = df_s.values.tolist()
+updated_contact_list = []
+for (j,items) in enumerate(col_list):
+    temp_str = []
+    for k in range(len(items)):
+         if k == 0:
+             temp_str.append((items[k].title() + '\t\t'))
+         elif k == len(items) - 1:
+             temp_str.append(items[k] + '\n')
+         else:
+             temp_str.append(items[k])
+    updated_contact_list.append('\t'.join(temp_str))
+
+for z in range(len(updated_contact_list)):
+    file_data[line_nums[z]] = updated_contact_list[z]
+f_I = open(I_filename, 'w')
+f_I.writelines(file_data)
+f_I.close()
+    #
+    # items[0] = items[0].upper + '\t\t'
+    # items[-1] = str(items[-1]) + '\n'
+
+#change back to upper, add two tabs, add \n to end
 
 
 
+
+
+
+#Need to add \n at end of each string
+#If ind 0 and 1 values repeat for different column,
+
+
+#Make dictionary of multiples
+#First, find Multiples with - "content"
+#Add the "content" as a key
+#Add lines that have the "content" as values
+#For each "content", find number of "" on the line with that content
+#Write that number of "" to second dictionary
+#Find Write "" from second dictionary to line
+
+
+'''
 #Assay file:
 
 phenotype_dataset = match_mult('cell_line/phenotype_dataset')
@@ -312,3 +396,4 @@ for pheno_ind in range(len(phenotype_dataset)):
     #If I-S file
     #If I-A file
     #If there are files missing, throw error?
+'''
