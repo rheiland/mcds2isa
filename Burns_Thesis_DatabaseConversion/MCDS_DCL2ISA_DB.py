@@ -1,3 +1,4 @@
+
 # MCDS_DCL2ISA_DB.py - using a MultiCellDS digital cell line XML file, generate associated ISA-Tab files
 #
 # Input:
@@ -17,7 +18,6 @@ import sys
 import re
 import pandas as pd
 from lxml import etree
-import linecache
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 #change current working directory to script location
@@ -31,6 +31,8 @@ DCL_list = os.listdir(DCL_xml_dir)
 DCL_file = DCL_list[40]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
+file_base = 'test.txt'
+#TODO update file base name
 #DSS_in = os.path.join(cwd, 'All_Snapshots_MCDS_S_0000000001.xml')
 # txt_in = os.path.join(cwd, 'DCL File List, Indexed.txt')
 #TODO - Change to allow for multiple file input or create GUI to select folder/files
@@ -45,18 +47,23 @@ if root.get('type') != 'cell_line':
 #TODO - is a check for xml needed? Is it better to skip over non XML files and non cell_line XML's rather than throw error? Allow user to decide?
 #Intialize XML parser, check file type
 
-df = pd.read_excel(rF'{db}', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
+df = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                       'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
 
-#Importing master database as df
+# xpath_test = 'cell_line/phenotype_dataset[1]/microenvironment/domain/variables/variable[2][@units]'
+# xpath_2 = 'cell_line/phenotype_dataset/microenvironment/domain/variables/variable[@units]'
+# print(re.search(r"\[[0-9]]", xpath_test))
+# x_list = root.findall(xpath_2)
+# print(x_list)
+# #Importing master database as df
+# sys.exit()
 
-
-#Input:
-#   One xPath that is marked in xlsx to be able to contain multiple values
-#   The xPath should have the root removed along with extra characters such as attribute value
-#Output:
-#   One list that contains existing elements at xPath and blanks, in order of appearance in DCL xml input file
 def match_mult(x_in):
+    '''
+
+    :param x_in: One xPath that is marked in the relationship xlsx to be able to contain multiple values
+    :return: One list containing existing elements at xPath and blanks in order of appearance in DCL xml input file
+    '''
     x_list = root.findall(x_in)
     #gives list of xPaths with existing elements
     x_elem_out = []
@@ -99,7 +106,7 @@ def entity_concat(path,i):
                 concat_list.append(root.find(concat).text.strip().replace('\n', ' ').replace('\t', ''))
             except:
                 concat_list.append('')
-                print('Text Does Not Exist')
+                #print('Text Does Not Exist')
         elif 'Multiple' in str(df.at[i, 'Multiples for xPath']):
             mult_list = match_mult(concat)
             for mult_elem in mult_list:
@@ -107,7 +114,7 @@ def entity_concat(path,i):
                     concat_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
                 except:
                     concat_list.append('')
-                    print('Text Does Not Exist')
+                    #print('Text Does Not Exist')
             k = len(mult_list)
         else:
             f_E.write('Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
@@ -165,7 +172,7 @@ def mcds_match(i):
                             except:
                                 print('Attr Does Not Exist')
                         elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
-                            mult_list = match_mult(atPath)
+                            mult_list = match_mult(path)
                             for mult_elem in mult_list:
                                 try:
                                    str_list.append(mult_elem.attrib[attr])
@@ -244,12 +251,13 @@ def mcds_match(i):
 
 error_file = "ErrorLog_DCL2ISA.txt"
 f_E = open(error_file, 'w')
-file_base = '_test.txt'
-I_filename = 'I' + file_base
+
+
+I_filename = 'i_' + file_base
 f_I = open(I_filename, 'w')
 for ind in df.index[:102]:
     if df.at[ind,'ISA File Location'] == 'I' or 'I-S':
-        print("I file line: ", ind + 1)
+        #print("I file line: ", ind + 1)
         if df.at[ind,'ISA Entity Type'] == 'Header':
             f_I.write(df.at[ind,'ISA-Tab Entity'].upper() + '\n')
         else:
@@ -259,13 +267,13 @@ for ind in df.index[:102]:
     # write then /t, parse through xml with correlate xpath. If no data exists, "" then /n. If data exists, write in file. Continue for all x paths.
     # After doing for all xpaths in list, /n
 f_I.close()
-def fix_multi_blanks(filename):
+def fix_multi_blanks(I_filename):
     '''
-    :param filename: Input file to modify
+    :param I_filename: Input file to modify
     :return: Modified input file with correct number of quotes for ISA entities with no associated xPath,
             based on number of entities on a separate line in the file
     '''
-    f_I = open(filename, 'r')
+    f_I = open(I_filename, 'r')
     file_data = f_I.readlines()
     multi_dict = {}
     multi_quantity = {}
@@ -278,10 +286,6 @@ def fix_multi_blanks(filename):
                 else:
                     multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
                     multi_dict[dep_str] = [multi_dict[dep_str]]
-                # if dep_str in multi_dict:
-                #     multi_dict[dep_str].append(df.at[i, 'ISA-Tab Entity'])
-                # else:
-                #     multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
 
     for key in multi_dict.keys():
         f_I.seek(0)
@@ -297,7 +301,7 @@ def fix_multi_blanks(filename):
                         for i in range(multi_quantity[key]):
                             quote_str += '\t""'
                         file_data[line_num] = edit_line + '\t\t' + quote_str + '\n'
-    f_I = open(filename, 'w')
+    f_I = open(I_filename, 'w')
     f_I.writelines(file_data)
     f_I.close()
 
@@ -319,7 +323,7 @@ for b in range(len(contact_info_list)):
 df_s = pd.DataFrame.transpose(pd.DataFrame(contact_info_list))
 df_s.columns=['A','B','C','D','E', 'F', 'G', 'H', 'I', 'J', 'K']
 #Last name and email columns
-for (index,dup) in enumerate(df_s.duplicated(subset = ['A','D'])):
+for (index,dup) in enumerate(df_s.duplicated(subset = ['A','B'])):
     if dup:
         dup_ind_list.append(index)
 #Get list of rows with duplicates
@@ -327,8 +331,8 @@ for (index,dup) in enumerate(df_s.duplicated(subset = ['A','D'])):
 #Get string from dup, find row which it is a duplicate of, go to
 for j in dup_ind_list:
     last = df_s.at[j,'A']
-    email = df_s.at[j,'D']
-    first_ind = df_s[(df_s.A == last) & (df_s.D == email)].index[0]
+    first = df_s.at[j,'B']
+    first_ind = df_s[(df_s.A == last) & (df_s.B == first)].index[0]
     role = str(df_s.at[first_ind,'I']).strip('"')
     new_role = str(df_s.at[j,'I']).strip('"')
     df_s.at[first_ind,'I'] = '"' + role + ';' + new_role + '"'
@@ -352,39 +356,201 @@ for z in range(len(updated_contact_list)):
 f_I = open(I_filename, 'w')
 f_I.writelines(file_data)
 f_I.close()
-    #
-    # items[0] = items[0].upper + '\t\t'
-    # items[-1] = str(items[-1]) + '\n'
 
-#change back to upper, add two tabs, add \n to end
+print('\n Assays \n')
 
+#Assay files:
+sample_name_base = root.find('cell_line/metadata/MultiCellDB/ID').text +'.' + root.find('cell_line[@ID]').attrib['ID']
+a_file_list = []
 
+def a_microenvironment(micro_elems):
+    '''
+    :param micro_elems: List of all microenvironment elements found with root.findall(.//microenvironment)
+    :return: microenvironment assay filename, to be appended to assay file list
+        Operation:
+            1) Using A_microenvironment sheet in relationship xlsx, load xPaths for searching variables
+            2) For each existing microenvironment element, find phenotype_dataset @ID and @keywords for writing
+            3) For each existing microenvironment element, create a dictionary with all discrete variable names as keys
+                and the xPaths at which the variable names occur as values
+            4) Using the xPaths loaded for searching variables, create a nested dictionary. There will be a dictionary
+                for each discrete variable name. At the xPaths of the discrete variable names, each variable element
+                in the Microenvironment Variable xPaths column from the loaded xlsx will be searched for. Each dictionary
+                will contain the discrete variable elements found from this search as keys and the xPaths at which they
+                were found as keys
+            5) Write variable content to data_out dictionary with dictionary xPaths for existing elements
+                Content is written in the following order: "Variable name" + measurements, then all other variable
+                elements and values for that variable name. Repeat for each discrete variable name.
+            6) Search for condition content based on relationship xlsx. This is done separately from the variable content
+                because it does not appear under the /variables/variable xPath. If the condition content exists,
+                generate dictionary for values and xPaths then write content to data_out dictionary. ISA Headers are
+                dictated by the xlsx relationship file
+            7) Write data_out dictionary to pandas dataframe, then write pandas dataframe to output text file
+    '''
+    df_micro_in = pd.read_excel(rF'{db}', sheet_name='A_Microenvironment', usecols=['Microenvironment Variable xPaths',
+            'Microenvironment Condition xPaths', 'ISA Condition Entities'])
+    micro_var_names = {}
+    micro_var = {}
+    keyword_list = []
+    #Initialize dictionary for writing to pandas dataframe, with ISA headers as keys and list of content to write down
+    #the column as values
+    data_out = {'Sample Name': []}
+    micro_var_pathend = [str(i) for i in df_micro_in['Microenvironment Variable xPaths'].tolist()]
+    #import variable xPaths as a list of strings from excel relationship file
+    for micro in micro_elems:
+        keyword_list.append('"' + micro.getparent().attrib['keywords'].strip().strip(',') + '"')
+        try:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + micro.getparent().attrib['ID'] + '"')
+        except:
+            data_out['Sample Name'].append('"' + sample_name_base + '0' + '"')
+        variable_elems = root.findall(tree.getelementpath(micro) + '/domain/variables/variable[@name]')
+        #make dictionary of distinct variable names as keys and the xpaths at which the names occur as values
+        #TODO - check for matching type and change name of variable to name + type?
+        for elem in variable_elems:
+            if elem.attrib['name'] in micro_var_names:
+                micro_var_names[elem.attrib['name']].append(tree.getelementpath(elem))
+            else:
+                micro_var_names[elem.attrib['name']] = tree.getelementpath(elem)
+                micro_var_names[elem.attrib['name']] = [micro_var_names[elem.attrib['name']]]
 
+    #Make dictionary of dictionaries: one dictionary per variable name in micro_var_names. Each nested dictionary contains
+    #the other variable elements (ex. units, ChEBI_ID, etc) that occur for each variable name and the associated xPaths
+    #for these variable elements
+    for var_name in micro_var_names:
+        for var_name_paths in micro_var_names[var_name]:
+            for path_ends in micro_var_pathend:
+                if '@' in path_ends:
+                    result = re.split(r"@", path_ends)
+                    attr = result[1].replace(']', '')
+                    try:
+                        root.find(var_name_paths + path_ends).attrib[attr]
+                        if var_name in micro_var:
+                            if attr in micro_var[var_name]:
+                                micro_var[var_name][attr].append(var_name_paths + path_ends)
+                            else:
+                                micro_var[var_name][attr] = var_name_paths + path_ends
+                                micro_var[var_name][attr] = [micro_var[var_name][attr]]
+                        else:
+                            micro_var[var_name] = {attr: [var_name_paths + path_ends]}
+                    except:
+                        None
 
+    #Write content to data out dictionary in order of "Variable name" then other found variable elements
+    #Find content based on the xPaths for variable names and variable elements in the created dictionaries
+    for var_name,all_var in micro_var.items():
+        #Create data_out dictionary key for variable name, then write variable /material_amount.text to values
+        data_out['Parameter Value[' + var_name + ']'] = []
+        if len(data_out['Sample Name']) > 1:
+            #Loop through each phenotype_dataset
+            for j in range(len(data_out['Sample Name'])):
+                data_str = '"'
+                #If element value exists for the phenotype_dataset number, write value to data_out dictionary
+                #otherwise, write "" for a blank
+                for name_path in micro_var_names[var_name]:
+                    result = re.search("phenotype_dataset\[(\d+)\]", name_path)
+                    if int(result.group(1)) == j+1:
+                        data_str += root.find(name_path + '/material_amount').text.replace('\n','').replace('\t','').strip()
+                        break
+                data_out['Parameter Value[' + var_name + ']'].append(data_str + '"')
+        else:
+            #If there is only one phenotype dataset, there will be no numbering in the xPath
+            #Name path is joined because the xPath within the dictionary is not accesible by index
+            name_path = ''.join(micro_var_names[var_name])
+            data_out['Parameter Value[' + var_name + ']'].append('"'+ root.find(name_path + '/material_amount')
+                    .text.replace('\n','').replace('\t','').strip() + '"')
+        #After adding variable name and its measurement values to data_out dictionary, repeat process with other
+        #variable elements
+        for var in all_var:
+            if "units" in var:
+                var_key = var_name + ' measurement ' + var
+            elif "ID" in var:
+                var_key = 'Characteristic[' + var_name +' ' + var.replace('_',' ') + ']'
+            else:
+                var_key = 'Parameter Value[' + var_name +' ' + var.replace('_',' ') + ']'
+            data_out[var_key] = []
+            if len(data_out['Sample Name']) > 1:
+                for j in range(len(data_out['Sample Name'])):
+                    data_str = '"'
+                    for var_path in all_var[var]:
+                        result = re.search("phenotype_dataset\[(\d+)\]", var_path)
+                        if int(result.group(1)) == j + 1:
+                            data_str += root.find(var_path).attrib[var].replace('\n', '').replace('\t','').strip()
+                            break
+                    data_out[var_key].append(data_str + '"')
+            else:
+                var_path = ''.join(all_var[var])
+                data_out[var_key].append('"' + root.find(var_path).attrib[var]
+                            .replace('\n', '').replace('\t', '').strip() + '"')
 
+    #load lists of condition xPaths and their associated ISA Header from xlsx relationship file
+    condition_xpath_list = [str(i) for i in df_micro_in['Microenvironment Condition xPaths'].tolist()]
+    condition_values = [str(i) for i in df_micro_in['ISA Condition Entities'].tolist()]
+    condition_dict = {}
+    j = 0
+    #similar to process for variables above, create dictionary of discrete condition elements and their xPaths
+    for condition_xpath in condition_xpath_list:
+        for elem in root.findall('.//' + condition_xpath):
+            path_tail = ''
+            if '@' in condition_xpath:
+                path_tail += re.search('\[@.*?\]', condition_xpath).group()
+            if condition_values[j] in condition_dict:
+                condition_dict[condition_values[j]].append(tree.getelementpath(elem) + path_tail)
+            else:
+                condition_dict[condition_values[j]] = tree.getelementpath(elem) + path_tail
+                condition_dict[condition_values[j]] = [condition_dict[condition_values[j]]]
+        j += 1
 
-#Need to add \n at end of each string
-#If ind 0 and 1 values repeat for different column,
+    #similar to process for variables above, find values from xPaths in dictionary and write to output_data dictionary
+    for condition in condition_dict:
+        data_out[condition] = []
+        if len(data_out['Sample Name']) > 1:
+            for j in range(len(data_out['Sample Name'])):
+                data_str = '"'
+                for cond_path in condition_dict[condition]:
+                    result = re.search("phenotype_dataset\[(\d+)\]", cond_path)
+                    if int(result.group(1)) == j + 1:
+                        if '@' in cond_path:
+                            result = re.split(r"@", cond_path)
+                            attr = result[1].replace(']', '')
+                            data_str += root.find(cond_path).attrib[attr].replace('\n', '').replace('\t', '').strip()
+                        else:
+                            data_str += root.find(cond_path).text.replace('\n', '').replace('\t', '').strip()
+                        break
+                data_out[condition].append(data_str + '"')
+        else:
+            data_str = '"'
+            cond_path = ''.join(condition_dict[condition])
+            if '@' in cond_path:
+                result = re.split(r"@", cond_path)
+                attr = result[1].replace(']', '')
+                data_str += root.find(cond_path).attrib[attr].replace('\n', '').replace('\t', '').strip()
+            else:
+                data_str += root.find(cond_path).text.replace('\n', '').replace('\t', '').strip()
+            data_out[condition].append(data_str + '"')
+    #add phenotype_dataset[@keywords] value for each phenotype dataset to the output file under 'Assay Name' column
+    data_out['Assay Name'] = keyword_list
+    df_micro = pd.DataFrame(data = data_out)
+    micro_filename = 'a_Microenvironment_' + file_base
+    f_a_micro = open(micro_filename, 'w')
+    f_a_micro.write(df_micro.to_string(header=True, index=False))
+    f_a_micro.close
+    return(micro_filename)
 
-
-#Make dictionary of multiples
-#First, find Multiples with - "content"
-#Add the "content" as a key
-#Add lines that have the "content" as values
-#For each "content", find number of "" on the line with that content
-#Write that number of "" to second dictionary
-#Find Write "" from second dictionary to line
-
+microenvironment = root.findall('.//microenvironment')
+if len(microenvironment) > 0:
+    a_file_list.append(a_microenvironment(microenvironment))
 
 '''
-#Assay file:
+phenotype_dataset = root.findall('cell_line/phenotype_dataset')
+cell_parts = root.findall('cell_line/phenotype_dataset/cell_part')
+cell_parts.extend(root.findall('cell_line/phenotype_dataset/cell_part/cell_part'))
+for phen in phenotype_dataset:
+    print(tree.getelementpath(phen))
+print('Cells')
+for part in cell_parts:
+    print(tree.getelementpath(part))
 
-phenotype_dataset = match_mult('cell_line/phenotype_dataset')
-pheno_paths = []
-cell_part_paths = []
-subcell_part_paths = []
-for pheno_ind in range(len(phenotype_dataset)):
-    pheno_paths.append(tree.getelementpath(phenotype_dataset[pheno_ind]))
+#Needs to match output for single cases too
+#
 
     #print(phenotype_dataset[pheno_ind].getelementpath())
     # cell_part_list = match_mult(getpath(phenotype_dataset[pheno_ind]))

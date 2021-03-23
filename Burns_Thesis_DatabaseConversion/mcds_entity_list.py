@@ -33,7 +33,7 @@ df = pd.DataFrame(columns=column_names)
 parser = etree.XMLParser(remove_comments=True)
 # Parse XML tree and remove comments
 
-# Loop through all XML files in All_Digital_Cell_Lines folder
+# Loop through all XML files in All_Digital_Cell_Lines folder, get tag + xPath of each element, classify element
 for XML_FileName in DCL_list:
     tree = etree.parse(os.path.join(DCL_xml_dir, XML_FileName), parser=parser)
     root = tree.getroot()
