@@ -50,13 +50,6 @@ if root.get('type') != 'cell_line':
 df = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                       'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
 
-# xpath_test = 'cell_line/phenotype_dataset[1]/microenvironment/domain/variables/variable[2][@units]'
-# xpath_2 = 'cell_line/phenotype_dataset/microenvironment/domain/variables/variable[@units]'
-# print(re.search(r"\[[0-9]]", xpath_test))
-# x_list = root.findall(xpath_2)
-# print(x_list)
-# #Importing master database as df
-# sys.exit()
 
 def match_mult(x_in):
     '''
@@ -386,18 +379,18 @@ def a_microenvironment(micro_elems):
                 dictated by the xlsx relationship file
             7) Write data_out dictionary to pandas dataframe, then write pandas dataframe to output text file
     '''
-    df_micro_in = pd.read_excel(rF'{db}', sheet_name='A_Microenvironment', usecols=['Microenvironment Variable xPaths',
-            'Microenvironment Condition xPaths', 'ISA Condition Entities'])
+    df_micro_in = pd.read_excel(rF'{db}', sheet_name='A_Microenvironment',keep_default_na=False,
+        usecols=['Microenvironment Variable xPaths', 'Microenvironment Condition xPaths', 'ISA Condition Entities'])
     micro_var_names = {}
     micro_var = {}
-    keyword_list = []
+    pheno_keywords = []
     #Initialize dictionary for writing to pandas dataframe, with ISA headers as keys and list of content to write down
     #the column as values
     data_out = {'Sample Name': []}
-    micro_var_pathend = [str(i) for i in df_micro_in['Microenvironment Variable xPaths'].tolist()]
-    #import variable xPaths as a list of strings from excel relationship file
+    micro_var_pathend = [str(i) for i in df_micro_in['Microenvironment Variable xPaths'].tolist() if i]
+    #import variable xPaths as a list of strings from excel relationship file, remove NaN values
     for micro in micro_elems:
-        keyword_list.append('"' + micro.getparent().attrib['keywords'].strip().strip(',') + '"')
+        pheno_keywords.append('"' + micro.getparent().attrib['keywords'].strip().strip(',') + '"')
         try:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + micro.getparent().attrib['ID'] + '"')
         except:
@@ -482,8 +475,8 @@ def a_microenvironment(micro_elems):
                             .replace('\n', '').replace('\t', '').strip() + '"')
 
     #load lists of condition xPaths and their associated ISA Header from xlsx relationship file
-    condition_xpath_list = [str(i) for i in df_micro_in['Microenvironment Condition xPaths'].tolist()]
-    condition_values = [str(i) for i in df_micro_in['ISA Condition Entities'].tolist()]
+    condition_xpath_list = [str(i) for i in df_micro_in['Microenvironment Condition xPaths'].tolist() if i]
+    condition_values = [str(i) for i in df_micro_in['ISA Condition Entities'].tolist() if i]
     condition_dict = {}
     j = 0
     #similar to process for variables above, create dictionary of discrete condition elements and their xPaths
@@ -527,7 +520,7 @@ def a_microenvironment(micro_elems):
                 data_str += root.find(cond_path).text.replace('\n', '').replace('\t', '').strip()
             data_out[condition].append(data_str + '"')
     #add phenotype_dataset[@keywords] value for each phenotype dataset to the output file under 'Assay Name' column
-    data_out['Assay Name'] = keyword_list
+    data_out['Assay Name'] = pheno_keywords
     df_micro = pd.DataFrame(data = data_out)
     micro_filename = 'a_Microenvironment_' + file_base
     f_a_micro = open(micro_filename, 'w')
@@ -539,23 +532,205 @@ microenvironment = root.findall('.//microenvironment')
 if len(microenvironment) > 0:
     a_file_list.append(a_microenvironment(microenvironment))
 
+def a_cellcycle(cell_cycle_elems,cell_phase_elems):
+    '''
+    :param cell_phase_elems: List of cell_cycle_phase elements
+    :return: a_CellCycle.txt file name to be appended to assay file list
+    '''
+    #Import cell cycle phase xPaths, correlate phase ISA headers, cell cycle summary xPaths, and correlate summary ISA headers
+    #from excel file and write each entity as string to list
+    df_cycle_in = pd.read_excel(rF'{db}', sheet_name='A_CellCycle', keep_default_na= False, usecols=
+    ['Cell Cycle Phase ISA Entities', 'Cell Cycle Phase xPaths', 'Cell Cycle Summary ISA Entities', 'Cell Cycle Summary xPaths'])
+    phase_paths = [str(i) for i in df_cycle_in['Cell Cycle Phase xPaths'].tolist() if i]
+    phase_headers = [str(i) for i in df_cycle_in['Cell Cycle Phase ISA Entities'].tolist() if i]
+    summary_paths = [str(i) for i in df_cycle_in['Cell Cycle Summary xPaths'].tolist() if i]
+    summary_headers = [str(i) for i in df_cycle_in['Cell Cycle Summary ISA Entities'].tolist() if i]
+    if len(phase_paths) != len(phase_headers):
+        print('Cell Cycle - Issue in Excel File')
+        #TODO change to error logging
+    #Initialize dictionary for writing to pandas dataframe
+    data_out = {'Sample Name': [], 'Characteristic [Cell Cycle Model]': [], 'Characteristic [Cell Cycle Phase]': []}
+    pheno_keywords = []
+    ent_in_file = []
+    summary_in_file = []
+    #Loop through each potential cell_cycle_phase element for each cell_cycle_phase occurance
+    #If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
+    #Output is a list of all ISA entities that are found in the xml file
+    for elem in cell_phase_elems:
+        for num in range(len(phase_paths)):
+            if root.find(tree.getelementpath(elem) + phase_paths[num]) is not None:
+                if phase_headers[num] not in ent_in_file:
+                    ent_in_file.append(phase_headers[num])
+
+    #If header is not in entity list (not in file), replace the header and the associated xPath with a '' to maintain
+    #correct indexing, then remove blank '' from list
+    for num in range(len(phase_headers)):
+        if phase_headers[num] not in ent_in_file:
+            phase_headers[num] = ''
+            phase_paths[num] = ''
+    phase_headers = [i for i in phase_headers if i]
+    phase_paths = [i for i in phase_paths if i]
+
+    #Add headers to dictionary keys with an empty list as value
+    for header in phase_headers:
+        data_out[header] = []
+
+    #Repeat process with summary elements (within /cell_cycle, not contianed in /cell_cycle/cell_cycle_phase/
+    for elem in cell_cycle_elems:
+        for num in range(len(summary_paths)):
+            if root.find(tree.getelementpath(elem) + summary_paths[num]) is not None:
+                if summary_headers[num] not in summary_in_file:
+                    summary_in_file.append(summary_headers[num])
+    for num in range(len(summary_headers)):
+        if summary_headers[num] not in summary_in_file:
+            summary_headers[num] = ''
+            summary_paths[num] = ''
+    summary_headers = [i for i in summary_headers if i]
+    summary_paths = [i for i in summary_paths if i]
+    for header in summary_headers:
+        data_out[header] = []
+
+    #Loop through cell cycle phase element and cell cycle summary elements and write content to dictionary
+    for elem in cell_phase_elems:
+        data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent().attrib['ID'] + '"')
+        pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
+        data_out['Characteristic [Cell Cycle Model]'].append('"' + elem.getparent().attrib['model'].strip() + '"')
+        data_out['Characteristic [Cell Cycle Phase]'].append('"' + elem.attrib['name'].strip() + '"')
+        for num in range(len(phase_paths)):
+            if root.find(tree.getelementpath(elem) + phase_paths[num]) is not None:
+                if '@' in phase_paths[num]:
+                    result = re.split(r"@", phase_paths[num])
+                    attr = result[1].replace(']', '')
+                    try:
+                        data_out[phase_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + phase_paths[num]).attrib[attr]).strip() + '"')
+                    except:
+                        data_out[phase_headers[num]].append('""')
+                else:
+                    try:
+                        data_out[phase_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + phase_paths[num]).text).strip() + '"')
+                    except:
+                        data_out[phase_headers[num]].append('""')
+            else:
+                data_out[phase_headers[num]].append('""')
+
+        summary_base_path = tree.getelementpath(elem).rsplit('/', 1)[0]
+        for num in range(len(summary_paths)):
+            if root.find(summary_base_path + summary_paths[num]) is not None:
+                if '@' in summary_paths[num]:
+                    result = re.split(r"@", summary_paths[num])
+                    attr = result[1].replace(']', '')
+                    try:
+                        data_out[summary_headers[num]].append\
+                            ('"' + (root.find(summary_base_path + summary_paths[num]).attrib[attr]).strip() + '"')
+                    except:
+                        data_out[summary_headers[num]].append('""')
+                else:
+                    try:
+                        data_out[summary_headers[num]].append\
+                            ('"' + (root.find(summary_base_path + summary_paths[num]).text).strip() + '"')
+                    except:
+                        data_out[summary_headers[num]].append('""')
+            else:
+                data_out[summary_headers[num]].append('""')
+    #Write dictionary to dataframe, then dataframe to text file
+    data_out['Assay Name'] = pheno_keywords
+    df_cycle = pd.DataFrame(data=data_out)
+    cycle_filename = 'a_CellCycle_' + file_base
+    f_a_cycle = open(cycle_filename, 'w')
+    f_a_cycle.write(df_cycle.to_string(header=True, index=False))
+    f_a_cycle.close
+    return (cycle_filename)
+
+
+cell_phase = root.findall('.//cell_cycle/cell_cycle_phase')
+cell_cycle = root.findall('.//cell_cycle')
+if len(cell_cycle) > 0:
+    a_file_list.append(a_cellcycle(cell_cycle,cell_phase))
+
+def a_celldeath(cell_death_elems):
+    '''
+
+    :param cell_death_elems:  List of /cell_death elements
+    :return: a_CellDeath.txt file name to be appended to assay file list
+    Operation: Similar to a_cellcycle function, except there are only terms within  (analogous to cell_cycle_phase)
+    '''
+
+    # Import cell death xPaths, correlate cell death ISA headers from excel file and write each entity as string to list
+    df_death_in = pd.read_excel(rF'{db}', sheet_name='A_CellDeath', keep_default_na=False, usecols=
+    ['Cell Death ISA Entities', 'Cell Death xPaths'])
+    death_paths = [str(i) for i in df_death_in['Cell Death xPaths'].tolist() if i]
+    death_headers = [str(i) for i in df_death_in['Cell Death ISA Entities'].tolist() if i]
+
+    if len(death_paths) != len(death_headers):
+        print('Cell Death - Issue in Excel File')
+        #TODO change to error logging
+    #Initialize dictionary for writing to pandas dataframe
+    data_out = {'Sample Name': []}
+    ent_in_file = []
+    pheno_keywords = []
+    #Loop through each potential cell_death for each cell_death occurance
+    #If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
+    #Output is a list of all ISA entities that are found in the xml file
+    for elem in cell_death_elems:
+        for num in range(len(death_paths)):
+            if root.find(tree.getelementpath(elem) + death_paths[num]) is not None:
+                if death_headers[num] not in ent_in_file:
+                    ent_in_file.append(death_headers[num])
+
+    #If header is not in entity list (not in file), replace the header and the associated xPath with a '' to maintain
+    #correct indexing, then remove blank '' from list
+    for num in range(len(death_headers)):
+        if death_headers[num] not in ent_in_file:
+            death_headers[num] = ''
+            death_paths[num] = ''
+    death_headers = [i for i in death_headers if i]
+    death_paths = [i for i in death_paths if i]
+
+    #Add headers to dictionary keys with an empty list as value
+    for header in death_headers:
+        data_out[header] = []
+
+    # Loop through cell death elements and write content to dictionary
+    for elem in cell_death_elems:
+        data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().attrib['ID'] + '"')
+        pheno_keywords.append('"' + elem.getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
+        for num in range(len(death_paths)):
+            if root.find(tree.getelementpath(elem) + death_paths[num]) is not None:
+                if '@' in death_paths[num]:
+                    result = re.split(r"@", death_paths[num])
+                    attr = result[1].replace(']', '')
+                    try:
+                        data_out[death_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + death_paths[num]).attrib[attr]).strip() + '"')
+                    except:
+                        data_out[death_headers[num]].append('""')
+                else:
+                    try:
+                        data_out[death_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + death_paths[num]).text).strip() + '"')
+                    except:
+                        data_out[death_headers[num]].append('""')
+            else:
+                data_out[death_headers[num]].append('""')
+    #Write data_out dictionary to dataframe, then write dataframe to output text file
+    data_out['Assay Name'] = pheno_keywords
+    df_death = pd.DataFrame(data=data_out)
+    death_filename = 'a_CellDeath_' + file_base
+    f_a_death = open(death_filename, 'w')
+    f_a_death.write(df_death.to_string(header=True, index=False))
+    f_a_death.close
+    return (death_filename)
+
+cell_death = root.findall('.//cell_death')
+if len(cell_death) > 0:
+    a_file_list.append(a_celldeath(cell_death))
+
+print(a_file_list)
+
 '''
-phenotype_dataset = root.findall('cell_line/phenotype_dataset')
-cell_parts = root.findall('cell_line/phenotype_dataset/cell_part')
-cell_parts.extend(root.findall('cell_line/phenotype_dataset/cell_part/cell_part'))
-for phen in phenotype_dataset:
-    print(tree.getelementpath(phen))
-print('Cells')
-for part in cell_parts:
-    print(tree.getelementpath(part))
 
-#Needs to match output for single cases too
-#
-
-    #print(phenotype_dataset[pheno_ind].getelementpath())
-    # cell_part_list = match_mult(getpath(phenotype_dataset[pheno_ind]))
-    # for
-    # subcell_part_list
 
     #If A - file
     # If S-file
