@@ -28,7 +28,7 @@ db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
-DCL_file = DCL_list[40]
+DCL_file = DCL_list[63]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 file_base = 'test.txt'
@@ -531,7 +531,8 @@ def a_microenvironment(micro_elems):
 microenvironment = root.findall('.//microenvironment')
 if len(microenvironment) > 0:
     a_file_list.append(a_microenvironment(microenvironment))
-
+else:
+    print('No Microenvironment Assay')
 def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     '''
     :param cell_phase_elems: List of cell_cycle_phase elements
@@ -648,6 +649,8 @@ cell_phase = root.findall('.//cell_cycle/cell_cycle_phase')
 cell_cycle = root.findall('.//cell_cycle')
 if len(cell_cycle) > 0:
     a_file_list.append(a_cellcycle(cell_cycle,cell_phase))
+else:
+    print('No Cell Cycle Assay')
 
 def a_celldeath(cell_death_elems):
     '''
@@ -726,15 +729,386 @@ def a_celldeath(cell_death_elems):
 cell_death = root.findall('.//cell_death')
 if len(cell_death) > 0:
     a_file_list.append(a_celldeath(cell_death))
+else:
+    print('No Cell Death Assay')
+def a_mechanics(cell_mechanics_elems):
+    '''
+    :param cell_mechanics_elems: List of all mechanics elements found in the xml file
+    :return: The cell mechanics file name to be appended to the assay file list
+    '''
+    # Import cell mechanics xPaths, correlate cell mechanics ISA headers from excel file and write each entity as string to list
+    df_mech_in = pd.read_excel(rF'{db}', sheet_name='A_Mechanics', keep_default_na=False, usecols=
+    ['Cell Mechanics ISA Entities', 'Cell Mechanics xPaths'])
+    mech_paths = [str(i) for i in df_mech_in['Cell Mechanics xPaths'].tolist() if i]
+    mech_headers = [str(i) for i in df_mech_in['Cell Mechanics ISA Entities'].tolist() if i]
 
-print(a_file_list)
+    if len(mech_paths) != len(mech_headers):
+        print('Cell Mechanics - Issue in Excel File')
+        # TODO change to error logging
 
+    data_out = {'Sample Name' : [], 'Characteristic[Cell Part]' : []}
+    pheno_keywords = []
+    lvl_tracking = {}
+    ent_in_file = []
+
+    #Determine cell part level of each mechanics element (whole cell, cell_part, sub part of cell_part) and save to
+    #dictionary as value for the mechanics element xPath as the key
+
+    for elem in cell_mechanics_elems:
+        elem_path = tree.getelementpath(elem)
+        lvl = len(re.findall('(cell_part)', elem_path))
+        lvl_tracking[elem_path] = lvl
+    #Find sample name and cell part information with logic based on cell part level of each mechanics element, then
+    #save information to appropriate key within data_out dictionary
+    for elem_path in lvl_tracking:
+        if lvl_tracking[elem_path] == 0:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
+                                           .attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"Entire Cell"')
+        elif lvl_tracking[elem_path] == 1:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
+                                           .getparent().attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
+                                  .attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent()
+                                                         .attrib['name'].strip() + '"')
+        elif lvl_tracking[elem_path] == 2:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
+                                           .getparent().getparent().getparent().attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
+                                  .attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent().attrib['name']
+                .strip()+ " of " + root.find(elem_path).getparent().getparent().getparent().attrib['name'].strip() + '"')
+        else:
+            print("Issue - cell_part/cell_part/cell_part structure is not supported by current version")
+            #TODO change to error logging
+
+    # Loop through each potential mechanics/"element" for each .//mechanics element
+    # If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
+    # Output is a list of all ISA entities that are found in the xml file
+    for elem in cell_mechanics_elems:
+        for num in range(len(mech_paths)):
+            if root.find(tree.getelementpath(elem) + mech_paths[num]) is not None:
+                if mech_headers[num] not in ent_in_file:
+                    ent_in_file.append(mech_headers[num])
+
+    # If header is not in entity list (not in file), replace the header and the associated xPath with a '' to maintain
+    # correct indexing, then remove blank '' from list
+    for num in range(len(mech_headers)):
+        if mech_headers[num] not in ent_in_file:
+            mech_headers[num] = ''
+            mech_paths[num] = ''
+    mech_headers = [i for i in mech_headers if i]
+    mech_paths = [i for i in mech_paths if i]
+
+    for header in mech_headers:
+        data_out[header] = []
+
+    for elem in cell_mechanics_elems:
+        for num in range(len(mech_paths)):
+            if root.find(tree.getelementpath(elem) + mech_paths[num]) is not None:
+                if '@' in mech_paths[num]:
+                    result = re.split(r"@", mech_paths[num])
+                    attr = result[1].replace(']', '')
+                    try:
+                        data_out[mech_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + mech_paths[num]).attrib[attr]).strip() + '"')
+                    except:
+                        data_out[mech_headers[num]].append('""')
+                else:
+                    try:
+                        data_out[mech_headers[num]].append\
+                            ('"' + (root.find(tree.getelementpath(elem) + mech_paths[num]).text).strip() + '"')
+                    except:
+                        data_out[mech_headers[num]].append('""')
+            else:
+                data_out[mech_headers[num]].append('""')
+    #Write data_out dictionary to dataframe, then write dataframe to output text file
+
+    data_out['Assay Name'] = pheno_keywords
+    df_mech = pd.DataFrame(data=data_out)
+    mech_filename = 'a_Mechanics_' + file_base
+    f_a_mech = open(mech_filename, 'w')
+    f_a_mech.write(df_mech.to_string(header=True, index=False))
+    f_a_mech.close
+    return (mech_filename)
+
+#Encapsulates cell_part elements too
+cell_mechanics = root.findall('.//mechanics')
+if len(cell_mechanics) > 0:
+    a_file_list.append(a_mechanics(cell_mechanics))
+else:
+    print('No Cell Mechanics Assay')
+
+print('\n\n')
+def a_geo_props(cell_geo_elems):
+    '''
+
+    :param cell_geo_elems: List of all cell geometric_properties elements found with
+            root.findall(.//geometric_properties
+    :return: geometric properties assay filename, to be appended to assay file list
+    Operations:
+        1) Import xPaths, values, attributes, and ISA header info from xlsx relationship file
+        2) Determine cell_part "level" for each element in cell_geo_elems, use level to
+            find info in xml for sample name, cell_part characteristic, and assay names in ISA file
+        3) Determine measurements that exist in file and write to dictionary as keys. For each measurement key,
+            determine attributes that exist in file and write to dictionary as list of values for mesurement key
+        4) Loop through measurement keys and associated attribute values. Use indices within xlsx file to create
+            dictionary with keys of ISA headers (ISA entity beginning + ISA measurement + ISA entity tail). Each
+            key will have a two element list containing measurement xpath at key[0] and attribute at key[1].
+        5) Loop through elems in cell_geo_elems and try to write info from xml file to data_out dict using dictionary
+            created in step 4
+        6) Append assay names to data_out, write data_out to dataframe, then write dataframe to Geometrical Properties
+            assay text file
+    '''
+    # Import geometric properties parameter value xPaths, correlate ISA value name, potential attributes
+    # for parameter values, and ISA header information for writing headers from excel file
+    # Write each entity as string to list
+    #geo_prop_attr: remove NaN from rows with no content, then replace NaN within dataframe with "" blank
+    df_geo_val_in = pd.read_excel(rF'{db}', sheet_name='A_GeometricalProperties', keep_default_na=False, usecols=
+    ['Cell Geometrical Properties ISA Measurement Name', 'Cell Geometrical Properties xPaths'])
+    df_geo_attr_in = pd.read_excel(rF'{db}', sheet_name='A_GeometricalProperties', keep_default_na=True, usecols=
+    ['Cell Geometrical Properties Attributes', 'Cell Geometrical Properties ISA Entity Beginning',
+     'Cell Geometrical Properties ISA Entity Tail']).dropna(how='all').fillna("")
+    #remove blanks from geo_measure_paths, geo_measure, and geo_attr
+    #Don't remove blanks from ISA entity beginning + tail lists (blank may be valid
+    geo_measure_paths = [str(i) for i in df_geo_val_in['Cell Geometrical Properties xPaths'].tolist() if i]
+    geo_measure = [str(i) for i in df_geo_val_in['Cell Geometrical Properties ISA Measurement Name'].tolist() if i]
+    geo_attr = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties Attributes'].tolist() if i]
+    geo_header_begin = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties ISA Entity Beginning'].tolist()]
+    geo_header_tail = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties ISA Entity Tail'].tolist()]
+    if len(geo_measure_paths) != len(geo_measure):
+        print('Cell Geometrical Properties - Issue in Excel File, Value Section')
+         # TODO change to error logging
+    if not (len(geo_attr) == len(geo_header_begin) == len(geo_header_tail)):
+        print('Cell Geometrical Properties - Issue in Excel File, Attribute Section')
+        # TODO change to error logging
+
+    data_out = {'Sample Name': [], 'Characteristic[Cell Part]': []}
+    pheno_keywords = []
+    lvl_tracking = {}
+    ent_in_file = {}
+
+    # Determine cell part level of each geometrical property element (whole cell, cell_part, sub part of cell_part) and save to
+    # dictionary as value for the geometrical property element xPath as the key
+    for elem in cell_geo_elems:
+        elem_path = tree.getelementpath(elem)
+        lvl = len(re.findall('(cell_part)', elem_path))
+        lvl_tracking[elem_path] = lvl
+    # Find sample name and cell part information with logic based on cell part level of each geometrical property
+    # element, then save information to appropriate key within data_out dictionary
+    for elem_path in lvl_tracking:
+        if lvl_tracking[elem_path] == 0:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
+                                           .attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"Entire Cell"')
+        elif lvl_tracking[elem_path] == 1:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
+                                           .getparent().attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
+                                  .attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent()
+                                                         .attrib['name'].strip() + '"')
+        elif lvl_tracking[elem_path] == 2:
+            data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
+                                           .getparent().getparent().getparent().attrib['ID'].strip() + '"')
+            pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
+                                  .attrib['keywords'].strip() + '"')
+            data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent().attrib['name']
+                    .strip() + " of " + root.find(elem_path).getparent().getparent().getparent().attrib['name'].strip() + '"')
+        else:
+            print("Issue - cell_part/cell_part/cell_part structure is not supported by current version")
+            # TODO change to error logging
+
+    #Create dictionary with geo property measurements in file as keys, in order, and initialize as list
+    measure_in_file = {}
+    for path in geo_measure_paths:
+        for elem in cell_geo_elems:
+            #Check to see if measurement elem exists, if so check to see if value exists for measurement elem
+            if (root.find(tree.getelementpath(elem) + path) is not None) and\
+            (root.find(tree.getelementpath(elem) + path).text is not None):
+                measure_in_file[path] = []
+                break
+    #add occurances of attribute under each path header in measure_in_file dictionary created above
+    #break after attribute confirmed for path (need to write ISA header)
+    #attributes added in order of list from xlsx sheet
+    for path in measure_in_file:
+        for attr in geo_attr:
+            for elem in cell_geo_elems:
+                if (root.find(tree.getelementpath(elem) + path) is not None):
+                    if attr in root.find(tree.getelementpath(elem) + path).attrib:
+                        measure_in_file[path].append(attr)
+                        break
+
+    ISA_head_path = {}
+    #for existing path/attribute combination, find index within their respective list from xlsx file
+    #Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
+    #be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
+    # of the xpath and attr to use to get the appropriate data from the xml file
+    for path in measure_in_file:
+        measure_index = geo_measure_paths.index(path)
+        ISA_head_path['Parameter Value[' + geo_measure[measure_index] + ']'] = [path]
+        for attr in measure_in_file[path]:
+            attr_index = geo_attr.index(attr)
+            ISA_head = geo_header_begin[attr_index] + geo_measure[measure_index] + geo_header_tail[attr_index]
+            ISA_head_path[ISA_head] = [path, attr]
+
+    #initialize data_out by writing headers
+    for header in ISA_head_path:
+        data_out[header] = []
+
+    #text elements (measurement values) have dictionary value len == 1, attributes have len == 2
+    # Iterate through list of elems
+    # Iterate through list of headers
+    # write data_out[header].append(find data in xml)
+    for elem in cell_geo_elems:
+        for header in ISA_head_path:
+            path = ISA_head_path[header][0]
+            if len(ISA_head_path[header]) == 1:
+                try:
+                    data_out[header].append('"' + root.find(tree.getelementpath(elem) + path).text.strip() + '"')
+                except:
+                    data_out[header].append('""')
+            else:
+                attr = ISA_head_path[header][1]
+                try:
+                    data_out[header].append('"' + (root.find(tree.getelementpath(elem) + path).attrib[attr]).strip() + '"')
+                except:
+                    data_out[header].append('""')
+
+    data_out['Assay Name'] = pheno_keywords
+    df_geo = pd.DataFrame(data=data_out)
+    geo_filename = 'a_GeometricalProperties_' + file_base
+    f_a_geo = open(geo_filename, 'w')
+    f_a_geo.write(df_geo.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_geo.close
+    return (geo_filename)
+
+cell_geo_props = root.findall('.//geometrical_properties')
+if len(cell_geo_props) > 0:
+    a_file_list.append(a_geo_props(cell_geo_props))
+
+def a_motility(cell_motility_elems):
+    '''
+    :param cell_motility_elems: List of all cell motility elements found with root.findall(.//motility)
+    :return: cell motility assay file name, to be appended to list of assay file names
+
+    '''
+
+    # Import motility parameter value xPaths, correlate ISA value name, potential attributes
+    # for parameter values, and ISA header information for writing headers from excel file
+    # Write each entity as string to list
+    # motility_attr: remove NaN from rows with no content, then replace NaN within dataframe with "" blank
+    df_motility_val_in = pd.read_excel(rF'{db}', sheet_name='A_Motility', keep_default_na=False, usecols=
+    ['Cell Motility ISA Measurement Name', 'Cell Motility xPaths'])
+    df_motility_attr_in = pd.read_excel(rF'{db}', sheet_name='A_Motility', keep_default_na=True, usecols=
+    ['Cell Motility Attributes', 'Cell Motility ISA Entity Beginning',
+     'Cell Motility ISA Entity Tail']).dropna(how='all').fillna("")
+    # remove blanks from motility_measure_paths, motility_measure, and motility_attr
+    # Don't remove blanks from ISA entity beginning + tail lists (blank may be valid)
+    motility_measure_paths = [str(i) for i in df_motility_val_in['Cell Motility xPaths'].tolist() if i]
+    motility_measure = [str(i) for i in df_motility_val_in['Cell Motility ISA Measurement Name'].tolist() if i]
+    motility_attr = [str(i) for i in df_motility_attr_in['Cell Motility Attributes'].tolist() if i]
+    motility_header_begin = [str(i) for i in df_motility_attr_in['Cell Motility ISA Entity Beginning'].tolist()]
+    motility_header_tail = [str(i) for i in df_motility_attr_in['Cell Motility ISA Entity Tail'].tolist()]
+    if len(motility_measure_paths) != len(motility_measure):
+        print('Cell Motility - Issue in Excel File, Value Section')
+        # TODO change to error logging
+    if not (len(motility_attr) == len(motility_header_begin) == len(motility_header_tail)):
+        print('Cell Motility - Issue in Excel File, Attribute Section')
+        # TODO change to error logging
+
+    data_out = {'Sample Name': [], 'Characteristic[Motility Type]': []}
+    pheno_keywords = []
+    ent_in_file = {}
+    ISA_head_path = {}
+    #For elems in list of found motility elements, append info that characterizes the element to data_out
+    #If restriction/surface_variables, add to ISA_head_path for finding data from xml
+    for elem in cell_motility_elems:
+        data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
+                                       .getparent().attrib['ID'].strip() + '"')
+        pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
+        data_out['Characteristic[Motility Type]'].append('"' + elem.tag.strip() +'"')
+        if root.find(tree.getelementpath(elem) + '/restriction/surface_variable') is not None:
+            if 'name' in root.find(tree.getelementpath(elem) + '/restriction/surface_variable').attrib:
+                ISA_head_path['Characteristic[Restriction Surface Name]'] = ['/restriction/surface_variable','name']
+            if 'MeSH_ID' in root.find(tree.getelementpath(elem) + '/restriction/surface_variable').attrib:
+                ISA_head_path['Characteristic[Restriction Surface MeSH ID]'] = ['/restriction/surface_variable', 'MeSH_ID']
+
+    measure_in_file = {}
+    for path in motility_measure_paths:
+        for elem in cell_motility_elems:
+            # Check to see if measurement elem exists, if so check to see if value exists for measurement elem
+            if (root.find(tree.getelementpath(elem) + path) is not None) and \
+                    (root.find(tree.getelementpath(elem) + path).text is not None):
+                measure_in_file[path] = []
+                break
+    # add occurances of attribute under each path header in measure_in_file dictionary created above
+    # break after attribute confirmed for path (need to write ISA header)
+    # attributes added in order of list from xlsx sheet
+    for path in measure_in_file:
+        for attr in motility_attr:
+            for elem in cell_motility_elems:
+                if (root.find(tree.getelementpath(elem) + path) is not None):
+                    if attr in root.find(tree.getelementpath(elem) + path).attrib:
+                        measure_in_file[path].append(attr)
+                        break
+
+    # for existing path/attribute combination, find index within their respective list from xlsx file
+    # Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
+    # be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
+    # of the xpath and attr to use to get the appropriate data from the xml file
+    for path in measure_in_file:
+        measure_index = motility_measure_paths.index(path)
+        ISA_head_path['Parameter Value[' + motility_measure[measure_index] + ']'] = [path]
+        for attr in measure_in_file[path]:
+            attr_index = motility_attr.index(attr)
+            ISA_head = motility_header_begin[attr_index] + motility_measure[measure_index] + motility_header_tail[attr_index]
+            ISA_head_path[ISA_head] = [path, attr]
+
+    # initialize data_out by writing headers
+    for header in ISA_head_path:
+        data_out[header] = []
+
+    # text elements (measurement values) have dictionary value len == 1, attributes have len == 2
+    # Iterate through list of elems
+    # Iterate through list of headers
+    # write data_out[header].append(find data in xml)
+    for elem in cell_motility_elems:
+        for header in ISA_head_path:
+            path = ISA_head_path[header][0]
+            if len(ISA_head_path[header]) == 1:
+                try:
+                    data_out[header].append('"' + root.find(tree.getelementpath(elem) + path).text.strip() + '"')
+                except:
+                    data_out[header].append('""')
+            else:
+                attr = ISA_head_path[header][1]
+                try:
+                    data_out[header].append(
+                        '"' + (root.find(tree.getelementpath(elem) + path).attrib[attr]).strip() + '"')
+                except:
+                    data_out[header].append('""')
+
+    data_out['Assay Name'] = pheno_keywords
+    df_motility = pd.DataFrame(data=data_out)
+    motility_filename = 'a_Motility_' + file_base
+    f_a_motility = open(motility_filename, 'w')
+    f_a_motility.write(df_motility.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_motility.close
+    return (motility_filename)
+
+cell_motility = root.findall('.//motility/restricted')
+cell_motility.extend(root.findall('.//motility/unrestricted'))
+if len(cell_motility) > 0:
+    a_file_list.append(a_motility(cell_motility))
+
+#print(a_file_list)
 '''
+Study
 
-
-    #If A - file
-    # If S-file
-    #If I-S file
-    #If I-A file
-    #If there are files missing, throw error?
+Correct I File
+I file - write entity then skip if ScriptVar?
 '''
