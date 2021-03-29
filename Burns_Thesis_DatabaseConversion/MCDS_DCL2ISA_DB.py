@@ -28,7 +28,7 @@ db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
-DCL_file = DCL_list[63]
+DCL_file = DCL_list[100]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 file_base = 'test.txt'
@@ -355,6 +355,7 @@ print('\n Assays \n')
 #Assay files:
 sample_name_base = root.find('cell_line/metadata/MultiCellDB/ID').text +'.' + root.find('cell_line[@ID]').attrib['ID']
 a_file_list = []
+s_file_list = []
 
 def a_microenvironment(micro_elems):
     '''
@@ -731,6 +732,7 @@ if len(cell_death) > 0:
     a_file_list.append(a_celldeath(cell_death))
 else:
     print('No Cell Death Assay')
+
 def a_mechanics(cell_mechanics_elems):
     '''
     :param cell_mechanics_elems: List of all mechanics elements found in the xml file
@@ -841,7 +843,6 @@ if len(cell_mechanics) > 0:
 else:
     print('No Cell Mechanics Assay')
 
-print('\n\n')
 def a_geo_props(cell_geo_elems):
     '''
 
@@ -989,6 +990,8 @@ def a_geo_props(cell_geo_elems):
 cell_geo_props = root.findall('.//geometrical_properties')
 if len(cell_geo_props) > 0:
     a_file_list.append(a_geo_props(cell_geo_props))
+else:
+    print('No Cell Geometrical Properties Assay')
 
 def a_motility(cell_motility_elems):
     '''
@@ -1104,11 +1107,379 @@ cell_motility = root.findall('.//motility/restricted')
 cell_motility.extend(root.findall('.//motility/unrestricted'))
 if len(cell_motility) > 0:
     a_file_list.append(a_motility(cell_motility))
+else:
+    print('No Cell Motility Assay')
 
-#print(a_file_list)
+def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
+    '''
+    :param PKPD_drug: list of xml elements found under PKPD/drug xPath
+    :param PKPD_pd_meas: list of xml elements found under PKPD/pharmacodynamics xPath
+    :return: list of PKPD file names to be appended to study file list and assay file list, respectively
+    '''
+    df_PKPD_drug_in = pd.read_excel(rF'{db}', sheet_name='A_S_PKPD', keep_default_na=False, usecols=
+    ['PKPD Drug ISA Headers', 'PKPD Drug Attributes'])
+    df_PKPD_pd_in = pd.read_excel(rF'{db}', sheet_name='A_S_PKPD', keep_default_na=False, usecols=
+    ['PKPD PD Headers', 'PKPD PD xPaths'])
+    drug_header = [str(i) for i in df_PKPD_drug_in['PKPD Drug ISA Headers'].tolist() if i]
+    drug_attr = [str(i) for i in df_PKPD_drug_in['PKPD Drug Attributes'].tolist() if i]
+    pd_header = [str(i) for i in df_PKPD_pd_in['PKPD PD Headers'].tolist() if i]
+    pd_paths = [str(i) for i in df_PKPD_pd_in['PKPD PD xPaths'].tolist() if i]
+
+    if len(drug_attr) != len(drug_header):
+        print('PKPD - Issue in Excel File, Drug Section')
+        # TODO change to error logging
+
+    if len(pd_paths) != len(pd_header):
+        print('PKPD - Issue in Excel File, Pharmacodynamics')
+        # TODO change to error logging
+
+    #TODO - Is drug ID global (will it match drug ID of other phenotype datasets, or is it only a local ID?)
+    drug_ID_name = {}
+    s_data_out = {}
+    drug_out = {}
+    exist_drug_attr = []
+    #Drug elements - Study
+    #Check to see which attributes exist, make list of existing attributes and reorder to match xlsx relationship file
+
+    for attr in drug_attr:
+        for elem in PKPD_drug:
+            if root.find(tree.getelementpath(elem)).attrib[attr] is not None:
+                exist_drug_attr.append(attr)
+                break
+    exist_drug_attr = [x for x in drug_attr if x in exist_drug_attr]
+    #initialize headers and save to dictionary with paired attribute
+    for attr in exist_drug_attr:
+        header = drug_header[drug_attr.index(attr)]
+        s_data_out[header] = []
+        drug_out[header] = attr
+    #loop through existing, ordered headers and write content to appropriate header in s_data_put
+    #save drug ID number as key and name as value in dictionary
+    for header in drug_out:
+        for elem in PKPD_drug:
+            if drug_out[header] == 'name':
+                drug_ID_name[root.find(tree.getelementpath(elem)).attrib['ID']] = root.find(tree.getelementpath(elem)).attrib['name'].strip()
+            try:
+                s_data_out[header].append('"' + root.find(tree.getelementpath(elem)).attrib[drug_out[header]].strip() + '"')
+            except:
+                s_data_out[header].append('""')
+    df_s_PKPD = pd.DataFrame(data=s_data_out)
+    s_PKPD_filename = 's_PKPD_' + file_base
+    f_s_PKPD = open(s_PKPD_filename, 'w')
+    f_s_PKPD.write(df_s_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_s_PKPD.close
+
+    pheno_keywords = []
+    therapy_drugs = {}
+    #make dictionary of drugs under each measurement set, append sample name and measurement set ID to a_data_out
+    a_data_out = {'Sample Name': [], 'Measurement Set ID#': []}
+    for elem in pkpd_pd_meas:
+        a_data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent()
+                                       .getparent().attrib['ID'].strip() + '"')
+        pheno_keywords.append('"' + elem.getparent().getparent().getparent().getparent().attrib['keywords'].strip() + '"')
+        try:
+            a_data_out['Measurement Set ID#'].append('"' + elem.attrib['ID'].strip() +'"')
+        except:
+            a_data_out['Measurement Set ID#'].append('""')
+        therapy_drugs[elem] = root.findall(tree.getelementpath(elem) + '/therapy/drug')
+    #make dictionary of existing drug measurement headers and xPaths using list index
+    exist_drug_measurements = {}
+    for path in pd_paths:
+        if '/dose' in path:
+            for drug_elem_list in therapy_drugs.values():
+                for drug_elem in drug_elem_list:
+                    if '@' not in path:
+                        if root.find(tree.getelementpath(drug_elem) + path).text is not None:
+                            exist_drug_measurements[pd_header[pd_paths.index(path)]] = [path]
+                            break
+                    else:
+                        result = re.split(r"@", path)
+                        new_path = result[0].replace('[','')
+                        attr = result[1].replace(']', '')
+                        if root.find(tree.getelementpath(drug_elem) + new_path).attrib[attr] is not None:
+                            exist_drug_measurements[pd_header[pd_paths.index(path)]] = [new_path, attr]
+    #Find max number of drugs in measurement set
+    max_drug_len = len(therapy_drugs[max(therapy_drugs, key=lambda x: len(set(therapy_drugs[x])))])
+    #initialize headers
+    if max_drug_len > 0:
+        for i in range(max_drug_len):
+            num_name = 'Drug #' + str(i + 1) + ': ' + 'Drug Name'
+            a_data_out[num_name] = []
+            for meas in exist_drug_measurements:
+                num_head = 'Drug #' + str(i+1) + ': ' + meas
+                a_data_out[num_head] = []
+    #write drug content: loop through drug elements and write content for each drug in drug list
+    for elem_list in therapy_drugs.values():
+        for j,elem in enumerate(elem_list):
+            num_name = 'Drug #' + str(j + 1) + ': ' + 'Drug Name'
+            try:
+               a_data_out[num_name].append('"' + drug_ID_name[elem.attrib['ID']].strip() + '"')
+            except:
+               a_data_out[num_name].append('""')
+            for meas in exist_drug_measurements:
+                num_head = 'Drug #' + str(j + 1) + ': ' + meas
+                drug_path = exist_drug_measurements[meas][0]
+                if len(exist_drug_measurements[meas]) == 1:
+                    try:
+                        a_data_out[num_head].append('"' + root.find(tree.getelementpath(elem) + drug_path).text + '"')
+                    except:
+                        a_data_out[num_head].append('""')
+                else:
+                    drug_attrib = exist_drug_measurements[meas][1]
+                    try:
+                        a_data_out[num_head].append('"' + root.find(tree.getelementpath(elem) + drug_path).attrib[drug_attrib] + '"')
+                    except:
+                        a_data_out[num_head].append('""')
+
+    exist_response_measurements = {}
+    #Loop through non dose paths from excel relationship sheet, search for existence in measurement set elements
+    for path in pd_paths:
+        if '/dose' not in path:
+            for elem in PKPD_pd_meas:
+                if '@' not in path:
+                        if root.find(tree.getelementpath(elem) + path).text is not None:
+                            exist_response_measurements[pd_header[pd_paths.index(path)]] = [path]
+                            break
+                else:
+                        result = re.split(r"@", path)
+                        new_path = result[0].replace('[', '')
+                        attr = result[1].replace(']', '')
+                        if root.find(tree.getelementpath(elem) + new_path).attrib[attr] is not None:
+                            exist_response_measurements[pd_header[pd_paths.index(path)]] = [new_path, attr]
+    #initalize existing ISA headers for measurement_set/responses
+    for header in exist_response_measurements:
+        a_data_out[header] = []
+
+    #loop through measurement elements, write response content to a_data_out
+    for elem in PKPD_pd_meas:
+        for header in exist_response_measurements:
+            response_path = exist_response_measurements[header][0]
+            if len(exist_response_measurements[header]) == 1:
+                try:
+                    a_data_out[header].append('"' + root.find(tree.getelementpath(elem) + response_path).text + '"')
+                except:
+                    a_data_out[header].append('""')
+            else:
+                response_attrib = exist_response_measurements[header][1]
+                try:
+                    a_data_out[header].append('"' + root.find(tree.getelementpath(elem) + response_path).attrib[response_attrib] + '"')
+                except:
+                    a_data_out[header].append('""')
+
+    a_data_out['Assay Name'] = pheno_keywords
+    df_a_PKPD = pd.DataFrame(data=a_data_out)
+    a_PKPD_filename = 'a_PKPD_' + file_base
+    f_a_PKPD = open(a_PKPD_filename, 'w')
+    f_a_PKPD.write(df_a_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_PKPD.close
+
+    return (s_PKPD_filename, a_PKPD_filename)
+
+pkpd_drug = root.findall('.//PKPD/drug')
+pkpd_pd_meas = root.findall('.//PKPD/pharmacodynamics/therapy_measurement_set')
+#TODO - is the boolean below an issue? Will these exist independently?
+if (len(pkpd_drug) > 0) or (len(pkpd_pd_meas) > 0):
+    pkpd_file = a_s_PKPD(pkpd_drug,pkpd_pd_meas)
+    s_file_list.append(pkpd_file[0])
+    a_file_list.append(pkpd_file[1])
+
+else:
+    print('No PKPD Assay')
+
+def a_trans_processes(trans_processes_elems):
+    '''
+
+    :param trans_processes_elems: List of transport processes / variable xml elements, from root.findall()
+    :return: transport processes file name, to be appended to list of assay file names
+    Operation:
+        1) Import data from xlsx relationship file
+        2) Loop through each variable element, determine attributes that exist for variables
+        3) Write headers and content for variables to data_out dictionary
+        4) Determine which measurements exist in file, determine which atributes exist for the measurements
+        5) Write existing measurements and associated attributes to data_out
+    '''
+    # Import transport process variable attributes, correlate ISA value name, potential variable measurements,
+    # potential measurement attributes, and ISA header information for writing headers from excel file
+    # Write each entity as string to list
+    # trans_meas_attr_in: remove NaN from rows with no content, then replace NaN within dataframe with "" blank
+    df_trans_var_in = pd.read_excel(rF'{db}', sheet_name='A_TransportProcesses', keep_default_na=False, usecols=
+    ['Transport Processes ISA Variable Headers', 'Transport Processes Variable Attributes'])
+    df_trans_meas_in = pd.read_excel(rF'{db}', sheet_name='A_TransportProcesses', keep_default_na=False, usecols=
+    ['Transport Processes ISA Measurement Name', 'Transport Processes Variable Measurements'])
+    df_trans_meas_attr_in = pd.read_excel(rF'{db}', sheet_name='A_TransportProcesses', keep_default_na=True, usecols=
+    ['Transport Processes Variable Measurement Attributes', 'Transport Processes ISA Entity Beginning',
+     'Transport Processes ISA Entity Tail']).dropna(how='all').fillna("")
+    # remove blanks from transport processes variable and measurements dataframes
+    # Don't remove blanks measurement attribute dataframe(ISA entity beginning + tail lists blanks may be valid)
+    trans_var_attr = [str(i) for i in df_trans_var_in['Transport Processes Variable Attributes'].tolist() if i]
+    trans_var = [str(i) for i in df_trans_var_in['Transport Processes ISA Variable Headers'].tolist() if i]
+    trans_meas_path = [str(i) for i in df_trans_meas_in['Transport Processes Variable Measurements'].tolist() if i]
+    trans_meas = [str(i) for i in df_trans_meas_in['Transport Processes ISA Measurement Name'].tolist() if i]
+    meas_attr = [str(i) for i in df_trans_meas_attr_in['Transport Processes Variable Measurement Attributes'].tolist() if i]
+    meas_header_begin = [str(i) for i in df_trans_meas_attr_in['Transport Processes ISA Entity Beginning'].tolist()]
+    meas_header_tail = [str(i) for i in df_trans_meas_attr_in['Transport Processes ISA Entity Tail'].tolist()]
+    if len(trans_var_attr) != len(trans_var):
+        print('Transport Processes - Issue in Excel File, Variable Section')
+        # TODO change to error logging
+    if len(trans_meas_path) != len(trans_meas):
+        print('Transport Processes - Issue in Excel File, Measurement Section')
+        # TODO change to error logging
+    if not (len(meas_attr) == len(meas_header_begin) == len(meas_header_tail)):
+        print('Transport Processes - Issue in Excel File, Measurement Attribute Section')
+        # TODO change to error logging
+
+    data_out = {'Sample Name': []}
+    pheno_keywords = []
+    var_attr_in_file = []
+    ISA_head_path = {}
+
+    # For elems in list of found motility elements, append info that characterizes the element to data_out
+    for elem in trans_processes_elems:
+        data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
+                                       .getparent().attrib['ID'].strip() + '"')
+        pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
+
+    for attr in trans_var_attr:
+        for elem in trans_processes_elems:
+            # Check to see if variable attribute exists, if so add to list of variables
+            if (root.find(tree.getelementpath(elem)).attrib[attr]) is not None:
+                var_attr_in_file.append(attr)
+                break
+    #Reorder list to match order attributes appear in xlsx relationship file
+    var_attr_in_file = [x for x in trans_var_attr if x in var_attr_in_file]
+    #Initialize headers with list of attributes in file, make properly indexed list of headers for attributes in file
+    attr_headers = []
+    for attr in var_attr_in_file:
+        header = trans_var[trans_var_attr.index(attr)]
+        data_out[header] = []
+        attr_headers.append(header)
+
+    #Write information for variables to data out
+    for elem in trans_processes_elems:
+        for ind, header in enumerate(attr_headers):
+            try:
+                data_out[header].append('"' + root.find(tree.getelementpath(elem)).attrib[var_attr_in_file[ind]] + '"')
+            except:
+                data_out[header].append('""')
+
+    measure_in_file = {}
+    for path in trans_meas_path:
+        for elem in trans_processes_elems:
+            # Check to see if measurement elem exists, if so check to see if value exists for measurement elem
+            if (root.find(tree.getelementpath(elem) + path) is not None) and \
+                    (root.find(tree.getelementpath(elem) + path).text is not None):
+                measure_in_file[path] = []
+                break
+    # add occurances of attribute under each path header in measure_in_file dictionary created above
+    # break after attribute confirmed for path (need to write ISA header)
+    # attributes added in order of list from xlsx sheet
+    for path in measure_in_file:
+        for attr in meas_attr:
+            for elem in trans_processes_elems:
+                if (root.find(tree.getelementpath(elem) + path) is not None):
+                    if attr in root.find(tree.getelementpath(elem) + path).attrib:
+                        measure_in_file[path].append(attr)
+                        break
+    # for existing path/attribute combination, find index within their respective list from xlsx file
+    # Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
+    # be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
+    # of the xpath and attr to use to get the appropriate data from the xml file
+    for path in measure_in_file:
+        measure_index = trans_meas_path.index(path)
+        ISA_head_path['Parameter Value[' + trans_meas[measure_index] + ']'] = [path]
+        for attr in measure_in_file[path]:
+            attr_index = meas_attr.index(attr)
+            ISA_head = meas_header_begin[attr_index] + trans_meas[measure_index] + meas_header_tail[
+                attr_index]
+            ISA_head_path[ISA_head] = [path, attr]
+
+    # initialize data_out by writing headers
+    for header in ISA_head_path:
+        data_out[header] = []
+
+    # text elements (measurement values) have dictionary value len == 1, attributes have len == 2
+    # Iterate through list of elems
+    # Iterate through list of headers
+    # write data_out[header].append(find data in xml)
+    for elem in trans_processes_elems:
+        for header in ISA_head_path:
+            path = ISA_head_path[header][0]
+            if len(ISA_head_path[header]) == 1:
+                try:
+                    data_out[header].append('"' + root.find(tree.getelementpath(elem) + path).text.strip() + '"')
+                except:
+                    data_out[header].append('""')
+            else:
+                attr = ISA_head_path[header][1]
+                try:
+                    data_out[header].append(
+                        '"' + (root.find(tree.getelementpath(elem) + path).attrib[attr]).strip() + '"')
+                except:
+                    data_out[header].append('""')
+
+
+    data_out['Assay Name'] = pheno_keywords
+    df_trans = pd.DataFrame(data=data_out)
+    trans_filename = 'a_TransportProcesses_' + file_base
+    f_a_trans = open(trans_filename, 'w')
+    f_a_trans.write(df_trans.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_trans.close
+    return (trans_filename)
+
+trans_process = root.findall('.//transport_processes/variable')
+if len(trans_process) > 0:
+    a_file_list.append(a_trans_processes(trans_process))
+else:
+    print('No Transport Processes Assay')
+
+
+print('Assay file list:', a_file_list)
+print('Study file list:', s_file_list)
+
+print(sample_name_base)
+
+def study_write():
+    '''
+
+    :return:
+    '''
+    df_study_in = pd.read_excel(rF'{db}', sheet_name='Study', keep_default_na=False, usecols=
+    ['Study ISA Header', 'Study xPath'])
+    study_paths = [str(i) for i in df_study_in['Study xPath'].tolist() if i]
+    study_headers = [str(i) for i in df_study_in['Study ISA Header'].tolist() if i]
+    print(study_paths)
+    print(study_headers)
+    #Initalize data_out dictionary
+    data_out = {'Sample Name': ['"' + sample_name_base + '"']}
+    if len(study_paths) != len(study_headers):
+        print('Study File - Issue in Excel File')
+
+    #If content exists in xml, write header and content
+    #Only 1 row of "content" : can write header then content, then move to next
+    for path in study_paths:
+        if root.find(path) is not None:
+            #Write header to dictionary as key with empty list as value
+            header = study_headers[study_paths.index(path)]
+            data_out[header] = []
+            if '@' not in path:
+                data_out[header].append('"' + root.find(path).text.strip() + '"')
+            else:
+                result = re.split(r"@", path)
+                new_path = result[0].replace('[', '')
+                attr = result[1].replace(']', '')
+                data_out[header].append('"' + root.find(path).attrib[attr].strip() + '"')
+
+    df_study = pd.DataFrame(data=data_out)
+    study_filename = 's_' + file_base
+    f_study = open(study_filename, 'w')
+    f_study.write(df_study.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_study.close
+    return (study_filename)
+#call study_write function and append file name to file list
+s_file_list.append(study_write())
 '''
 Study
 
+Clinical study and non clinical? Or together?
 Correct I File
 I file - write entity then skip if ScriptVar?
 '''
