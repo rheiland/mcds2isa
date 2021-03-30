@@ -28,9 +28,10 @@ db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
-DCL_file = DCL_list[100]
+DCL_file = DCL_list[103]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
+output_folder = os.path.join(cwd,'ISATabOutput')
 file_base = 'test.txt'
 #TODO update file base name
 #DSS_in = os.path.join(cwd, 'All_Snapshots_MCDS_S_0000000001.xml')
@@ -242,12 +243,12 @@ def mcds_match(i):
 
     f_I.write(I_str + '\n')
 
-error_file = "ErrorLog_DCL2ISA.txt"
+error_file = os.path.join(output_folder,'ErrorLog_DCL2ISA.txt')
 f_E = open(error_file, 'w')
 
 
 I_filename = 'i_' + file_base
-f_I = open(I_filename, 'w')
+f_I = open(os.path.join(output_folder,I_filename), 'w')
 for ind in df.index[:102]:
     if df.at[ind,'ISA File Location'] == 'I' or 'I-S':
         #print("I file line: ", ind + 1)
@@ -259,95 +260,6 @@ for ind in df.index[:102]:
     #If type is I file, then write newline with I file. If header, write in all caps and go to next line. If type data,
     # write then /t, parse through xml with correlate xpath. If no data exists, "" then /n. If data exists, write in file. Continue for all x paths.
     # After doing for all xpaths in list, /n
-f_I.close()
-def fix_multi_blanks(I_filename):
-    '''
-    :param I_filename: Input file to modify
-    :return: Modified input file with correct number of quotes for ISA entities with no associated xPath,
-            based on number of entities on a separate line in the file
-    '''
-    f_I = open(I_filename, 'r')
-    file_data = f_I.readlines()
-    multi_dict = {}
-    multi_quantity = {}
-    for i in range(len(df['Multiples for xPath'])):
-        if 'Multiple' in str(df.at[i,'Multiples for xPath']):
-            dep_str = df.at[i, 'Multiples for xPath'].replace('Multiple', '').replace('-', '').strip()
-            if dep_str:
-                if dep_str in multi_dict:
-                    multi_dict[dep_str].append(str(df.at[i,'ISA-Tab Entity']))
-                else:
-                    multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
-                    multi_dict[dep_str] = [multi_dict[dep_str]]
-
-    for key in multi_dict.keys():
-        f_I.seek(0)
-        for line in f_I:
-            if key in line:
-                multi_quantity[key] = int(line.count('"') / 2)
-        if multi_quantity[key] > 1:
-            for edit_line in multi_dict[key]:
-                f_I.seek(0)
-                for (line_num, line) in enumerate(f_I):
-                    if edit_line in line:
-                        quote_str = ''
-                        for i in range(multi_quantity[key]):
-                            quote_str += '\t""'
-                        file_data[line_num] = edit_line + '\t\t' + quote_str + '\n'
-    f_I = open(I_filename, 'w')
-    f_I.writelines(file_data)
-    f_I.close()
-
-fix_multi_blanks(I_filename)
-
-
-f_I = open(I_filename, 'r')
-file_data = f_I.readlines()
-f_I.seek(0)
-contact_info_list = []
-line_nums = []
-dup_ind_list = []
-for (line_num,line) in enumerate(f_I):
-    if 'Study Person' in line:
-        contact_info_list.append(line.replace('\n', '').split('\t'))
-        line_nums.append(line_num)
-for b in range(len(contact_info_list)):
-    contact_info_list[b] = list(filter(None, contact_info_list[b]))
-df_s = pd.DataFrame.transpose(pd.DataFrame(contact_info_list))
-df_s.columns=['A','B','C','D','E', 'F', 'G', 'H', 'I', 'J', 'K']
-#Last name and email columns
-for (index,dup) in enumerate(df_s.duplicated(subset = ['A','B'])):
-    if dup:
-        dup_ind_list.append(index)
-#Get list of rows with duplicates
-
-#Get string from dup, find row which it is a duplicate of, go to
-for j in dup_ind_list:
-    last = df_s.at[j,'A']
-    first = df_s.at[j,'B']
-    first_ind = df_s[(df_s.A == last) & (df_s.B == first)].index[0]
-    role = str(df_s.at[first_ind,'I']).strip('"')
-    new_role = str(df_s.at[j,'I']).strip('"')
-    df_s.at[first_ind,'I'] = '"' + role + ';' + new_role + '"'
-
-df_s = df_s.drop(dup_ind_list).transpose()
-col_list = df_s.values.tolist()
-updated_contact_list = []
-for (j,items) in enumerate(col_list):
-    temp_str = []
-    for k in range(len(items)):
-         if k == 0:
-             temp_str.append((items[k].title() + '\t\t'))
-         elif k == len(items) - 1:
-             temp_str.append(items[k] + '\n')
-         else:
-             temp_str.append(items[k])
-    updated_contact_list.append('\t'.join(temp_str))
-
-for z in range(len(updated_contact_list)):
-    file_data[line_nums[z]] = updated_contact_list[z]
-f_I = open(I_filename, 'w')
-f_I.writelines(file_data)
 f_I.close()
 
 print('\n Assays \n')
@@ -524,7 +436,7 @@ def a_microenvironment(micro_elems):
     data_out['Assay Name'] = pheno_keywords
     df_micro = pd.DataFrame(data = data_out)
     micro_filename = 'a_Microenvironment_' + file_base
-    f_a_micro = open(micro_filename, 'w')
+    f_a_micro = open(os.path.join(output_folder,micro_filename), 'w')
     f_a_micro.write(df_micro.to_string(header=True, index=False))
     f_a_micro.close
     return(micro_filename)
@@ -640,7 +552,7 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     data_out['Assay Name'] = pheno_keywords
     df_cycle = pd.DataFrame(data=data_out)
     cycle_filename = 'a_CellCycle_' + file_base
-    f_a_cycle = open(cycle_filename, 'w')
+    f_a_cycle = open(os.path.join(output_folder,cycle_filename), 'w')
     f_a_cycle.write(df_cycle.to_string(header=True, index=False))
     f_a_cycle.close
     return (cycle_filename)
@@ -722,7 +634,7 @@ def a_celldeath(cell_death_elems):
     data_out['Assay Name'] = pheno_keywords
     df_death = pd.DataFrame(data=data_out)
     death_filename = 'a_CellDeath_' + file_base
-    f_a_death = open(death_filename, 'w')
+    f_a_death = open(os.path.join(output_folder,death_filename), 'w')
     f_a_death.write(df_death.to_string(header=True, index=False))
     f_a_death.close
     return (death_filename)
@@ -831,7 +743,7 @@ def a_mechanics(cell_mechanics_elems):
     data_out['Assay Name'] = pheno_keywords
     df_mech = pd.DataFrame(data=data_out)
     mech_filename = 'a_Mechanics_' + file_base
-    f_a_mech = open(mech_filename, 'w')
+    f_a_mech = open(os.path.join(output_folder,mech_filename), 'w')
     f_a_mech.write(df_mech.to_string(header=True, index=False))
     f_a_mech.close
     return (mech_filename)
@@ -982,7 +894,7 @@ def a_geo_props(cell_geo_elems):
     data_out['Assay Name'] = pheno_keywords
     df_geo = pd.DataFrame(data=data_out)
     geo_filename = 'a_GeometricalProperties_' + file_base
-    f_a_geo = open(geo_filename, 'w')
+    f_a_geo = open(os.path.join(output_folder,geo_filename), 'w')
     f_a_geo.write(df_geo.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_geo.close
     return (geo_filename)
@@ -1098,7 +1010,7 @@ def a_motility(cell_motility_elems):
     data_out['Assay Name'] = pheno_keywords
     df_motility = pd.DataFrame(data=data_out)
     motility_filename = 'a_Motility_' + file_base
-    f_a_motility = open(motility_filename, 'w')
+    f_a_motility = open(os.path.join(output_folder,motility_filename), 'w')
     f_a_motility.write(df_motility.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_motility.close
     return (motility_filename)
@@ -1164,7 +1076,7 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
                 s_data_out[header].append('""')
     df_s_PKPD = pd.DataFrame(data=s_data_out)
     s_PKPD_filename = 's_PKPD_' + file_base
-    f_s_PKPD = open(s_PKPD_filename, 'w')
+    f_s_PKPD = open(os.path.join(output_folder,s_PKPD_filename), 'w')
     f_s_PKPD.write(df_s_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
     f_s_PKPD.close
 
@@ -1268,7 +1180,7 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
     a_data_out['Assay Name'] = pheno_keywords
     df_a_PKPD = pd.DataFrame(data=a_data_out)
     a_PKPD_filename = 'a_PKPD_' + file_base
-    f_a_PKPD = open(a_PKPD_filename, 'w')
+    f_a_PKPD = open(os.path.join(output_folder,a_PKPD_filename), 'w')
     f_a_PKPD.write(df_a_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_PKPD.close
 
@@ -1420,7 +1332,7 @@ def a_trans_processes(trans_processes_elems):
     data_out['Assay Name'] = pheno_keywords
     df_trans = pd.DataFrame(data=data_out)
     trans_filename = 'a_TransportProcesses_' + file_base
-    f_a_trans = open(trans_filename, 'w')
+    f_a_trans = open(os.path.join(output_folder,trans_filename), 'w')
     f_a_trans.write(df_trans.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_trans.close
     return (trans_filename)
@@ -1431,11 +1343,187 @@ if len(trans_process) > 0:
 else:
     print('No Transport Processes Assay')
 
+def a_clinical_stain(stain_properties, stain_measurements):
+    '''
+    :param stain_properties: list of xml elements found under pathology_definitions/stain
+    :param stain_measurements: list of xml elements found under pathology/stain
+    :return: name of clinical stain assay to be appended to assay file list
+    '''
+    #Import ISA headers and paired xPaths from xlsx relationship file
+    df_clin_stain_prop = pd.read_excel(rF'{db}', sheet_name='A_ClinicalStain', keep_default_na=False, usecols=
+    ['Clinical Stain Properties ISA Headers', 'Clinical Stain Properties xPaths'])
+    df_clin_stain_meas = pd.read_excel(rF'{db}', sheet_name='A_ClinicalStain', keep_default_na=False, usecols=
+    ['Clinical Stain Measurements ISA Header', 'Clinical Stain Measurements xPaths'])
+    # remove blanks from dataframes
+    stain_prop_path = [str(i) for i in df_clin_stain_prop['Clinical Stain Properties xPaths'].tolist() if i]
+    stain_prop_head = [str(i) for i in df_clin_stain_prop['Clinical Stain Properties ISA Headers'].tolist() if i]
+    stain_meas_path = [str(i) for i in df_clin_stain_meas['Clinical Stain Measurements xPaths'].tolist() if i]
+    stain_meas_head = [str(i) for i in df_clin_stain_meas['Clinical Stain Measurements ISA Header'].tolist() if i]
+
+    if len(stain_prop_path) != len(stain_prop_head):
+        print('Clinical Stain - Issue in Excel File, Properties Section')
+        # TODO change to error logging
+    if len(stain_meas_path) != len(stain_meas_head):
+        print('Clinical Stain - Issue in Excel File, Measurement Section')
+        # TODO change to error logging
+
+    #Append the sample name base to data_out one time per different stain
+    data_out = {'Sample Name': []}
+    for i in range(max(len(stain_properties),len(stain_measurements))):
+        data_out['Sample Name'].append('"' + sample_name_base + '"')
+
+    #If ID's of stain elements match (they should be correctly ordered), add the element pair to dictionary
+    matched_prop_meas = {}
+
+    for prop_elem in stain_properties:
+        for meas_elem in stain_measurements:
+            if (prop_elem.attrib['ID'].strip() == meas_elem.attrib['ID'].strip()):
+                matched_prop_meas[prop_elem] = meas_elem
+                break
+
+    #make list of unmatched measurement elements if there are any
+    unmatched_meas_elems = [x for x in stain_measurements if x not in matched_prop_meas.values()]
+    #determine existing stain property xPaths, write matched ISA header to dictionary as key and xPath to dictionary as value
+    #If xPath is for an attribute, save the element path as key[0] and the attribute name as key[1]
+    exist_properties = {}
+    for path in stain_prop_path:
+        header = stain_prop_head[stain_prop_path.index(path)]
+        for elem in stain_properties:
+            if '@' not in path:
+                if root.find(tree.getelementpath(elem) + path).text is not None:
+                    exist_properties[header] = [path]
+            else:
+                result = re.split(r"@", path)
+                new_path = result[0].replace('[', '')
+                attr = result[1].replace(']', '')
+                if (root.find(tree.getelementpath(elem) + path) is not None and
+                root.find(tree.getelementpath(elem) + path).attrib[attr] is not None):
+                    exist_properties[header] = [new_path, attr]
+
+        # determine existing stain measurement xPaths, write matched ISA header to dictionary as key and xPath to dictionary as value
+        # If xPath is for an attribute, save the element path as key[0] and the attribute name as key[1]
+    exist_measurements = {}
+    for path in stain_meas_path:
+        header = stain_meas_head[stain_meas_path.index(path)]
+        for elem in stain_measurements:
+            if '@' not in path:
+                if root.find(tree.getelementpath(elem) + path).text is not None:
+                    exist_measurements[header] = [path]
+            else:
+                result = re.split(r"@", path)
+                new_path = result[0].replace('[', '')
+                attr = result[1].replace(']', '')
+                if (root.find(tree.getelementpath(elem) + path) is not None and
+                root.find(tree.getelementpath(elem) + path).attrib[attr] is not None):
+                    exist_measurements[header] = [new_path, attr]
+
+    #Initialize existing headers for data_out
+    data_out['Stain Name'] = []
+    data_out['Study Stain ID#'] = []
+    for header in exist_properties:
+        data_out[header] = []
+    for header in exist_measurements:
+        data_out[header] = []
+
+    #Write content for existing ISA headers and xPaths to data_out
+    #If no ID, write '""' to data_out
+    #If not in matched_prop_meas, does not have a matched measurement element. Therefore, make meas_elem '""' to trigger
+    #except statement and put "" blank in measurement headers
+    #If there are any measurement elements which are not matched, their content will be written to the file in
+    #the following loop
+    for prop_elem in stain_properties:
+        try:
+            data_out['Study Stain ID#'].append('"' + prop_elem.attrib['ID'] + '"')
+        except:
+            data_out['Study Stain ID#'].append('""')
+        try:
+            meas_elem = (matched_prop_meas[prop_elem])
+        except KeyError:
+            meas_elem = ""
+        if prop_elem.attrib['name'] is not None:
+            data_out['Stain Name'].append('"' + prop_elem.attrib['name'].strip() + '"')
+        elif meas_elem.attrib['name'] is not None:
+            data_out['Stain Name'].append('"' + meas_elem.attrib['name'].strip() + '"')
+        else:
+            elem.attrib['name'].append('""')
+        for header in exist_properties:
+            prop_path = exist_properties[header][0]
+            if len(exist_properties[header]) == 1:
+                try:
+                    data_out[header].append(
+                        '"' + root.find(tree.getelementpath(prop_elem) + prop_path).text +'"')
+                except:
+                    data_out[header].append('""')
+            elif len(exist_properties[header]) == 2:
+                prop_attr = exist_properties[header][1]
+                try:
+                    data_out[header].append(
+                        '"' + root.find(tree.getelementpath(prop_elem) + prop_path).attrib[prop_attr]+ '"')
+                except:
+                    data_out[header].append('""')
+        for header in exist_measurements:
+            meas_path = exist_measurements[header][0]
+            if len(exist_measurements[header]) == 1:
+                try:
+                    data_out[header].append(
+                        '"' + root.find(tree.getelementpath(meas_elem) + meas_path).text + '"')
+                except:
+                    data_out[header].append('""')
+            elif len(exist_measurements[header]) == 2:
+                meas_attr = exist_measurements[header][1]
+                try:
+                    data_out[header].append(
+                        '"' + root.find(tree.getelementpath(meas_elem) + meas_path).attrib[meas_attr] + '"')
+                except:
+                    data_out[header].append('""')
+
+    #append data to data_out for any unmatched measurements
+    #Since there is no matched stain property, write "" to data_out for all property headers that exist in the file
+    if len(unmatched_meas_elems) > 0:
+        for unmatched_elem in unmatched_meas_elems:
+            try:
+                data_out['Stain Name'].append('"' + unmatched_elem.attrib['name'] + '"')
+            except:
+                data_out['Stain Name'].append('""')
+            try:
+                data_out['Study Stain ID#'].append('"' + unmatched_elem.attrib['ID'] + '"')
+            except:
+                data_out['Study Stain ID#'].append('""')
+            for header in exist_properties:
+                data_out[header].append('""')
+
+            for header in exist_measurements:
+                meas_path = exist_measurements[header][0]
+                if len(exist_measurements[header]) == 1:
+                    try:
+                        data_out[header].append(
+                            '"' + root.find(tree.getelementpath(unmatched_elem) + meas_path).text + '"')
+                    except:
+                        data_out[header].append('""')
+                elif len(exist_measurements[header]) == 2:
+                    meas_attr = exist_measurements[header][1]
+                    try:
+                        data_out[header].append(
+                            '"' + root.find(tree.getelementpath(unmatched_elem) + meas_path).attrib[meas_attr] + '"')
+                    except:
+                        data_out[header].append('""')
+
+    df_clin_stain = pd.DataFrame(data=data_out)
+    clin_stain_filename = 'a_ClinicalStain_' + file_base
+    f_a_clin_stain = open(os.path.join(output_folder,clin_stain_filename), 'w')
+    f_a_clin_stain.write(df_clin_stain.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_clin_stain.close
+    return (clin_stain_filename)
+
+
+stain_properties = root.findall('.//clinical/diagnosis/pathology/pathology_definitions/stain')
+stain_measurements = root.findall('.//clinical/diagnosis/pathology/stain')
+if (len(stain_measurements) > 0) or (len(stain_properties) > 0):
+    a_file_list.append(a_clinical_stain(stain_properties, stain_measurements))
+else:
+    print('No Clinical Stain Assay')
 
 print('Assay file list:', a_file_list)
-print('Study file list:', s_file_list)
-
-print(sample_name_base)
 
 def study_write():
     '''
@@ -1446,8 +1534,6 @@ def study_write():
     ['Study ISA Header', 'Study xPath'])
     study_paths = [str(i) for i in df_study_in['Study xPath'].tolist() if i]
     study_headers = [str(i) for i in df_study_in['Study ISA Header'].tolist() if i]
-    print(study_paths)
-    print(study_headers)
     #Initalize data_out dictionary
     data_out = {'Sample Name': ['"' + sample_name_base + '"']}
     if len(study_paths) != len(study_headers):
@@ -1470,12 +1556,131 @@ def study_write():
 
     df_study = pd.DataFrame(data=data_out)
     study_filename = 's_' + file_base
-    f_study = open(study_filename, 'w')
+    f_study = open(os.path.join(output_folder,study_filename), 'w')
     f_study.write(df_study.to_string(header=True, index=False, col_space=0, justify='center'))
     f_study.close
     return (study_filename)
 #call study_write function and append file name to file list
 s_file_list.append(study_write())
+
+print('Study file list: ', s_file_list)
+
+#Make fixes for multiple blanks, joining roles of repeated study contacts, and removing unused comments in I file
+
+def fix_multi_blanks():
+    '''
+    :param I_filename: Input file to modify
+    :return: Modified input file with correct number of quotes for ISA entities with no associated xPath,
+            based on number of entities on a separate line in the file
+    '''
+    f_I = open(os.path.join(output_folder,I_filename), 'r')
+    file_data = f_I.readlines()
+    multi_dict = {}
+    multi_quantity = {}
+    for i in range(len(df['Multiples for xPath'])):
+        if 'Multiple' in str(df.at[i,'Multiples for xPath']):
+            dep_str = df.at[i, 'Multiples for xPath'].replace('Multiple', '').replace('-', '').strip()
+            if dep_str:
+                if dep_str in multi_dict:
+                    multi_dict[dep_str].append(str(df.at[i,'ISA-Tab Entity']))
+                else:
+                    multi_dict[dep_str] = str(df.at[i, 'ISA-Tab Entity'])
+                    multi_dict[dep_str] = [multi_dict[dep_str]]
+
+    for key in multi_dict.keys():
+        f_I.seek(0)
+        for line in f_I:
+            if key in line:
+                multi_quantity[key] = int(line.count('"') / 2)
+        if multi_quantity[key] > 1:
+            for edit_line in multi_dict[key]:
+                f_I.seek(0)
+                for (line_num, line) in enumerate(f_I):
+                    if edit_line in line:
+                        quote_str = ''
+                        for i in range(multi_quantity[key]):
+                            quote_str += '\t""'
+                        file_data[line_num] = edit_line + '\t\t' + quote_str + '\n'
+    f_I = open(os.path.join(output_folder,I_filename), 'w')
+    f_I.writelines(file_data)
+    f_I.close()
+
+fix_multi_blanks()
+
+#TODO - make into function and update headers to be content
+
+def fix_study_contacts():
+    f_I = open(os.path.join(output_folder,I_filename), 'r')
+    file_data = f_I.readlines()
+    f_I.seek(0)
+    contact_info_list = []
+    line_nums = []
+    dup_ind_list = []
+    for (line_num,line) in enumerate(f_I):
+        if 'Study Person' in line:
+            contact_info_list.append(line.replace('\n', '').split('\t'))
+            line_nums.append(line_num)
+    for b in range(len(contact_info_list)):
+        contact_info_list[b] = list(filter(None, contact_info_list[b]))
+    df_s = pd.DataFrame.transpose(pd.DataFrame(contact_info_list))
+    df_s.columns=['A','B','C','D','E', 'F', 'G', 'H', 'I', 'J', 'K']
+    #Last name and email columns
+    for (index,dup) in enumerate(df_s.duplicated(subset = ['A','B'])):
+        if dup:
+            dup_ind_list.append(index)
+    #Get list of rows with duplicates
+
+    #Get string from dup, find row which it is a duplicate of, go to
+    for j in dup_ind_list:
+        last = df_s.at[j,'A']
+        first = df_s.at[j,'B']
+        first_ind = df_s[(df_s.A == last) & (df_s.B == first)].index[0]
+        role = str(df_s.at[first_ind,'I']).strip('"')
+        new_role = str(df_s.at[j,'I']).strip('"')
+        df_s.at[first_ind,'I'] = '"' + role + ';' + new_role + '"'
+
+    df_s = df_s.drop(dup_ind_list).transpose()
+    col_list = df_s.values.tolist()
+    updated_contact_list = []
+    for (j,items) in enumerate(col_list):
+        temp_str = []
+        for k in range(len(items)):
+             if k == 0:
+                 temp_str.append((items[k].title() + '\t\t'))
+             elif k == len(items) - 1:
+                 temp_str.append(items[k] + '\n')
+             else:
+                 temp_str.append(items[k])
+        updated_contact_list.append('\t'.join(temp_str))
+
+    for z in range(len(updated_contact_list)):
+        file_data[line_nums[z]] = updated_contact_list[z]
+    f_I = open(os.path.join(output_folder,I_filename), 'w')
+    f_I.writelines(file_data)
+    f_I.close()
+
+fix_study_contacts()
+
+def remove_I_empty_comment():
+    '''
+    :param I_filename: Input I_file
+    :return: None
+    '''
+    f_I = open(os.path.join(output_folder, I_filename), 'r')
+    file_data = f_I.readlines()
+    f_I.seek(0)
+    lines_to_remove = []
+    for line in file_data:
+        if 'Comment[' in line:
+            line_content = line.split(']',1)
+            if not line_content[1].replace('\n','').replace('\t','').replace('"','').strip():
+               lines_to_remove.append(line)
+    file_data = [x for x in file_data if x not in lines_to_remove]
+    f_I = open(os.path.join(output_folder, I_filename), 'w')
+    f_I.writelines(file_data)
+    f_I.close()
+
+remove_I_empty_comment()
 '''
 Study
 
