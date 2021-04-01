@@ -25,7 +25,11 @@ cwd = os.getcwd()
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 # DCL_xml_dir = (r'...<enter local path>...\MCDS_2_ISATab\All_Digital_Cell_Lines')
 # Other user: remove line 21-23 and use line 24
-DCL_list = [os.path.join(DCL_xml_dir,x) for x in os.listdir(DCL_xml_dir)]
+DCL_list = os.listdir(DCL_xml_dir)
+Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
+                ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
+DCL_list = [os.path.join(DCL_xml_dir,DCL) for DCL in DCL_list if DCL not in Obsolete_DCL]
+print(DCL_list)
 column_names = ["MCDS Entity", "xPath", "xPath - Index Removed", "File Name", "Entity Type"]
 # Define column names
 df = pd.DataFrame(columns=column_names)

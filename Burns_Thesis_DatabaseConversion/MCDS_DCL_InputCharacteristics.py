@@ -18,6 +18,9 @@ os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 cwd = os.getcwd()
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 DCL_list = os.listdir(DCL_xml_dir)
+Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
+                ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
+DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 All_DCL_list = []
 for DCL in DCL_list:
     All_DCL_list.append(os.path.join(DCL_xml_dir, DCL))
@@ -34,7 +37,8 @@ def dcl_input_indexed_list(DCL_list):
         parser = etree.XMLParser(remove_comments=True)
         tree = etree.parse(DCL, parser=parser)
         root = tree.getroot()
-        f_l.write('List Index: ' + str(dcl_ind) + '\t\tFilename: ' + os.path.split(DCL)[1] + '\t\tFile type: ' + str(root.get('type')) + '\n')
+        f_l.write('List Index: ' + str(dcl_ind) + '\t\tFilename: ' + os.path.split(DCL)[1] + '\t\tFile type: ' + str(root.get('type'))
+                  + '\t\tMCDS version: ' + str(root.get('version')) + '\n')
         if str(root.get('type')) != "cell_line":
             k+= 1
             print('\nFilename: ' + os.path.split(DCL)[1] + ' \tis type: ' + str(root.get('type')))
