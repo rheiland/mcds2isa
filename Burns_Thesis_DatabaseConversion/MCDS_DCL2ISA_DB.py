@@ -28,7 +28,11 @@ db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
-DCL_file = DCL_list[103]
+Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
+                ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
+DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
+#These are removed because they have been updated to cell lines 238-242, in same order as original
+DCL_file = DCL_list[-3]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 output_folder = os.path.join(cwd,'ISATabOutput')
@@ -44,6 +48,8 @@ root = tree.getroot()
 #TODO - comment explanation, raise error (value errors or things of that nature)
 if root.get('type') != 'cell_line':
     sys.exit("\n\033[1;31;40m Error: Input .xml is not a Digital Cell Line")
+if root.get('version') != '1.0.0':
+    print('Warning - MCDS version ' + str(root.get('version')) + ' may not be supported for this conversion script')
 #TODO - Update to work with list of files
 #TODO - is a check for xml needed? Is it better to skip over non XML files and non cell_line XML's rather than throw error? Allow user to decide?
 #Intialize XML parser, check file type
@@ -51,223 +57,15 @@ if root.get('type') != 'cell_line':
 df = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                       'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
 
-
-def match_mult(x_in):
-    '''
-
-    :param x_in: One xPath that is marked in the relationship xlsx to be able to contain multiple values
-    :return: One list containing existing elements at xPath and blanks in order of appearance in DCL xml input file
-    '''
-    x_list = root.findall(x_in)
-    #gives list of xPaths with existing elements
-    x_elem_out = []
-    par_len = len(root.findall(x_in.rsplit('/',1)[0]))
-    #if number of existing elements is less than iterations of parent tag, appropriately place elements and blanks in ordered list
-    if len(x_list) < par_len:
-        val_dict = {}
-        for x in x_list:
-            val_dict[int(tree.getpath(x).rsplit('[')[-1].rsplit(']')[0]) - 1] = x
-            #x is xpath for element that exists
-        for j in range(par_len):
-            if not j in val_dict:
-                val_dict[j] = ""
-            x_elem_out.append(val_dict[j])
-            #add in "" blanks for elements which do not exist and append to list in order
-    else:
-        x_elem_out = x_list
-    return(x_elem_out)
-
-def entity_concat(path,i):
-    '''
-    :param path: 2 or more xPaths with a separation variable in " ", signifying concatenation with the separation variable
-    :param i: index of xPaths
-    :return: list of concatenated strings generated from the 2 or more xPaths
-    Operation: initialize variables, split xPaths to be concatenated, store values in array, concatenate by j counter
-    '''
-    concat_out = []
-    matched_list = []
-    concat_list = []
-    concat_paths = path.split('"')[::2]
-    sep_vars = path.split('"')[1::2]
-    #TODO give error if len (concat_paths) is not = len(sep_vars)?
-    j = len(concat_paths)
-    k = 1
-    # j = number of elements to concat, k = number of multiples, default 1 for single
-    for concat in concat_paths:
-        concat = concat.strip()
-        if 'Single' in str(df.at[i, 'Multiples for xPath']):
-            try:
-                concat_list.append(root.find(concat).text.strip().replace('\n', ' ').replace('\t', ''))
-            except:
-                concat_list.append('')
-                #print('Text Does Not Exist')
-        elif 'Multiple' in str(df.at[i, 'Multiples for xPath']):
-            mult_list = match_mult(concat)
-            for mult_elem in mult_list:
-                try:
-                    concat_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
-                except:
-                    concat_list.append('')
-                    #print('Text Does Not Exist')
-            k = len(mult_list)
-        else:
-            f_E.write('Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
-   #determine which indices from generated list to concatenate
-    for num_mult in range(k):
-        ind_list = []
-        join_list = []
-        for num_concat in range(j):
-            ind_list.append(num_mult + num_concat * (k))
-        for c_list_ind in ind_list:
-            if concat_list[c_list_ind]:
-                join_list.append(concat_list[c_list_ind])
-        matched_list.append(join_list)
-    #Matched_list has nested lists of each item to be joined
-    for num_mult in range(k):
-        concat_out.append(sep_vars[0].join(matched_list[num_mult]))
-    return concat_out
-
-def mcds_match(i):
-    # For each index value, go to that row of the relationship xlsx file
-    # Pull xPath's in list, separate by commas into different values
-    # Go to each xPath in input xml - if there is value, write to f_I
-    # If there is no value from input xml, put appropriate quotes for blank
-
-    # Initialize string with spacing from entered ISA entity name
-    str_list = []
-    I_str = ''
-    I_sep = '\t'
-    I_blank = '""'
-    # If statement checks to see whether xPath exists in relationship excel sheet.
-    # If xPath does not exist, write appropriate number of "" to line in else statement
-    if not pd.isnull(df.at[i,'MCDS-DCL Correlate X-Path']):
-        #If entry is written in excel sheet (i.e. not contained in input XML, same for all files), write to I_str
-        if df.at[i,'MCDS-DCL Correlate X-Path'] == "Text Entry":
-            I_str += df.at[i,'MCDS-DCL Correlate Entity']
-        else:
-            xpaths = df.at[i,'MCDS-DCL Correlate X-Path'].split(",")
-            #Pull xPaths from cell in xlsx file, separate multiple values into list to use in for loop
-            for path in xpaths:
-                path = path.strip()
-                if '"' in path:
-                    str_list.extend(entity_concat(path,i))
-                #'&' in xPath signifies that the xPaths should be concatenated to a single ISA value "text1 - text2..."
-                else:
-                    if '@' in path:
-                    # '@' in xPath signifies this is an attribute
-                    #Lines below: split input xPath into element xPath and attribute name
-                    #Write value of attribute to str_list with appropriate "" if no result
-                        result = re.split(r"@", path)
-                        attr = result[1].replace(']', '')
-                        if 'Single' in str(df.at[i,'Multiples for xPath']):
-                            try:
-                                str_list.append(root.find(path).attrib[attr])
-                                break
-                            except:
-                                print('Attr Does Not Exist')
-                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
-                            mult_list = match_mult(path)
-                            for mult_elem in mult_list:
-                                try:
-                                   str_list.append(mult_elem.attrib[attr])
-                                except:
-                                    str_list.append(I_blank)
-                                    print('Attr Does Not Exist')
-                        else:
-                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
-
-                    elif '*' in path:
-                        # '*' in xPath signifies this is a tag
-                        # Lines below: remove '*' from xPath
-                        # Write value of tag to str_list with appropriate "" if no result
-                        gen_count = path.count('*')
-                        result = path.replace('*', '')
-                        if 'Single' in str(df.at[i,'Multiples for xPath']):
-                            try:
-                                if gen_count == 1:
-                                    str_list.append(root.find(result).getparent().tag.replace('_', ' ').title())
-                                if gen_count == 2:
-                                    str_list.append(root.find(result).getparent().getparent().tag.replace('_', ' ').title())
-                                break
-                            except:
-                                print('Tag Does Not Exist')
-                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
-                            mult_list = match_mult(result)
-                            for mult_elem in mult_list:
-                                try:
-                                    if gen_count == 1:
-                                        str_list.append(mult_elem.getparent().tag.replace('_', ' ').title())
-                                    if gen_count == 2:
-                                        str_list.append(mult_elem.getparent().getparent().tag.replace('_', ' ').title())
-                                except:
-                                    str_list.append(I_blank)
-                                    print('Tag Does Not Exist')
-                        else:
-                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
-
-                    else:
-                        # Default state is finding the text from the element at the specified xPath
-                        # Lines below: split input xPath into element xPath and attribute name
-                        # Write value of attribute to str_list with appropriate "" if no result
-
-                        if 'Single' in str(df.at[i,'Multiples for xPath']):
-                            try:
-                                str_list.append(root.find(path).text.strip().replace('\n', ' ').replace('\t', ''))
-                                break
-                            except:
-                                print('Text Does Not Exist')
-                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
-                            mult_list = match_mult(path)
-                            for mult_elem in mult_list:
-                                try:
-                                    str_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
-                                except:
-                                    str_list.append(I_blank)
-                                    print('Text Does Not Exist')
-                        else:
-                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
-
-                        #TODO - would there be instances of the same info being contained at different xPaths, but should only be written to the ISA output once?
-            if df.at[i,'Multiples for xPath'] == 'Single' and len(str_list) == 0:
-                I_str += I_sep + '""'
-            else:
-                for match in str_list:
-                    if match != '""':
-                        I_str += I_sep + '"' + match + '"'
-                    else:
-                        I_str += I_sep + match
-    else:
-        I_str += I_sep + '""'
-        if pd.isnull(df.at[i,'Multiples for xPath']):
-            f_E.write('\t\t\t (No xPath) Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
-
-    f_I.write(I_str + '\n')
-
-error_file = os.path.join(output_folder,'ErrorLog_DCL2ISA.txt')
-f_E = open(error_file, 'w')
-
-
-I_filename = 'i_' + file_base
-f_I = open(os.path.join(output_folder,I_filename), 'w')
-for ind in df.index[:102]:
-    if df.at[ind,'ISA File Location'] == 'I' or 'I-S':
-        #print("I file line: ", ind + 1)
-        if df.at[ind,'ISA Entity Type'] == 'Header':
-            f_I.write(df.at[ind,'ISA-Tab Entity'].upper() + '\n')
-        else:
-            f_I.write(df.at[ind,'ISA-Tab Entity'] + '\t\t')
-            mcds_match(ind)
-    #If type is I file, then write newline with I file. If header, write in all caps and go to next line. If type data,
-    # write then /t, parse through xml with correlate xpath. If no data exists, "" then /n. If data exists, write in file. Continue for all x paths.
-    # After doing for all xpaths in list, /n
-f_I.close()
-
 print('\n Assays \n')
 
 #Assay files:
 sample_name_base = root.find('cell_line/metadata/MultiCellDB/ID').text +'.' + root.find('cell_line[@ID]').attrib['ID']
 a_file_list = []
-s_file_list = []
+assay_type_list = []
+assay_parameters = []
+param_removal_keywords = ['range','error','standard deviation', 'uncertainty']
+
 
 def a_microenvironment(micro_elems):
     '''
@@ -317,7 +115,7 @@ def a_microenvironment(micro_elems):
             else:
                 micro_var_names[elem.attrib['name']] = tree.getelementpath(elem)
                 micro_var_names[elem.attrib['name']] = [micro_var_names[elem.attrib['name']]]
-
+    assay_params = ';'.join([x.strip() for x in micro_var_names.keys()])
     #Make dictionary of dictionaries: one dictionary per variable name in micro_var_names. Each nested dictionary contains
     #the other variable elements (ex. units, ChEBI_ID, etc) that occur for each variable name and the associated xPaths
     #for these variable elements
@@ -339,7 +137,6 @@ def a_microenvironment(micro_elems):
                             micro_var[var_name] = {attr: [var_name_paths + path_ends]}
                     except:
                         None
-
     #Write content to data out dictionary in order of "Variable name" then other found variable elements
     #Find content based on the xPaths for variable names and variable elements in the created dictionaries
     for var_name,all_var in micro_var.items():
@@ -434,18 +231,24 @@ def a_microenvironment(micro_elems):
             data_out[condition].append(data_str + '"')
     #add phenotype_dataset[@keywords] value for each phenotype dataset to the output file under 'Assay Name' column
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_micro = pd.DataFrame(data = data_out)
     micro_filename = 'a_Microenvironment_' + file_base
     f_a_micro = open(os.path.join(output_folder,micro_filename), 'w')
     f_a_micro.write(df_micro.to_string(header=True, index=False))
     f_a_micro.close
-    return(micro_filename)
+
+    return(micro_filename, assay_params)
 
 microenvironment = root.findall('.//microenvironment')
 if len(microenvironment) > 0:
-    a_file_list.append(a_microenvironment(microenvironment))
+    micro_results = a_microenvironment(microenvironment)
+    a_file_list.append(micro_results[0])
+    assay_type_list.append('Microenvironment')
+    assay_parameters.append(micro_results[1])
 else:
     print('No Microenvironment Assay')
+
 def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     '''
     :param cell_phase_elems: List of cell_cycle_phase elements
@@ -454,21 +257,24 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     #Import cell cycle phase xPaths, correlate phase ISA headers, cell cycle summary xPaths, and correlate summary ISA headers
     #from excel file and write each entity as string to list
     df_cycle_in = pd.read_excel(rF'{db}', sheet_name='A_CellCycle', keep_default_na= False, usecols=
-    ['Cell Cycle Phase ISA Entities', 'Cell Cycle Phase xPaths', 'Cell Cycle Summary ISA Entities', 'Cell Cycle Summary xPaths'])
+        ['Cell Cycle Phase ISA Entities', 'Cell Cycle Phase xPaths', 'Cell Cycle Summary ISA Entities',
+         'Cell Cycle Summary xPaths'])
     phase_paths = [str(i) for i in df_cycle_in['Cell Cycle Phase xPaths'].tolist() if i]
     phase_headers = [str(i) for i in df_cycle_in['Cell Cycle Phase ISA Entities'].tolist() if i]
     summary_paths = [str(i) for i in df_cycle_in['Cell Cycle Summary xPaths'].tolist() if i]
     summary_headers = [str(i) for i in df_cycle_in['Cell Cycle Summary ISA Entities'].tolist() if i]
     if len(phase_paths) != len(phase_headers):
         print('Cell Cycle - Issue in Excel File')
-        #TODO change to error logging
-    #Initialize dictionary for writing to pandas dataframe
-    data_out = {'Sample Name': [], 'Characteristic [Cell Cycle Model]': [], 'Characteristic [Cell Cycle Phase]': []}
+        # TODO change to error logging
+    # Initialize dictionary for writing to pandas dataframe
+    data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': [], 'Characteristic[Cell Cycle Model]': [],
+                'Characteristic[Cell Cycle Phase]': []}
+
     pheno_keywords = []
     ent_in_file = []
     summary_in_file = []
-    #Loop through each potential cell_cycle_phase element for each cell_cycle_phase occurance
-    #If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
+    # Loop through each potential cell_cycle_phase element for each cell_cycle_phase occurance
+    # If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
     #Output is a list of all ISA entities that are found in the xml file
     for elem in cell_phase_elems:
         for num in range(len(phase_paths)):
@@ -508,8 +314,12 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     for elem in cell_phase_elems:
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent().attrib['ID'] + '"')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
-        data_out['Characteristic [Cell Cycle Model]'].append('"' + elem.getparent().attrib['model'].strip() + '"')
-        data_out['Characteristic [Cell Cycle Phase]'].append('"' + elem.attrib['name'].strip() + '"')
+        try:
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+        except:
+            data_out['Characteristic[Phenotype Type]'].append('""')
+        data_out['Characteristic[Cell Cycle Model]'].append('"' + elem.getparent().attrib['model'].strip() + '"')
+        data_out['Characteristic[Cell Cycle Phase]'].append('"' + elem.attrib['name'].strip() + '"')
         for num in range(len(phase_paths)):
             if root.find(tree.getelementpath(elem) + phase_paths[num]) is not None:
                 if '@' in phase_paths[num]:
@@ -550,18 +360,25 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
                 data_out[summary_headers[num]].append('""')
     #Write dictionary to dataframe, then dataframe to text file
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_cycle = pd.DataFrame(data=data_out)
     cycle_filename = 'a_CellCycle_' + file_base
     f_a_cycle = open(os.path.join(output_folder,cycle_filename), 'w')
     f_a_cycle.write(df_cycle.to_string(header=True, index=False))
+
+    #sort data for study protocol parameters
+    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
     f_a_cycle.close
-    return (cycle_filename)
-
-
+    return (cycle_filename, assay_params)
 cell_phase = root.findall('.//cell_cycle/cell_cycle_phase')
 cell_cycle = root.findall('.//cell_cycle')
 if len(cell_cycle) > 0:
-    a_file_list.append(a_cellcycle(cell_cycle,cell_phase))
+    cellcycle_results = a_cellcycle(cell_cycle,cell_phase)
+    a_file_list.append(cellcycle_results[0])
+    assay_type_list.append('Cell Cycle')
+    assay_parameters.append(cellcycle_results[1])
 else:
     print('No Cell Cycle Assay')
 
@@ -583,7 +400,7 @@ def a_celldeath(cell_death_elems):
         print('Cell Death - Issue in Excel File')
         #TODO change to error logging
     #Initialize dictionary for writing to pandas dataframe
-    data_out = {'Sample Name': []}
+    data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': []}
     ent_in_file = []
     pheno_keywords = []
     #Loop through each potential cell_death for each cell_death occurance
@@ -611,6 +428,10 @@ def a_celldeath(cell_death_elems):
     # Loop through cell death elements and write content to dictionary
     for elem in cell_death_elems:
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().attrib['ID'] + '"')
+        try:
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+        except:
+            data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
         for num in range(len(death_paths)):
             if root.find(tree.getelementpath(elem) + death_paths[num]) is not None:
@@ -632,16 +453,24 @@ def a_celldeath(cell_death_elems):
                 data_out[death_headers[num]].append('""')
     #Write data_out dictionary to dataframe, then write dataframe to output text file
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_death = pd.DataFrame(data=data_out)
     death_filename = 'a_CellDeath_' + file_base
     f_a_death = open(os.path.join(output_folder,death_filename), 'w')
     f_a_death.write(df_death.to_string(header=True, index=False))
     f_a_death.close
-    return (death_filename)
+
+    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
+    return (death_filename, assay_params)
 
 cell_death = root.findall('.//cell_death')
 if len(cell_death) > 0:
-    a_file_list.append(a_celldeath(cell_death))
+    results = a_celldeath(cell_death)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Death')
+    assay_parameters.append(results[1])
 else:
     print('No Cell Death Assay')
 
@@ -660,7 +489,7 @@ def a_mechanics(cell_mechanics_elems):
         print('Cell Mechanics - Issue in Excel File')
         # TODO change to error logging
 
-    data_out = {'Sample Name' : [], 'Characteristic[Cell Part]' : []}
+    data_out = {'Sample Name' : [], 'Characteristic[Phenotype Type]': [], 'Characteristic[Cell Part]' : []}
     pheno_keywords = []
     lvl_tracking = {}
     ent_in_file = []
@@ -678,11 +507,19 @@ def a_mechanics(cell_mechanics_elems):
         if lvl_tracking[elem_path] == 0:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"Entire Cell"')
         elif lvl_tracking[elem_path] == 1:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
                                   .attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent()
@@ -690,6 +527,10 @@ def a_mechanics(cell_mechanics_elems):
         elif lvl_tracking[elem_path] == 2:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
                                   .attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent().attrib['name']
@@ -741,17 +582,25 @@ def a_mechanics(cell_mechanics_elems):
     #Write data_out dictionary to dataframe, then write dataframe to output text file
 
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_mech = pd.DataFrame(data=data_out)
     mech_filename = 'a_Mechanics_' + file_base
     f_a_mech = open(os.path.join(output_folder,mech_filename), 'w')
     f_a_mech.write(df_mech.to_string(header=True, index=False))
     f_a_mech.close
-    return (mech_filename)
+
+    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
+    return (mech_filename, assay_params)
 
 #Encapsulates cell_part elements too
 cell_mechanics = root.findall('.//mechanics')
 if len(cell_mechanics) > 0:
-    a_file_list.append(a_mechanics(cell_mechanics))
+    results = a_mechanics(cell_mechanics)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Mechanics')
+    assay_parameters.append(results[1])
 else:
     print('No Cell Mechanics Assay')
 
@@ -798,7 +647,7 @@ def a_geo_props(cell_geo_elems):
         print('Cell Geometrical Properties - Issue in Excel File, Attribute Section')
         # TODO change to error logging
 
-    data_out = {'Sample Name': [], 'Characteristic[Cell Part]': []}
+    data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]' : [] ,'Characteristic[Cell Part]': []}
     pheno_keywords = []
     lvl_tracking = {}
     ent_in_file = {}
@@ -815,11 +664,19 @@ def a_geo_props(cell_geo_elems):
         if lvl_tracking[elem_path] == 0:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"Entire Cell"')
         elif lvl_tracking[elem_path] == 1:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
                                   .attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent()
@@ -827,6 +684,10 @@ def a_geo_props(cell_geo_elems):
         elif lvl_tracking[elem_path] == 2:
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
+            try:
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+            except:
+                data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
                                   .attrib['keywords'].strip() + '"')
             data_out['Characteristic[Cell Part]'].append('"' + root.find(elem_path).getparent().getparent().attrib['name']
@@ -847,6 +708,7 @@ def a_geo_props(cell_geo_elems):
     #add occurances of attribute under each path header in measure_in_file dictionary created above
     #break after attribute confirmed for path (need to write ISA header)
     #attributes added in order of list from xlsx sheet
+
     for path in measure_in_file:
         for attr in geo_attr:
             for elem in cell_geo_elems:
@@ -860,14 +722,17 @@ def a_geo_props(cell_geo_elems):
     #Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
     #be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
     # of the xpath and attr to use to get the appropriate data from the xml file
+    params = []
     for path in measure_in_file:
         measure_index = geo_measure_paths.index(path)
         ISA_head_path['Parameter Value[' + geo_measure[measure_index] + ']'] = [path]
+        params.append(geo_measure[measure_index])
         for attr in measure_in_file[path]:
             attr_index = geo_attr.index(attr)
             ISA_head = geo_header_begin[attr_index] + geo_measure[measure_index] + geo_header_tail[attr_index]
             ISA_head_path[ISA_head] = [path, attr]
-
+    #separate measurements by semicolon to write to I file
+    assay_params = ';'.join(params)
     #initialize data_out by writing headers
     for header in ISA_head_path:
         data_out[header] = []
@@ -892,16 +757,22 @@ def a_geo_props(cell_geo_elems):
                     data_out[header].append('""')
 
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_geo = pd.DataFrame(data=data_out)
     geo_filename = 'a_GeometricalProperties_' + file_base
     f_a_geo = open(os.path.join(output_folder,geo_filename), 'w')
     f_a_geo.write(df_geo.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_geo.close
-    return (geo_filename)
+    return (geo_filename, assay_params)
 
 cell_geo_props = root.findall('.//geometrical_properties')
 if len(cell_geo_props) > 0:
-    a_file_list.append(a_geo_props(cell_geo_props))
+    results = a_geo_props(cell_geo_props)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Geometrical Properties')
+    assay_parameters.append(results[1])
+
+
 else:
     print('No Cell Geometrical Properties Assay')
 
@@ -935,7 +806,7 @@ def a_motility(cell_motility_elems):
         print('Cell Motility - Issue in Excel File, Attribute Section')
         # TODO change to error logging
 
-    data_out = {'Sample Name': [], 'Characteristic[Motility Type]': []}
+    data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': [],'Characteristic[Motility Type]': []}
     pheno_keywords = []
     ent_in_file = {}
     ISA_head_path = {}
@@ -944,6 +815,10 @@ def a_motility(cell_motility_elems):
     for elem in cell_motility_elems:
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
+        try:
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+        except:
+            data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
         data_out['Characteristic[Motility Type]'].append('"' + elem.tag.strip() +'"')
         if root.find(tree.getelementpath(elem) + '/restriction/surface_variable') is not None:
@@ -975,14 +850,19 @@ def a_motility(cell_motility_elems):
     # Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
     # be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
     # of the xpath and attr to use to get the appropriate data from the xml file
+    params = []
+
     for path in measure_in_file:
         measure_index = motility_measure_paths.index(path)
         ISA_head_path['Parameter Value[' + motility_measure[measure_index] + ']'] = [path]
+        params.append(motility_measure[measure_index])
         for attr in measure_in_file[path]:
             attr_index = motility_attr.index(attr)
             ISA_head = motility_header_begin[attr_index] + motility_measure[measure_index] + motility_header_tail[attr_index]
             ISA_head_path[ISA_head] = [path, attr]
 
+    #join parameter measurements with ; for I file
+    assay_params = ';'.join(params)
     # initialize data_out by writing headers
     for header in ISA_head_path:
         data_out[header] = []
@@ -1008,20 +888,25 @@ def a_motility(cell_motility_elems):
                     data_out[header].append('""')
 
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_motility = pd.DataFrame(data=data_out)
     motility_filename = 'a_Motility_' + file_base
     f_a_motility = open(os.path.join(output_folder,motility_filename), 'w')
     f_a_motility.write(df_motility.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_motility.close
-    return (motility_filename)
+    return (motility_filename, assay_params)
 
 cell_motility = root.findall('.//motility/restricted')
 cell_motility.extend(root.findall('.//motility/unrestricted'))
 if len(cell_motility) > 0:
-    a_file_list.append(a_motility(cell_motility))
+    results = a_motility(cell_motility)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Motility')
+    assay_parameters.append(results[1])
 else:
     print('No Cell Motility Assay')
 
+pkpd_s_data = {}
 def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
     '''
     :param PKPD_drug: list of xml elements found under PKPD/drug xPath
@@ -1074,19 +959,26 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
                 s_data_out[header].append('"' + root.find(tree.getelementpath(elem)).attrib[drug_out[header]].strip() + '"')
             except:
                 s_data_out[header].append('""')
-    df_s_PKPD = pd.DataFrame(data=s_data_out)
-    s_PKPD_filename = 's_PKPD_' + file_base
-    f_s_PKPD = open(os.path.join(output_folder,s_PKPD_filename), 'w')
-    f_s_PKPD.write(df_s_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_s_PKPD.close
+
+    #TODO - may need to update in future for cases of different drugs under different phenotype_datasets
+    #section below commented out because we are writing data to study file instead of PKPD_study
+    # df_s_PKPD = pd.DataFrame(data=s_data_out)
+    # s_PKPD_filename = 's_PKPD_' + file_base
+    # f_s_PKPD = open(os.path.join(output_folder,s_PKPD_filename), 'w')
+    # f_s_PKPD.write(df_s_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
+    # f_s_PKPD.close
 
     pheno_keywords = []
     therapy_drugs = {}
     #make dictionary of drugs under each measurement set, append sample name and measurement set ID to a_data_out
-    a_data_out = {'Sample Name': [], 'Measurement Set ID#': []}
+    a_data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': [], 'Measurement Set ID#': []}
     for elem in pkpd_pd_meas:
         a_data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
+        try:
+            a_data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+        except:
+            a_data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().getparent().attrib['keywords'].strip() + '"')
         try:
             a_data_out['Measurement Set ID#'].append('"' + elem.attrib['ID'].strip() +'"')
@@ -1109,6 +1001,11 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
                         attr = result[1].replace(']', '')
                         if root.find(tree.getelementpath(drug_elem) + new_path).attrib[attr] is not None:
                             exist_drug_measurements[pd_header[pd_paths.index(path)]] = [new_path, attr]
+
+    pre_params = [x for x in exist_drug_measurements.keys() if "Parameter Value" in x]
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
+
     #Find max number of drugs in measurement set
     max_drug_len = len(therapy_drugs[max(therapy_drugs, key=lambda x: len(set(therapy_drugs[x])))])
     #initialize headers
@@ -1160,7 +1057,8 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
     #initalize existing ISA headers for measurement_set/responses
     for header in exist_response_measurements:
         a_data_out[header] = []
-
+        if 'Parameter Value' in header:
+            pre_params.append(header)
     #loop through measurement elements, write response content to a_data_out
     for elem in PKPD_pd_meas:
         for header in exist_response_measurements:
@@ -1178,21 +1076,26 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
                     a_data_out[header].append('""')
 
     a_data_out['Assay Name'] = pheno_keywords
+    a_data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(a_data_out['Sample Name'])
     df_a_PKPD = pd.DataFrame(data=a_data_out)
     a_PKPD_filename = 'a_PKPD_' + file_base
     f_a_PKPD = open(os.path.join(output_folder,a_PKPD_filename), 'w')
     f_a_PKPD.write(df_a_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_PKPD.close
 
-    return (s_PKPD_filename, a_PKPD_filename)
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
+
+    return (s_data_out, a_PKPD_filename, assay_params)
 
 pkpd_drug = root.findall('.//PKPD/drug')
 pkpd_pd_meas = root.findall('.//PKPD/pharmacodynamics/therapy_measurement_set')
-#TODO - is the boolean below an issue? Will these exist independently?
 if (len(pkpd_drug) > 0) or (len(pkpd_pd_meas) > 0):
     pkpd_file = a_s_PKPD(pkpd_drug,pkpd_pd_meas)
-    s_file_list.append(pkpd_file[0])
+    pkpd_s_data = pkpd_file[0]
     a_file_list.append(pkpd_file[1])
+    assay_type_list.append('PKPD')
+    assay_parameters.append(pkpd_file[2])
 
 else:
     print('No PKPD Assay')
@@ -1239,15 +1142,19 @@ def a_trans_processes(trans_processes_elems):
         print('Transport Processes - Issue in Excel File, Measurement Attribute Section')
         # TODO change to error logging
 
-    data_out = {'Sample Name': []}
+    data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': []}
     pheno_keywords = []
     var_attr_in_file = []
     ISA_head_path = {}
 
-    # For elems in list of found motility elements, append info that characterizes the element to data_out
+    # For elems in list of found transport_processes/variable elements, append info that characterizes the element to data_out
     for elem in trans_processes_elems:
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
+        try:
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+        except:
+            data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
 
     for attr in trans_var_attr:
@@ -1295,15 +1202,18 @@ def a_trans_processes(trans_processes_elems):
     # Use index to concatenate ISA entity beginning + ISA measurement + ISA entity tail to form ISA header, which will
     # be the header within the data file. Use the header as a key within the ISA_head_path dict, which will contain values
     # of the xpath and attr to use to get the appropriate data from the xml file
+    params = []
+
     for path in measure_in_file:
         measure_index = trans_meas_path.index(path)
         ISA_head_path['Parameter Value[' + trans_meas[measure_index] + ']'] = [path]
+        params.append(trans_meas[measure_index])
         for attr in measure_in_file[path]:
             attr_index = meas_attr.index(attr)
             ISA_head = meas_header_begin[attr_index] + trans_meas[measure_index] + meas_header_tail[
                 attr_index]
             ISA_head_path[ISA_head] = [path, attr]
-
+    assay_params = ';'.join(params)
     # initialize data_out by writing headers
     for header in ISA_head_path:
         data_out[header] = []
@@ -1330,18 +1240,111 @@ def a_trans_processes(trans_processes_elems):
 
 
     data_out['Assay Name'] = pheno_keywords
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_trans = pd.DataFrame(data=data_out)
     trans_filename = 'a_TransportProcesses_' + file_base
     f_a_trans = open(os.path.join(output_folder,trans_filename), 'w')
     f_a_trans.write(df_trans.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_trans.close
-    return (trans_filename)
+    return (trans_filename, assay_params)
 
 trans_process = root.findall('.//transport_processes/variable')
 if len(trans_process) > 0:
-    a_file_list.append(a_trans_processes(trans_process))
+    results = a_trans_processes(trans_process)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Transport Processes')
+    assay_parameters.append(results[1])
 else:
     print('No Transport Processes Assay')
+
+def transitions(cell_transitions):
+    '''
+
+    :param cell_transitions: list of transition elements found with root.findall
+    :return: cell_transitions assay file name and assay parameters
+    '''
+
+    df_pheno_in = pd.read_excel(rF'{db}', sheet_name='A_StateTransition', keep_default_na=False, usecols=
+    ['Transition Phenotype ISA Headers', 'Transition Phenotype xPaths'])
+    df_transition_in = pd.read_excel(rF'{db}', sheet_name='A_StateTransition', keep_default_na=False, usecols=
+    ['Transition ISA Headers', 'Transition xPaths'])
+    pheno_header = [str(i) for i in df_pheno_in['Transition Phenotype ISA Headers'].tolist() if i]
+    pheno_path = [str(i) for i in df_pheno_in['Transition Phenotype xPaths'].tolist() if i]
+    trans_header = [str(i) for i in df_transition_in['Transition ISA Headers'].tolist() if i]
+    trans_paths = [str(i) for i in df_transition_in['Transition xPaths'].tolist() if i]
+
+    phenotype_child = []
+    phenotype_elems = root.findall('.//transitions/phenotype_dataset_collection')
+    params = []
+
+    for path in pheno_path:
+        for elem in phenotype_elems:
+            if root.find(tree.getelementpath(elem) + path) is not None:
+                phenotype_child.append(path)
+                break
+
+    transition_elems = root.findall('.//transitions/transition')
+    j = len(transition_elems)
+
+    data_out = {'Sample Name': ['"' + sample_name_base + '"']*j}
+    for elem in phenotype_elems:
+        for path in phenotype_child:
+            try:
+                data_out[pheno_header[pheno_path.index(path)] + elem.attrib['ID']] = [root.find(tree.getelementpath(elem) + path).text.replace('\n','').replace('\t','')]*j
+            except:
+                data_out[pheno_header[pheno_path.index(path)] + elem.attrib['ID']] = ['"']*j
+
+    #Find existing transition xPaths and initialize headers
+    #Add parameter values to params to append to I file
+    exist_trans_paths = {}
+    for path in trans_paths:
+        for elem in transition_elems:
+            if root.find(tree.getelementpath(elem) + path) is not None:
+                head = trans_header[trans_paths.index(path)]
+                data_out[head] = []
+                exist_trans_paths[path] = head
+                if 'Parameter Value' in head:
+                    params.append(head.split('[')[1].split(']')[0])
+
+    for elem in transition_elems:
+        for path in exist_trans_paths:
+            if '@' not in path:
+                try:
+                    data_out[exist_trans_paths[path]].append('"' + root.find(tree.getelementpath(elem) + path).text.replace('\n','').replace('\t','') + '"')
+                except:
+                    data_out[exist_trans_paths[path]].append('""')
+            else:
+                new_path = path.split('[')[0]
+                attr = path.split('@')[1].strip(']')
+                try:
+                    data_out[exist_trans_paths[path]].append('"' + root.find(tree.getelementpath(elem) + new_path).attrib[attr] + '"')
+                except:
+                    data_out[exist_trans_paths[path]].append('""')
+    #TODO This section will need updating if multiple transitions are in a digital cell line
+    for condition in root.findall('.//transitions/transition/conditions/variable/condition'):
+        cond_name = condition.attrib['condition_type']
+        params.append(cond_name)
+        data_out['Parameter Value[' + cond_name + ']'] = condition.text.replace('\n','').replace('\t','')
+        data_out[cond_name + ' - Units'] = condition.attrib['units']
+        data_out['Parameter Value[' + cond_name + ' - Uncertainty]'] = condition.attrib['uncertainty']
+
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
+    df_transition = pd.DataFrame(data=data_out)
+    transition_filename = 'a_StateTransition_' + file_base
+    f_a_transition = open(os.path.join(output_folder,transition_filename), 'w')
+    f_a_transition.write(df_transition.to_string(header=True, index=False, col_space=0, justify='center'))
+    f_a_transition.close
+
+    assay_params = ';'.join(params)
+    return (transition_filename, assay_params)
+
+#This is used for HUVEC Cell Line
+cell_transitions = root.findall('.//transitions')
+if len(cell_transitions) > 0:
+    results = transitions(cell_transitions)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell State Transitions')
+    assay_parameters.append(results[1])
 
 def a_clinical_stain(stain_properties, stain_measurements):
     '''
@@ -1405,6 +1408,7 @@ def a_clinical_stain(stain_properties, stain_measurements):
     exist_measurements = {}
     for path in stain_meas_path:
         header = stain_meas_head[stain_meas_path.index(path)]
+
         for elem in stain_measurements:
             if '@' not in path:
                 if root.find(tree.getelementpath(elem) + path).text is not None:
@@ -1418,12 +1422,17 @@ def a_clinical_stain(stain_properties, stain_measurements):
                     exist_measurements[header] = [new_path, attr]
 
     #Initialize existing headers for data_out
+    pre_params = []
+
     data_out['Stain Name'] = []
     data_out['Study Stain ID#'] = []
     for header in exist_properties:
         data_out[header] = []
     for header in exist_measurements:
         data_out[header] = []
+        if 'Parameter Value' in header:
+            pre_params.append(header)
+
 
     #Write content for existing ISA headers and xPaths to data_out
     #If no ID, write '""' to data_out
@@ -1508,23 +1517,36 @@ def a_clinical_stain(stain_properties, stain_measurements):
                     except:
                         data_out[header].append('""')
 
+    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_clin_stain = pd.DataFrame(data=data_out)
     clin_stain_filename = 'a_ClinicalStain_' + file_base
     f_a_clin_stain = open(os.path.join(output_folder,clin_stain_filename), 'w')
     f_a_clin_stain.write(df_clin_stain.to_string(header=True, index=False, col_space=0, justify='center'))
     f_a_clin_stain.close
-    return (clin_stain_filename)
 
+    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
+    assay_params = ';'.join(list(params))
+
+    return (clin_stain_filename, assay_params)
 
 stain_properties = root.findall('.//clinical/diagnosis/pathology/pathology_definitions/stain')
 stain_measurements = root.findall('.//clinical/diagnosis/pathology/stain')
 if (len(stain_measurements) > 0) or (len(stain_properties) > 0):
-    a_file_list.append(a_clinical_stain(stain_properties, stain_measurements))
+    results = a_clinical_stain(stain_properties, stain_measurements)
+    a_file_list.append(results[0])
+    assay_type_list.append('Cell Stains')
+    assay_parameters.append(results[1])
 else:
     print('No Clinical Stain Assay')
 
+
+
+
 print('Assay file list:', a_file_list)
 
+s_file_list = []
+phenotype_factors = []
+phenotype_factor_type = []
 def study_write():
     '''
 
@@ -1535,25 +1557,37 @@ def study_write():
     study_paths = [str(i) for i in df_study_in['Study xPath'].tolist() if i]
     study_headers = [str(i) for i in df_study_in['Study ISA Header'].tolist() if i]
     #Initalize data_out dictionary
-    data_out = {'Sample Name': ['"' + sample_name_base + '"']}
+    data_out = {'Source Name': []}
+    assay_samples = []
     if len(study_paths) != len(study_headers):
         print('Study File - Issue in Excel File')
 
     #If content exists in xml, write header and content
     #Only 1 row of "content" : can write header then content, then move to next
+    phenos = root.findall('cell_line/phenotype_dataset')
+    for elem in phenos:
+        data_out['Source Name'].append('"' + sample_name_base + '"')
+        assay_samples.append('"' + sample_name_base + '.' + elem.attrib['ID'] + '"')
+        phenotype_factors.append(elem.attrib['keywords'])
+        phenotype_factor_type.append('Cell conditions')
     for path in study_paths:
         if root.find(path) is not None:
             #Write header to dictionary as key with empty list as value
             header = study_headers[study_paths.index(path)]
             data_out[header] = []
             if '@' not in path:
-                data_out[header].append('"' + root.find(path).text.strip() + '"')
+                data_out[header].extend(('"' + root.find(path).text.strip() + '"') for j in range(len(phenos)))
             else:
                 result = re.split(r"@", path)
                 new_path = result[0].replace('[', '')
                 attr = result[1].replace(']', '')
-                data_out[header].append('"' + root.find(path).attrib[attr].strip() + '"')
+                data_out[header].extend(('"' + root.find(path).attrib[attr].strip() + '"') for j in range(len(phenos)))
 
+    #append PKPD drug information from a_s_pkpd if it exists to end of study file, before sample names
+    if pkpd_s_data:
+        for PKPD in pkpd_s_data:
+            data_out[PKPD] = pkpd_s_data[PKPD]
+    data_out['Sample Name'] = assay_samples
     df_study = pd.DataFrame(data=data_out)
     study_filename = 's_' + file_base
     f_study = open(os.path.join(output_folder,study_filename), 'w')
@@ -1563,7 +1597,260 @@ def study_write():
 #call study_write function and append file name to file list
 s_file_list.append(study_write())
 
-print('Study file list: ', s_file_list)
+# I file
+def match_mult(x_in):
+    '''
+
+    :param x_in: One xPath that is marked in the relationship xlsx to be able to contain multiple values
+    :return: One list containing existing elements at xPath and blanks in order of appearance in DCL xml input file
+    '''
+    x_list = root.findall(x_in)
+    #gives list of xPaths with existing elements
+    x_elem_out = []
+    par_len = len(root.findall(x_in.rsplit('/',1)[0]))
+    #if number of existing elements is less than iterations of parent tag, appropriately place elements and blanks in ordered list
+    if len(x_list) < par_len:
+        val_dict = {}
+        for x in x_list:
+            val_dict[int(tree.getpath(x).rsplit('[')[-1].rsplit(']')[0]) - 1] = x
+            #x is xpath for element that exists
+        for j in range(par_len):
+            if not j in val_dict:
+                val_dict[j] = ""
+            x_elem_out.append(val_dict[j])
+            #add in "" blanks for elements which do not exist and append to list in order
+    else:
+        x_elem_out = x_list
+    return(x_elem_out)
+
+def entity_concat(path,i):
+    '''
+    :param path: 2 or more xPaths with a separation variable in " ", signifying concatenation with the separation variable
+    :param i: index of xPaths
+    :return: list of concatenated strings generated from the 2 or more xPaths
+    Operation: initialize variables, split xPaths to be concatenated, store values in array, concatenate by j counter
+    '''
+    concat_out = []
+    matched_list = []
+    concat_list = []
+    concat_paths = path.split('"')[::2]
+    sep_vars = path.split('"')[1::2]
+    #TODO give error if len (concat_paths) is not = len(sep_vars)?
+    #TODO - only accept one separation variable (first used in xlsx cell) to join strings right now
+    j = len(concat_paths)
+    k = 1
+    # j = number of elements to concat, k = number of multiples, default 1 for single
+    for concat in concat_paths:
+        concat = concat.strip()
+        if 'Single' in str(df.at[i, 'Multiples for xPath']):
+            try:
+                concat_list.append(root.find(concat).text.strip().replace('\n', ' ').replace('\t', ''))
+            except:
+                concat_list.append('')
+                #print('Text Does Not Exist')
+        elif 'Multiple' in str(df.at[i, 'Multiples for xPath']):
+            mult_list = match_mult(concat)
+            for mult_elem in mult_list:
+                try:
+                    concat_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
+                except:
+                    concat_list.append('')
+                    #print('Text Does Not Exist')
+            k = len(mult_list)
+        else:
+            f_E.write('Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
+   #determine which indices from generated list to concatenate
+    for num_mult in range(k):
+        ind_list = []
+        join_list = []
+        for num_concat in range(j):
+            ind_list.append(num_mult + num_concat * (k))
+        for c_list_ind in ind_list:
+            if concat_list[c_list_ind]:
+                join_list.append(concat_list[c_list_ind])
+        matched_list.append(join_list)
+    #Matched_list has nested lists of each item to be joined
+    for num_mult in range(k):
+        concat_out.append(sep_vars[0].join(matched_list[num_mult]))
+    return concat_out
+
+def mcds_match(i):
+    '''
+
+    :param i: Index of xPath
+    :return: Writes line to investigation text file
+    '''
+    # For each index value, go to that row of the relationship xlsx file
+    # Pull xPath's in list, separate by commas into different values
+    # Go to each xPath in input xml - if there is value, write to f_I
+    # If there is no value from input xml, put appropriate quotes for blank
+
+    # Initialize string with spacing from entered ISA entity name
+    str_list = []
+    I_str = ''
+    I_sep = '\t'
+    I_blank = '""'
+    # If statement checks to see whether xPath exists in relationship excel sheet.
+    # If xPath does not exist, write appropriate number of "" to line in else statement
+    if not pd.isnull(df.at[i,'MCDS-DCL Correlate X-Path']):
+        #If entry is written in excel sheet (i.e. not contained in input XML, same for all files), write to I_str
+        if df.at[i,'MCDS-DCL Correlate X-Path'] == "Text Entry":
+            str_list = [x.strip() for x in df.at[i,'MCDS-DCL Correlate Entity'].split(';') if x]
+        elif df.at[i,'MCDS-DCL Correlate X-Path'] == "Script Variable":
+            var_in = ISAfromScript[df.at[i,'ISA-Tab Entity'].strip()]
+            if type(var_in) == list and type(var_in[0]) == str:
+                str_list = var_in
+            elif type(var_in) == str:
+                str_list.append(var_in)
+        else:
+            xpaths = df.at[i,'MCDS-DCL Correlate X-Path'].split(",")
+            #Pull xPaths from cell in xlsx file, separate multiple values into list to use in for loop
+            for path in xpaths:
+                path = path.strip()
+                if '"' in path:
+                    str_list.extend(entity_concat(path,i))
+                #'&' in xPath signifies that the xPaths should be concatenated to a single ISA value "text1 - text2..."
+                else:
+                    if '@' in path:
+                    # '@' in xPath signifies this is an attribute
+                    #Lines below: split input xPath into element xPath and attribute name
+                    #Write value of attribute to str_list with appropriate "" if no result
+                        result = re.split(r"@", path)
+                        attr = result[1].replace(']', '')
+                        if 'Single' in str(df.at[i,'Multiples for xPath']):
+                            try:
+                                str_list.append(root.find(path).attrib[attr])
+                                break
+                            except:
+                                print('Attr Does Not Exist')
+                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
+                            mult_list = match_mult(path)
+                            for mult_elem in mult_list:
+                                try:
+                                   str_list.append(mult_elem.attrib[attr])
+                                except:
+                                    str_list.append(I_blank)
+                                    print('Attr Does Not Exist')
+                        else:
+                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
+
+                    elif '*' in path:
+                        # '*' in xPath signifies that a parent tag is desired content
+                        # Lines below: remove '*' from xPath
+                        # Write value of tag to str_list with appropriate "" if no result
+                        gen_count = path.count('*')
+                        result = path.replace('*', '')
+                        if 'Single' in str(df.at[i,'Multiples for xPath']):
+                            try:
+                                if gen_count == 1:
+                                    str_list.append(root.find(result).getparent().tag.replace('_', ' ').title())
+                                if gen_count == 2:
+                                    str_list.append(root.find(result).getparent().getparent().tag.replace('_', ' ').title())
+                                break
+                            except:
+                                print('Tag Does Not Exist')
+                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
+                            mult_list = match_mult(result)
+                            for mult_elem in mult_list:
+                                try:
+                                    if gen_count == 1:
+                                        str_list.append(mult_elem.getparent().tag.replace('_', ' ').title())
+                                    if gen_count == 2:
+                                        str_list.append(mult_elem.getparent().getparent().tag.replace('_', ' ').title())
+                                except:
+                                    str_list.append(I_blank)
+                                    print('Tag Does Not Exist')
+                        else:
+                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
+
+                    else:
+                        # Default state is finding the text from the element at the specified xPath
+                        # Lines below: split input xPath into element xPath and attribute name
+                        # Write value of attribute to str_list with appropriate "" if no result
+
+                        if 'Single' in str(df.at[i,'Multiples for xPath']):
+                            try:
+                                str_list.append(root.find(path).text.strip().replace('\n', ' ').replace('\t', ''))
+                                break
+                            except:
+                                print('Text Does Not Exist')
+                        elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
+                            mult_list = match_mult(path)
+                            for mult_elem in mult_list:
+                                try:
+                                    str_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
+                                except:
+                                    str_list.append(I_blank)
+                                    print('Text Does Not Exist')
+                        else:
+                            f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
+
+                        #TODO - would there be instances of the same info being contained at different xPaths, but should only be written to the ISA output once?
+        if df.at[i,'Multiples for xPath'] == 'Single' and len(str_list) == 0:
+            I_str += '""'
+        else:
+            for match in str_list:
+                if match != '""':
+                    I_str += I_sep + '"' + match + '"'
+                else:
+                    I_str += I_sep + match
+    else:
+        I_str += I_sep + '""'
+        if pd.isnull(df.at[i,'Multiples for xPath']):
+            f_E.write('\t\t\t (No xPath) Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
+        #Deal with blank areas that are multiples in I file correction functions
+    f_I.write(I_str + '\n')
+
+error_file = os.path.join(output_folder,'ErrorLog_DCL2ISA.txt')
+f_E = open(error_file, 'w')
+
+
+I_filename = 'i_' + file_base
+f_I = open(os.path.join(output_folder,I_filename), 'w')
+
+if root.find('cell_line/metadata/citation/notes') is not None:
+    print("Found")
+    mcds_pub = root.find('cell_line/metadata/citation/notes').text
+    pub_status = mcds_pub.rsplit('(',1)[1].split(',',1)[1].strip(')').strip()
+    pub_title = mcds_pub.split(',',1)[1].split('(',1)[0].strip()
+    if '[' in mcds_pub:
+        pub_author = mcds_pub.split(',', 1)[0].split(']', 1)[1].strip()
+    else:
+        pub_author = mcds_pub.split(',', 1)[0].strip()
+else:
+    pub_status = ''
+    pub_author = ''
+    pub_title = ''
+#Set variables found from assay and study for I writing
+ISAfromScript = {'Investigation Publication Author List': pub_author,
+                 'Investigation Publication Title': pub_title,
+                 'Investigation Publication Status': pub_status,
+                 'Study Publication Author List': pub_author,
+                 'Study Publication Title': pub_title,
+                 'Study Publication Status': pub_status,
+                 'Study Factor Name' : phenotype_factors,
+                 'Study Factor Type' : phenotype_factor_type,
+                 'Study File Name' : s_file_list,
+                 'Study Assay File Name' : a_file_list,
+                 'Study Assay Measurement Type' : assay_type_list,
+                 'Study Protocol Parameters Name' : assay_parameters
+                 }
+
+for ind in df.index:
+    if df.at[ind,'ISA File Location'] == 'I':
+        #print("I file line: ", ind + 1)
+        if df.at[ind,'ISA Entity Type'] == 'Header':
+            f_I.write(str(df.at[ind,'ISA-Tab Entity']).strip().upper() + '\n')
+        elif df.at[ind,'ISA Entity Type'] == 'Data':
+            f_I.write(str(df.at[ind,'ISA-Tab Entity']).strip())
+            mcds_match(ind)
+
+
+    #If type is I file, then write newline with I file. If header, write in all caps and go to next line. If type data,
+    # write then /t, parse through xml with correlate xpath. If no data exists, "" then /n. If data exists, write in file. Continue for all x paths.
+    # After doing for all xpaths in list, /n
+f_I.close()
+
 
 #Make fixes for multiple blanks, joining roles of repeated study contacts, and removing unused comments in I file
 
@@ -1600,14 +1887,13 @@ def fix_multi_blanks():
                         quote_str = ''
                         for i in range(multi_quantity[key]):
                             quote_str += '\t""'
-                        file_data[line_num] = edit_line + '\t\t' + quote_str + '\n'
+                        file_data[line_num] = edit_line + '\t' + quote_str + '\n'
     f_I = open(os.path.join(output_folder,I_filename), 'w')
     f_I.writelines(file_data)
     f_I.close()
 
 fix_multi_blanks()
 
-#TODO - make into function and update headers to be content
 
 def fix_study_contacts():
     f_I = open(os.path.join(output_folder,I_filename), 'r')
@@ -1623,30 +1909,43 @@ def fix_study_contacts():
     for b in range(len(contact_info_list)):
         contact_info_list[b] = list(filter(None, contact_info_list[b]))
     df_s = pd.DataFrame.transpose(pd.DataFrame(contact_info_list))
-    df_s.columns=['A','B','C','D','E', 'F', 'G', 'H', 'I', 'J', 'K']
-    #Last name and email columns
-    for (index,dup) in enumerate(df_s.duplicated(subset = ['A','B'])):
+    #set ISA headers as column labels
+    headers = df_s.iloc[0]
+    df_s = df_s[1:]
+    df_s.columns = headers
+    #If the study person first name contains a middle initial in the form of "Samuel H" or "Samuel H.",
+    #seprate the first name and middle initial and write to their respective ISA labels
+    #Does not currently accept two middle initials or two first names
+    for idx in df_s.index:
+        first_middle = df_s.at[idx,'Study Person First Name'].strip('"').strip('.').split(' ')
+        if len(first_middle) == 2:
+            if len(first_middle[1]) == 1:
+                df_s.at[idx, 'Study Person First Name'] = '"' + first_middle[0] + '"'
+                df_s.at[idx, 'Study Person Mid Initials'] = '"' + first_middle[1] + '."'
+
+    #Searched for duplicate rows based on Last name and First name columns
+    #Return list of indices of duplicate rows
+    for (index,dup) in enumerate(df_s.duplicated(subset = ['Study Person Last Name','Study Person First Name'], keep='first')):
         if dup:
-            dup_ind_list.append(index)
-    #Get list of rows with duplicates
-
-    #Get string from dup, find row which it is a duplicate of, go to
+            dup_ind_list.append(index+1)
+    #Get string from dup, find row which it is a duplicate of, go to row, append role to first occurance
     for j in dup_ind_list:
-        last = df_s.at[j,'A']
-        first = df_s.at[j,'B']
-        first_ind = df_s[(df_s.A == last) & (df_s.B == first)].index[0]
-        role = str(df_s.at[first_ind,'I']).strip('"')
-        new_role = str(df_s.at[j,'I']).strip('"')
-        df_s.at[first_ind,'I'] = '"' + role + ';' + new_role + '"'
+        last = df_s.at[j,'Study Person Last Name']
+        first = df_s.at[j,'Study Person First Name']
+        first_ind = df_s[(df_s['Study Person Last Name'] == last) & (df_s['Study Person First Name'] == first)].index[0]
+        role = str(df_s.at[first_ind,'Study Person Roles']).strip('"')
+        new_role = str(df_s.at[j,'Study Person Roles']).strip('"')
+        df_s.at[first_ind,'Study Person Roles'] = '"' + role + ';' + new_role + '"'
 
+    #drop duplicate rows, transpose data to match ISA format, write to list including index labels
     df_s = df_s.drop(dup_ind_list).transpose()
-    col_list = df_s.values.tolist()
+    col_list = df_s.reset_index().values.tolist()
     updated_contact_list = []
     for (j,items) in enumerate(col_list):
         temp_str = []
         for k in range(len(items)):
              if k == 0:
-                 temp_str.append((items[k].title() + '\t\t'))
+                 temp_str.append((items[k].title()))
              elif k == len(items) - 1:
                  temp_str.append(items[k] + '\n')
              else:
@@ -1684,7 +1983,7 @@ remove_I_empty_comment()
 '''
 Study
 
-Clinical study and non clinical? Or together?
+
 Correct I File
-I file - write entity then skip if ScriptVar?
+I file - write entity then skip if ScriptVar? 
 '''
