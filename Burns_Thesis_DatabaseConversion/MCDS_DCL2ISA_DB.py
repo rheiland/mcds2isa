@@ -11,7 +11,9 @@
 
 # Author: Connor Burns
 # Date:
-#   v0.1 - Feb 2020
+#   v0.1 - Feb 2021
+#   v0.2 - Apr 2021
+#           Passes CSSI ISA-Tab validation, all existing xPaths are placed
 
 import os
 import sys
@@ -32,7 +34,7 @@ Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_00000000
                 ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
 DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 #These are removed because they have been updated to cell lines 238-242, in same order as original
-DCL_file = DCL_list[-3]
+DCL_file = DCL_list[100]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 output_folder = os.path.join(cwd,'ISATabOutput')
@@ -63,8 +65,78 @@ print('\n Assays \n')
 sample_name_base = root.find('cell_line/metadata/MultiCellDB/ID').text +'.' + root.find('cell_line[@ID]').attrib['ID']
 a_file_list = []
 assay_type_list = []
+study_prot_list = []
+study_prot_types = []
 assay_parameters = []
-param_removal_keywords = ['range','error','standard deviation', 'uncertainty']
+assay_param_components = []
+
+
+def a_header_fix(a_filename, df_a, protocol_ref, ref_col_num):
+    '''
+
+    :param a_filename: string of desired assay filename
+    :param df_a: pd dataframe of the assay file contents
+    :param protocol_ref: string of protocol name for the assay
+    :param ref_col_num: index at which the protocol ref column should be added
+    :return:
+    '''
+    # change unit columns to 'Units" - had to keep separate above for dictionary
+    # remove " from parameters (will be added back on when writing to file), could fix this by rewriting assay functions
+    # df_a = df_a.replace('"','', regex=True)
+    df_a.columns = ['Units' if 'units' in x.lower() else x for x in df_a.columns]
+    param_list = (
+    [x.replace('Parameter Value[', '').replace(']', '').strip() for x in df_a.columns if 'Parameter Value' in x])
+    params = ';'.join(param_list)
+    bad_cols = ['Sample Name', 'Parameter Value', 'MCDS-DCL File', 'Units', 'Assay Name', 'Source Name', 'Phenotype Dataset Collection']
+    for cols in df_a.columns:
+        if not any(x in cols for x in bad_cols):
+            cols = cols.replace('Characteristic[', '').strip(']')
+    # If column does not have string from bad_cols, remove characteristic[ and add to list
+    comps = [x.replace('Characteristic[', '').strip(']').strip() for x in df_a.columns if
+             not any(y in x for y in bad_cols)]
+    # if component has parameter from param_list in name, remove
+    for j, comp in enumerate(comps):
+        for param in param_list:
+            if param in comp:
+                comps[j] = comp.replace(param, '').replace('-','').strip()
+    param_comps = ';'.join(list(set(comps)))
+    df_a.insert(ref_col_num, 'Protocol REF', [protocol_ref] * len(df_a['Sample Name']))
+    a_rows = [df_a.columns.values.tolist()] + df_a.values.tolist()
+
+    # Initialize assay file
+    a_path = os.path.join(output_folder, a_filename)
+    f_a = open(a_path, 'w')
+    # write content to assay file
+    for j, row in enumerate(a_rows):
+        if j > 0:
+            f_a.write('\n')
+        row = [('"' + str(x) + '"') for x in row]
+        f_a.write('\t'.join(row))
+
+    f_a.close()
+    return (params, param_comps)
+
+def write_dict_to_txt(file_name, data_dict, data_dict_col):
+    '''
+    :param file_name: Assay or study text file name for writing
+    :param data_dict: name of dictionary in which the assay or study data is stored
+    :param data_dict_col: known column of data_dict to establish number of values for looping
+    :return: Tab delimited txt output file, written "vertically" by dictionary key and values
+    '''
+    f_dict = open(os.path.join(output_folder, file_name), 'w')
+    str_list = []
+    for keys in data_dict.keys():
+        str_list.append(keys)
+    str_out = '\t'.join(str_list)
+    f_dict.write(str_out + '\n')
+    for j in range(len(data_dict[data_dict_col])):
+        str_list = []
+        str_out = ''
+        for keys in data_dict.keys():
+            str_list.append(data_dict[keys][j])
+        str_out = '\t'.join(str_list)
+        f_dict.write(str_out + '\n')
+    f_dict.close()
 
 
 def a_microenvironment(micro_elems):
@@ -115,7 +187,7 @@ def a_microenvironment(micro_elems):
             else:
                 micro_var_names[elem.attrib['name']] = tree.getelementpath(elem)
                 micro_var_names[elem.attrib['name']] = [micro_var_names[elem.attrib['name']]]
-    assay_params = ';'.join([x.strip() for x in micro_var_names.keys()])
+    assay_variables = [x.strip() for x in micro_var_names.keys()]
     #Make dictionary of dictionaries: one dictionary per variable name in micro_var_names. Each nested dictionary contains
     #the other variable elements (ex. units, ChEBI_ID, etc) that occur for each variable name and the associated xPaths
     #for these variable elements
@@ -164,9 +236,10 @@ def a_microenvironment(micro_elems):
         #variable elements
         for var in all_var:
             if "units" in var:
-                var_key = var_name + ' measurement ' + var
-            elif "ID" in var:
+                var_key = var_name + var
+            elif "ID" in var or "measurement_type" in var:
                 var_key = 'Characteristic[' + var_name +' ' + var.replace('_',' ') + ']'
+
             else:
                 var_key = 'Parameter Value[' + var_name +' ' + var.replace('_',' ') + ']'
             data_out[var_key] = []
@@ -232,20 +305,37 @@ def a_microenvironment(micro_elems):
     #add phenotype_dataset[@keywords] value for each phenotype dataset to the output file under 'Assay Name' column
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_micro = pd.DataFrame(data = data_out)
-    micro_filename = 'a_Microenvironment_' + file_base
-    f_a_micro = open(os.path.join(output_folder,micro_filename), 'w')
-    f_a_micro.write(df_micro.to_string(header=True, index=False))
-    f_a_micro.close
 
-    return(micro_filename, assay_params)
+    micro_filename = 'a_Microenvironment_' + file_base
+    micro_protocol = 'Microenvironment Characterization'
+    #Remove " from dictionary values. They'll be added in later when writing to file
+    for data in data_out:
+        data_out[data] = [x.replace('"','') for x in data_out[data]]
+    df_micro = pd.DataFrame(data=data_out)
+
+    for variable in assay_variables:
+        if ('Parameter Value['+variable+' type]') in df_micro.columns:
+            var_type = list(set([x for x in df_micro['Parameter Value['+variable+' type]'] if x]))
+            if len(var_type) == 1:
+                var_type = var_type[0]
+                df_micro = df_micro.drop(labels = ['Parameter Value['+variable+' type]'], axis = 1)
+                df_micro.columns = df_micro.columns.str.replace(variable, variable +'.' + var_type)
+
+    params, param_comps = a_header_fix(micro_filename,df_micro,micro_protocol,1)
+
+    return(micro_filename, micro_protocol, params,param_comps)
+
 
 microenvironment = root.findall('.//microenvironment')
 if len(microenvironment) > 0:
     micro_results = a_microenvironment(microenvironment)
     a_file_list.append(micro_results[0])
     assay_type_list.append('Microenvironment')
-    assay_parameters.append(micro_results[1])
+    study_prot_types.append('Characterization')
+    study_prot_list.append(micro_results[1])
+    assay_parameters.append(micro_results[2])
+    assay_param_components.append(micro_results[3])
+
 else:
     print('No Microenvironment Assay')
 
@@ -315,7 +405,7 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent().attrib['ID'] + '"')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
         try:
-            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
         except:
             data_out['Characteristic[Phenotype Type]'].append('""')
         data_out['Characteristic[Cell Cycle Model]'].append('"' + elem.getparent().attrib['model'].strip() + '"')
@@ -361,24 +451,26 @@ def a_cellcycle(cell_cycle_elems,cell_phase_elems):
     #Write dictionary to dataframe, then dataframe to text file
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_cycle = pd.DataFrame(data=data_out)
     cycle_filename = 'a_CellCycle_' + file_base
-    f_a_cycle = open(os.path.join(output_folder,cycle_filename), 'w')
-    f_a_cycle.write(df_cycle.to_string(header=True, index=False))
 
-    #sort data for study protocol parameters
-    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
-    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
-    assay_params = ';'.join(list(params))
-    f_a_cycle.close
-    return (cycle_filename, assay_params)
+    cycle_protocol = 'Cell Cycle Characterization'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_cycle = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(cycle_filename, df_cycle, cycle_protocol, 4)
+
+    return (cycle_filename, cycle_protocol,params,param_comps)
 cell_phase = root.findall('.//cell_cycle/cell_cycle_phase')
 cell_cycle = root.findall('.//cell_cycle')
 if len(cell_cycle) > 0:
     cellcycle_results = a_cellcycle(cell_cycle,cell_phase)
     a_file_list.append(cellcycle_results[0])
     assay_type_list.append('Cell Cycle')
-    assay_parameters.append(cellcycle_results[1])
+    study_prot_types.append('Characterization')
+    study_prot_list.append(cellcycle_results[1])
+    assay_parameters.append(cellcycle_results[2])
+    assay_param_components.append(cellcycle_results[3])
 else:
     print('No Cell Cycle Assay')
 
@@ -429,7 +521,7 @@ def a_celldeath(cell_death_elems):
     for elem in cell_death_elems:
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().attrib['ID'] + '"')
         try:
-            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
         except:
             data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().attrib['keywords'].strip().strip(',') + '"')
@@ -456,21 +548,24 @@ def a_celldeath(cell_death_elems):
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_death = pd.DataFrame(data=data_out)
     death_filename = 'a_CellDeath_' + file_base
-    f_a_death = open(os.path.join(output_folder,death_filename), 'w')
-    f_a_death.write(df_death.to_string(header=True, index=False))
-    f_a_death.close
+    death_protocol = 'Cell Death Characterization'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_death = pd.DataFrame(data=data_out)
 
-    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
-    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
-    assay_params = ';'.join(list(params))
-    return (death_filename, assay_params)
+    params, param_comps = a_header_fix(death_filename, df_death, death_protocol, 3)
+
+    return (death_filename, death_protocol,params,param_comps)
 
 cell_death = root.findall('.//cell_death')
 if len(cell_death) > 0:
     results = a_celldeath(cell_death)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Death')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Characterization')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
 else:
     print('No Cell Death Assay')
 
@@ -508,7 +603,7 @@ def a_mechanics(cell_mechanics_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
@@ -517,7 +612,7 @@ def a_mechanics(cell_mechanics_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -528,7 +623,7 @@ def a_mechanics(cell_mechanics_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
@@ -583,16 +678,16 @@ def a_mechanics(cell_mechanics_elems):
 
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_mech = pd.DataFrame(data=data_out)
     mech_filename = 'a_Mechanics_' + file_base
-    f_a_mech = open(os.path.join(output_folder,mech_filename), 'w')
-    f_a_mech.write(df_mech.to_string(header=True, index=False))
-    f_a_mech.close
+    mech_protocol = 'Cell Mechanics Measurements'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_mech = pd.DataFrame(data=data_out)
 
-    pre_params = [x.strip() for x in data_out.keys() if "Parameter Value" in x]
-    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
-    assay_params = ';'.join(list(params))
-    return (mech_filename, assay_params)
+    params, param_comps = a_header_fix(mech_filename, df_mech, mech_protocol, 3)
+
+    return (mech_filename, mech_protocol, params, param_comps)
+
 
 #Encapsulates cell_part elements too
 cell_mechanics = root.findall('.//mechanics')
@@ -600,7 +695,11 @@ if len(cell_mechanics) > 0:
     results = a_mechanics(cell_mechanics)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Mechanics')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Measurement')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
+
 else:
     print('No Cell Mechanics Assay')
 
@@ -665,7 +764,7 @@ def a_geo_props(cell_geo_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
@@ -674,7 +773,7 @@ def a_geo_props(cell_geo_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -685,7 +784,7 @@ def a_geo_props(cell_geo_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
@@ -758,19 +857,26 @@ def a_geo_props(cell_geo_elems):
 
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_geo = pd.DataFrame(data=data_out)
     geo_filename = 'a_GeometricalProperties_' + file_base
-    f_a_geo = open(os.path.join(output_folder,geo_filename), 'w')
-    f_a_geo.write(df_geo.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_geo.close
-    return (geo_filename, assay_params)
+    geo_protocol = 'Cell Geometrical Property Measurements'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_geo = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(geo_filename, df_geo, geo_protocol, 3)
+
+    return (geo_filename, geo_protocol, params, param_comps)
+
 
 cell_geo_props = root.findall('.//geometrical_properties')
 if len(cell_geo_props) > 0:
     results = a_geo_props(cell_geo_props)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Geometrical Properties')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Measurement')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
 
 
 else:
@@ -816,7 +922,7 @@ def a_motility(cell_motility_elems):
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
         try:
-            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
         except:
             data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
@@ -889,12 +995,16 @@ def a_motility(cell_motility_elems):
 
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_motility = pd.DataFrame(data=data_out)
     motility_filename = 'a_Motility_' + file_base
-    f_a_motility = open(os.path.join(output_folder,motility_filename), 'w')
-    f_a_motility.write(df_motility.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_motility.close
-    return (motility_filename, assay_params)
+    motility_protocol = 'Cell Motility Characterization'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_motility = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(motility_filename, df_motility, motility_protocol, 2)
+
+    return (motility_filename, motility_protocol, params, param_comps)
+
 
 cell_motility = root.findall('.//motility/restricted')
 cell_motility.extend(root.findall('.//motility/unrestricted'))
@@ -902,7 +1012,10 @@ if len(cell_motility) > 0:
     results = a_motility(cell_motility)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Motility')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Characterization')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
 else:
     print('No Cell Motility Assay')
 
@@ -976,7 +1089,7 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
         a_data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
         try:
-            a_data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'])
+            a_data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'] + '"')
         except:
             a_data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().getparent().attrib['keywords'].strip() + '"')
@@ -1077,25 +1190,28 @@ def a_s_PKPD(PKPD_drug, PKPD_pd_meas):
 
     a_data_out['Assay Name'] = pheno_keywords
     a_data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(a_data_out['Sample Name'])
-    df_a_PKPD = pd.DataFrame(data=a_data_out)
+
     a_PKPD_filename = 'a_PKPD_' + file_base
-    f_a_PKPD = open(os.path.join(output_folder,a_PKPD_filename), 'w')
-    f_a_PKPD.write(df_a_PKPD.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_PKPD.close
+    PKPD_protocol = 'Drug Pharmacodynamic Measurements'
+    for data in a_data_out:
+        a_data_out[data] = [x.replace('"', '') for x in a_data_out[data]]
+    df_PKPD_a = pd.DataFrame(data=a_data_out)
 
-    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
-    assay_params = ';'.join(list(params))
+    params, param_comps = a_header_fix(a_PKPD_filename, df_PKPD_a, PKPD_protocol, 2)
 
-    return (s_data_out, a_PKPD_filename, assay_params)
+    return (s_data_out,a_PKPD_filename, PKPD_protocol, params, param_comps)
 
 pkpd_drug = root.findall('.//PKPD/drug')
 pkpd_pd_meas = root.findall('.//PKPD/pharmacodynamics/therapy_measurement_set')
 if (len(pkpd_drug) > 0) or (len(pkpd_pd_meas) > 0):
-    pkpd_file = a_s_PKPD(pkpd_drug,pkpd_pd_meas)
-    pkpd_s_data = pkpd_file[0]
-    a_file_list.append(pkpd_file[1])
+    results = a_s_PKPD(pkpd_drug,pkpd_pd_meas)
+    pkpd_s_data = results[0]
+    a_file_list.append(results[1])
     assay_type_list.append('PKPD')
-    assay_parameters.append(pkpd_file[2])
+    study_prot_list.append(results[2])
+    study_prot_types.append('Measurement')
+    assay_parameters.append(results[3])
+    assay_param_components.append(results[4])
 
 else:
     print('No PKPD Assay')
@@ -1152,7 +1268,7 @@ def a_trans_processes(trans_processes_elems):
         data_out['Sample Name'].append('"' + sample_name_base + '.' + elem.getparent().getparent()
                                        .getparent().attrib['ID'].strip() + '"')
         try:
-            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'])
+            data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
         except:
             data_out['Characteristic[Phenotype Type]'].append('""')
         pheno_keywords.append('"' + elem.getparent().getparent().getparent().attrib['keywords'].strip() + '"')
@@ -1241,19 +1357,26 @@ def a_trans_processes(trans_processes_elems):
 
     data_out['Assay Name'] = pheno_keywords
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_trans = pd.DataFrame(data=data_out)
     trans_filename = 'a_TransportProcesses_' + file_base
-    f_a_trans = open(os.path.join(output_folder,trans_filename), 'w')
-    f_a_trans.write(df_trans.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_trans.close
-    return (trans_filename, assay_params)
+    trans_protocol = 'Cell Transport Processes Measurements'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_trans = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(trans_filename, df_trans, trans_protocol, 3)
+
+    return (trans_filename, trans_protocol, params, param_comps)
+
 
 trans_process = root.findall('.//transport_processes/variable')
 if len(trans_process) > 0:
     results = a_trans_processes(trans_process)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Transport Processes')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Measurement')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
 else:
     print('No Transport Processes Assay')
 
@@ -1286,13 +1409,13 @@ def transitions(cell_transitions):
     transition_elems = root.findall('.//transitions/transition')
     j = len(transition_elems)
 
-    data_out = {'Sample Name': ['"' + sample_name_base + '"']*j}
+    data_out = {'Sample Name': [sample_name_base]*j}
     for elem in phenotype_elems:
         for path in phenotype_child:
             try:
                 data_out[pheno_header[pheno_path.index(path)] + elem.attrib['ID']] = [root.find(tree.getelementpath(elem) + path).text.replace('\n','').replace('\t','')]*j
             except:
-                data_out[pheno_header[pheno_path.index(path)] + elem.attrib['ID']] = ['"']*j
+                data_out[pheno_header[pheno_path.index(path)] + elem.attrib['ID']] = ['']*j
 
     #Find existing transition xPaths and initialize headers
     #Add parameter values to params to append to I file
@@ -1310,16 +1433,16 @@ def transitions(cell_transitions):
         for path in exist_trans_paths:
             if '@' not in path:
                 try:
-                    data_out[exist_trans_paths[path]].append('"' + root.find(tree.getelementpath(elem) + path).text.replace('\n','').replace('\t','') + '"')
+                    data_out[exist_trans_paths[path]].append(root.find(tree.getelementpath(elem) + path).text.replace('\n','').replace('\t',''))
                 except:
-                    data_out[exist_trans_paths[path]].append('""')
+                    data_out[exist_trans_paths[path]].append('')
             else:
                 new_path = path.split('[')[0]
                 attr = path.split('@')[1].strip(']')
                 try:
-                    data_out[exist_trans_paths[path]].append('"' + root.find(tree.getelementpath(elem) + new_path).attrib[attr] + '"')
+                    data_out[exist_trans_paths[path]].append(root.find(tree.getelementpath(elem) + new_path).attrib[attr])
                 except:
-                    data_out[exist_trans_paths[path]].append('""')
+                    data_out[exist_trans_paths[path]].append('')
     #TODO This section will need updating if multiple transitions are in a digital cell line
     for condition in root.findall('.//transitions/transition/conditions/variable/condition'):
         cond_name = condition.attrib['condition_type']
@@ -1328,12 +1451,18 @@ def transitions(cell_transitions):
         data_out[cond_name + ' - Units'] = condition.attrib['units']
         data_out['Parameter Value[' + cond_name + ' - Uncertainty]'] = condition.attrib['uncertainty']
 
-    data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-    df_transition = pd.DataFrame(data=data_out)
+    data_out['MCDS-DCL File'] = [ DCL_file ]*len(data_out['Sample Name'])
     transition_filename = 'a_StateTransition_' + file_base
-    f_a_transition = open(os.path.join(output_folder,transition_filename), 'w')
-    f_a_transition.write(df_transition.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_transition.close
+    transition_protocol = 'Cell State Transition Characterization'
+    print(data_out)
+    # for data in data_out:
+    #     data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    # print(data_out)
+    df_transition = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(transition_filename, df_transition, transition_protocol, 1)
+
+    return (transition_filename, transition_protocol, params, param_comps)
 
     assay_params = ';'.join(params)
     return (transition_filename, assay_params)
@@ -1344,7 +1473,10 @@ if len(cell_transitions) > 0:
     results = transitions(cell_transitions)
     a_file_list.append(results[0])
     assay_type_list.append('Cell State Transitions')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Characterization')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
 
 def a_clinical_stain(stain_properties, stain_measurements):
     '''
@@ -1520,22 +1652,25 @@ def a_clinical_stain(stain_properties, stain_measurements):
     data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
     df_clin_stain = pd.DataFrame(data=data_out)
     clin_stain_filename = 'a_ClinicalStain_' + file_base
-    f_a_clin_stain = open(os.path.join(output_folder,clin_stain_filename), 'w')
-    f_a_clin_stain.write(df_clin_stain.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_a_clin_stain.close
+    stain_protocol = 'Cell Clinical Stain Characterization'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_stain = pd.DataFrame(data=data_out)
 
-    params = set([x.split('[')[1].split('-')[0].strip(']').strip() for x in pre_params])
-    assay_params = ';'.join(list(params))
+    params, param_comps = a_header_fix(clin_stain_filename, df_stain, stain_protocol, 3)
 
-    return (clin_stain_filename, assay_params)
-
+    return (clin_stain_filename, stain_protocol, params, param_comps)
 stain_properties = root.findall('.//clinical/diagnosis/pathology/pathology_definitions/stain')
 stain_measurements = root.findall('.//clinical/diagnosis/pathology/stain')
 if (len(stain_measurements) > 0) or (len(stain_properties) > 0):
     results = a_clinical_stain(stain_properties, stain_measurements)
     a_file_list.append(results[0])
     assay_type_list.append('Cell Stains')
-    assay_parameters.append(results[1])
+    study_prot_list.append(results[1])
+    study_prot_types.append('Characterization')
+    assay_parameters.append(results[2])
+    assay_param_components.append(results[3])
+
 else:
     print('No Clinical Stain Assay')
 
@@ -1588,14 +1723,23 @@ def study_write():
         for PKPD in pkpd_s_data:
             data_out[PKPD] = pkpd_s_data[PKPD]
     data_out['Sample Name'] = assay_samples
-    df_study = pd.DataFrame(data=data_out)
     study_filename = 's_' + file_base
-    f_study = open(os.path.join(output_folder,study_filename), 'w')
-    f_study.write(df_study.to_string(header=True, index=False, col_space=0, justify='center'))
-    f_study.close
-    return (study_filename)
+    study_protocol = 'Digital Cell Line Creation'
+    for data in data_out:
+        data_out[data] = [x.replace('"', '') for x in data_out[data]]
+    df_study = pd.DataFrame(data=data_out)
+
+    params, param_comps = a_header_fix(study_filename, df_study, study_protocol, 1)
+
+    return (study_filename, study_protocol, params, param_comps)
+
 #call study_write function and append file name to file list
-s_file_list.append(study_write())
+results = study_write()
+s_file_list.append(results[0])
+study_prot_list.insert(0,results[1])
+study_prot_types.insert(0,'sample collection')
+assay_parameters.insert(0,results[2])
+assay_param_components.insert(0,results[3])
 
 # I file
 def match_mult(x_in):
@@ -1829,11 +1973,13 @@ ISAfromScript = {'Investigation Publication Author List': pub_author,
                  'Study Publication Title': pub_title,
                  'Study Publication Status': pub_status,
                  'Study Factor Name' : phenotype_factors,
-                 'Study Factor Type' : phenotype_factor_type,
                  'Study File Name' : s_file_list,
                  'Study Assay File Name' : a_file_list,
                  'Study Assay Measurement Type' : assay_type_list,
-                 'Study Protocol Parameters Name' : assay_parameters
+                 'Study Protocol Name' : study_prot_list,
+                 'Study Protocol Type' : study_prot_types,
+                 'Study Protocol Parameters Name' : assay_parameters,
+                 'Study Protocol Components Name' : assay_param_components
                  }
 
 for ind in df.index:
