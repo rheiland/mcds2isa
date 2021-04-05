@@ -35,7 +35,7 @@ Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_00000000
 DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 #These are removed because they have been updated to cell lines 238-242, in same order as original
 
-DCL_file = DCL_list[38]
+DCL_file = DCL_list[DCL_list.index('MCDS_L_0000000241.xml')]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 output_dir = os.path.join(cwd,'ISATabOutput')
@@ -1462,7 +1462,6 @@ def transitions(cell_transitions):
     data_out['MCDS-DCL File'] = [ DCL_file ]*len(data_out['Sample Name'])
     transition_filename = 'a_StateTransition_' + file_base
     transition_protocol = 'Cell State Transition Characterization'
-    print(data_out)
     # for data in data_out:
     #     data_out[data] = [x.replace('"', '') for x in data_out[data]]
     # print(data_out)
@@ -1750,6 +1749,7 @@ assay_parameters.insert(0,results[2])
 assay_param_components.insert(0,results[3])
 
 # I file
+
 def match_mult(x_in):
     '''
 
@@ -1854,6 +1854,22 @@ def mcds_match(i):
                 str_list = var_in
             elif type(var_in) == str:
                 str_list.append(var_in)
+        elif df.at[i,'Multiples for xPath'] == 'Mult-join':
+            path = df.at[i, 'MCDS-DCL Correlate X-Path']
+            par_path, child = path.rsplit('/',1)
+            parnt = root.findall(par_path)
+            for par in parnt:
+                par_child = root.findall(tree.getelementpath(par) + '/' + child)
+                join_list = []
+                for elem in par_child:
+                    try:
+                        join_list.append(elem.text)
+                    except:
+                        None
+                if len(join_list) > 0:
+                    str_list.append(' ; '.join(join_list))
+                else:
+                    str_list.append('""')
         else:
             xpaths = df.at[i,'MCDS-DCL Correlate X-Path'].split(",")
             #Pull xPaths from cell in xlsx file, separate multiple values into list to use in for loop
@@ -2099,7 +2115,7 @@ def fix_study_contacts():
         temp_str = []
         for k in range(len(items)):
              if k == 0:
-                 temp_str.append((items[k].title()))
+                 temp_str.append(items[k])
              elif k == len(items) - 1:
                  temp_str.append(items[k] + '\n')
              else:
