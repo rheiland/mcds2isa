@@ -1,0 +1,3 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Part]"	"Protocol REF"	"Parameter Value[Maximum Cell Deformation]"	"Units"	"Characteristic[Maximum Cell Deformation - Measurement Type]"	"Parameter Value[Maximum Cell Deformation - Range]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000240.0.1"	"expected"	"Entire Cell"	"Cell Mechanics Measurements"	"6.2"	"micron / hour"	"literature"	"5 11"	"normoxic,tip,CD34+,vegfA165+,glass surface"	"MCDS_L_0000000240.xml"
+"MCDS_L_0000000240.0.3"	"expected"	"Entire Cell"	"Cell Mechanics Measurements"	"6.2"	"micron / hour"	"literature"	"5 11"	"normoxic,tip,CD34+,vegfA165+,fibrin surface"	"MCDS_L_0000000240.xml"

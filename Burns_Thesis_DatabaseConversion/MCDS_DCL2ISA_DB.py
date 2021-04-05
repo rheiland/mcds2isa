@@ -34,11 +34,17 @@ Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_00000000
                 ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
 DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 #These are removed because they have been updated to cell lines 238-242, in same order as original
-DCL_file = DCL_list[100]
+
+DCL_file = DCL_list[38]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
-output_folder = os.path.join(cwd,'ISATabOutput')
-file_base = 'test.txt'
+output_dir = os.path.join(cwd,'ISATabOutput')
+DCL_name = DCL_file.replace('.xml','')
+file_base = DCL_name + '.txt'
+output_folder = os.path.join(output_dir,DCL_name)
+os.makedirs(output_folder, exist_ok = True)
+
+
 #TODO update file base name
 #DSS_in = os.path.join(cwd, 'All_Snapshots_MCDS_S_0000000001.xml')
 # txt_in = os.path.join(cwd, 'DCL File List, Indexed.txt')
@@ -88,17 +94,19 @@ def a_header_fix(a_filename, df_a, protocol_ref, ref_col_num):
     [x.replace('Parameter Value[', '').replace(']', '').strip() for x in df_a.columns if 'Parameter Value' in x])
     params = ';'.join(param_list)
     bad_cols = ['Sample Name', 'Parameter Value', 'MCDS-DCL File', 'Units', 'Assay Name', 'Source Name', 'Phenotype Dataset Collection']
-    for cols in df_a.columns:
-        if not any(x in cols for x in bad_cols):
-            cols = cols.replace('Characteristic[', '').strip(']')
+
     # If column does not have string from bad_cols, remove characteristic[ and add to list
     comps = [x.replace('Characteristic[', '').strip(']').strip() for x in df_a.columns if
              not any(y in x for y in bad_cols)]
     # if component has parameter from param_list in name, remove
     for j, comp in enumerate(comps):
+        if 'pkpd' in a_filename.lower():
+            if 'Drug #' in comp:
+                comp = comp.split(':',1)[1]
         for param in param_list:
             if param in comp:
-                comps[j] = comp.replace(param, '').replace('-','').strip()
+                comp = comp.replace(param, '').replace('-','').strip()
+        comps[j] = comp
     param_comps = ';'.join(list(set(comps)))
     df_a.insert(ref_col_num, 'Protocol REF', [protocol_ref] * len(df_a['Sample Name']))
     a_rows = [df_a.columns.values.tolist()] + df_a.values.tolist()
@@ -2033,7 +2041,7 @@ def fix_multi_blanks():
                         quote_str = ''
                         for i in range(multi_quantity[key]):
                             quote_str += '\t""'
-                        file_data[line_num] = edit_line + '\t' + quote_str + '\n'
+                        file_data[line_num] = edit_line + quote_str + '\n'
     f_I = open(os.path.join(output_folder,I_filename), 'w')
     f_I.writelines(file_data)
     f_I.close()

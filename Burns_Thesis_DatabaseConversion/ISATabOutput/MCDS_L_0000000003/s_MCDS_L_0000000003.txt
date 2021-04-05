@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000003.0"	"Digital Cell Line Creation"	"MCF10A_JSB"	"MCF10A"	"0001939"	"0007599"	"N/A"	"Homo Sapiens"	"Mammary gland; Breast"	"Fibrocystic disease; nontumorigenic"	"MCDS_L_0000000003.0.0"

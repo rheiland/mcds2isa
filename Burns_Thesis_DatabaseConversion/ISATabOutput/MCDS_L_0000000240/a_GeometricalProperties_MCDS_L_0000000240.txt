@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Part]"	"Protocol REF"	"Parameter Value[Radius]"	"Units"	"Characteristic[Radius Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000240.0.0"	"expected"	"Entire Cell"	"Cell Geometrical Property Measurements"	"9.23"	"micron"	"literature"	"normoxic,phalanx,vegfA165,"	"MCDS_L_0000000240.xml"

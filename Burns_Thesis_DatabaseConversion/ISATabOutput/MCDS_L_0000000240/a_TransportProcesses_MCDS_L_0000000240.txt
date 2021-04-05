@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Variable Name"	"Protocol REF"	"Characteristic[Variable ChEBI ID]"	"Characteristic[Variable MeSH ID]"	"Characteristic[Variable PR ID]"	"Characteristic[Variable UniProt ID]"	"Parameter Value[Export Rate]"	"Units"	"Characteristic[Export Rate Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000240.0.0"	"expected"	"VEGFA 165"	"Cell Transport Processes Measurements"	"91189"	"C467484"	"000017284"	"P15692-11"	"6.97e-5"	"molecules/s"	"literature"	"normoxic,phalanx,vegfA165,"	"MCDS_L_0000000240.xml"

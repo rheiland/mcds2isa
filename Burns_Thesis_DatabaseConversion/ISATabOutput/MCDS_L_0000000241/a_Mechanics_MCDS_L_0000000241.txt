@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Part]"	"Protocol REF"	"Parameter Value[Young's Modulus]"	"Units"	"Characteristic[Young's Modulus - Measurement Type]"	"Parameter Value[Young's Modulus - Standard Deviation]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000241.0.0"	""	"Entire Cell"	"Cell Mechanics Measurements"	"221.4"	"MPa"	"literature"	"11.9"	"normal"	"MCDS_L_0000000241.xml"

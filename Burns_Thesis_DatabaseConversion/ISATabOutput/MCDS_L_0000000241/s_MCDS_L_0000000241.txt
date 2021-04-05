@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Characteristic[Species]"	"Characteristic[Strain]"	"Sample Name"
+"MCDS_L_0000000241.0"	"Digital Cell Line Creation"	"e_coli"	"E_coli"	"Escherichia coli"	"NCTC 9001"	"MCDS_L_0000000241.0.0"

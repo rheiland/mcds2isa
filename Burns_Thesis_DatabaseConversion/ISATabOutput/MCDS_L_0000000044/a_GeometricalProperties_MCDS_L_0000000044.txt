@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Part]"	"Protocol REF"	"Parameter Value[Radius]"	"Units"	"Characteristic[Radius Measurement Type]"	"Parameter Value[Radius Measurement - Maximum]"	"Parameter Value[Radius Measurement - Minimum]"	"Parameter Value[Radius Measurement - Range]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000048.0.0"	"expected"	"Entire Cell"	"Cell Geometrical Property Measurements"	"4"	"micron"	"inferred"	"5"	"3"	"3 5"	"normoxic"	"MCDS_L_0000000044.xml"

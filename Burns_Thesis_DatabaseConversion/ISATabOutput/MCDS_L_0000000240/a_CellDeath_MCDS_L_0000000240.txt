@@ -1,0 +1,4 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Death Type]"	"Protocol REF"	"Parameter Value[Duration]"	"Units"	"Characteristic[Duration - Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000240.0.1"	"expected"	"apoptosis"	"Cell Death Characterization"	"24"	"hour"	"estimated"	"normoxic,tip,CD34+,vegfA165+,glass surface"	"MCDS_L_0000000240.xml"
+"MCDS_L_0000000240.0.2"	"expected"	"apoptosis"	"Cell Death Characterization"	"24"	"hour"	"estimated"	"normoxic,stalk,CD34-,vegfA165,multiple_words_together"	"MCDS_L_0000000240.xml"
+"MCDS_L_0000000240.0.3"	"expected"	"apoptosis"	"Cell Death Characterization"	"24"	"hour"	"estimated"	"normoxic,tip,CD34+,vegfA165+,fibrin surface"	"MCDS_L_0000000240.xml"

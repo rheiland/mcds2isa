@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Cycle Model]"	"Characteristic[Cell Cycle Phase]"	"Protocol REF"	"Parameter Value[Duration]"	"Units"	"Characteristic[Duration - Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000048.0.0"	"expected"	"total_cells"	"growth_phase"	"Cell Cycle Characterization"	"24"	"hours"	"estimated"	"normoxic"	"MCDS_L_0000000044.xml"
