@@ -19,7 +19,7 @@ root.set('type',"cell_line")
 root.set('version', "1.0.0")
 
 ISA_inputs = os.path.join(cwd,'ISATabOutput')
-ISA_file_base = os.listdir(ISA_inputs)[os.listdir(ISA_inputs).index('MCDS_L_0000000066')]
+ISA_file_base = os.listdir(ISA_inputs)[os.listdir(ISA_inputs).index('MCDS_L_0000000238')]
 print('MCDS File: ', ISA_file_base)
 ISA_file_folder = os.path.join(ISA_inputs,ISA_file_base)
 I_filename = os.path.join(ISA_file_folder, 'i_' + ISA_file_base + '.txt')
@@ -389,7 +389,6 @@ for a_file in I_data['Study Assay File Name']:
         num_death_elems = max(num_death)
         death_type_elems = copy_elem('cell_line/phenotype_dataset/phenotype/cell_death',num_death_elems)
 
-
     elif "ClinicalStain" in a_file:
         exist_assay_names.append('ClinicalStain')
         clinstain_df = pd.read_csv(os.path.join(ISA_file_folder, a_file), sep='\t', dtype = str)
@@ -407,6 +406,41 @@ for a_file in I_data['Study Assay File Name']:
         exist_assay_path.append('cell_line/phenotype_dataset/phenotype/geometrical_properties')
         exist_assay_path.append('cell_line/phenotype_dataset/cell_part/phenotype/geometrical_properties')
         exist_assay_path.append('cell_line/phenotype_dataset/cell_part/cell_part/phenotype/geometrical_properties')
+        exist_geoprops_dict = {}
+        for sample_ind in geoprops_df.index:
+            sample = str(geoprops_df.at[sample_ind,'Sample Name'])
+            if exist_geoprops_dict.get(sample) is None:
+                exist_geoprops_dict[sample] = {}
+            cell_part = str(geoprops_df.at[sample_ind,'Characteristic[Cell Part]'])
+            if cell_part != 'Entire Cell':
+                if ' of ' not in cell_part:
+                    if exist_geoprops_dict[sample].get(cell_part) is None:
+                        exist_geoprops_dict[sample][cell_part] = []
+                else:
+                    part_name = cell_part.split(' of ')[1]
+                    sub_part = cell_part.split(' of ')[0]
+                    if exist_geoprops_dict[sample].get(part_name) is None:
+                        exist_geoprops_dict[sample][part_name] = []
+                    exist_geoprops_dict[sample][part_name].append(sub_part)
+
+        # determine necessary elements to copy based on assay contents, make copies, and save elements
+        num_parts = []
+        num_subparts = []
+        for sample in exist_geoprops_dict.keys():
+            num_parts.append(len(exist_geoprops_dict[sample].keys()))
+            for cell_part in exist_geoprops_dict[sample].keys():
+                num_subparts.append(len(exist_geoprops_dict[sample][cell_part]))
+
+        if len(num_parts) > 0:
+            num_parts = max(num_parts)
+            geo_cellpart_elems = copy_elem('cell_line/phenotype_dataset/cell_part', num_parts)
+        else:
+            geo_cellpart_elems = []
+        if len(num_subparts) > 0:
+            num_subparts = max(num_subparts)
+            geo_subpart_elems = copy_elem('cell_line/phenotype_dataset/cell_part/cell_part', num_subparts)
+        else:
+            geo_subpart_elems = []
 
     elif "Mechanics" in a_file:
         exist_assay_names.append('Mechanics')
@@ -414,6 +448,42 @@ for a_file in I_data['Study Assay File Name']:
         exist_assay_path.append('cell_line/phenotype_dataset/phenotype/mechanics')
         exist_assay_path.append('cell_line/phenotype_dataset/cell_part/phenotype/mechanics')
         exist_assay_path.append('cell_line/phenotype_dataset/cell_part/cell_part/phenotype/mechanics')
+        #find existing mechaincs elements
+        exist_mechanics_dict = {}
+        for sample_ind in mechanics_df.index:
+            sample = str(mechanics_df.at[sample_ind, 'Sample Name'])
+            if exist_mechanics_dict.get(sample) is None:
+                exist_mechanics_dict[sample] = {}
+            cell_part = str(mechanics_df.at[sample_ind, 'Characteristic[Cell Part]'])
+            if cell_part != 'Entire Cell':
+                if ' of ' not in cell_part:
+                    if exist_mechanics_dict[sample].get(cell_part) is None:
+                        exist_mechanics_dict[sample][cell_part] = []
+                else:
+                    part_name = cell_part.split(' of ')[1]
+                    sub_part = cell_part.split(' of ')[0]
+                    if exist_mechanics_dict[sample].get(part_name) is None:
+                        exist_mechanics_dict[sample][part_name] = []
+                    exist_mechanics_dict[sample][part_name].append(sub_part)
+
+        # determine necessary elements to copy based on assay contents, make copies, and save elements
+        num_parts = []
+        num_subparts = []
+        for sample in exist_mechanics_dict.keys():
+            num_parts.append(len(exist_mechanics_dict[sample].keys()))
+            for cell_part in exist_mechanics_dict[sample].keys():
+                num_subparts.append(len(exist_mechanics_dict[sample][cell_part]))
+
+        if len(num_parts) > 0:
+            num_parts = max(num_parts)
+            mech_cellpart_elems = copy_elem('cell_line/phenotype_dataset/cell_part', num_parts)
+        else:
+            mech_cellpart_elems = []
+        if len(num_subparts) > 0:
+            num_subparts = max(num_subparts)
+            mech_subpart_elems = copy_elem('cell_line/phenotype_dataset/cell_part/cell_part', num_subparts)
+        else:
+            mech_subpart_elems = []
 
     elif "Microenvironment" in a_file:
         exist_assay_names.append('Microenvironment')
@@ -436,11 +506,47 @@ for a_file in I_data['Study Assay File Name']:
         exist_assay_names.append('Motility')
         motility_df = pd.read_csv(os.path.join(ISA_file_folder, a_file), sep='\t', dtype = str)
         exist_assay_path.append('cell_line/phenotype_dataset/phenotype/motility')
+        exist_restricted_dict = {}
+        exist_unrestricted_dict = {}
+        all_mot_dict = {}
+        #determine motility elements, make copies if necessary
+        for sample_ind in motility_df.index:
+            sample = str(motility_df.at[sample_ind, 'Sample Name'])
+            motility_type = str(motility_df.at[sample_ind, 'Characteristic[Motility Type]'])
+            phenotype_type = str(motility_df.at[sample_ind, 'Characteristic[Phenotype Type]'])
+            if all_mot_dict.get(sample) is None:
+                all_mot_dict[sample] = []
+            all_mot_dict[sample].append(motility_type)
+            if motility_type == 'restricted':
+                if exist_restricted_dict.get(sample) is None:
+                    exist_restricted_dict[sample] = []
+                exist_restricted_dict[sample].append(motility_type)
+            elif motility_type == 'unrestricted':
+                if exist_unrestricted_dict.get(sample) is None:
+                    exist_unrestricted_dict[sample] = []
+                exist_unrestricted_dict[sample].append(motility_type)
+        num_restrict = []
+        for sample in exist_restricted_dict.keys():
+            num_restrict.append(len(exist_restricted_dict[sample]))
+        if len(num_restrict) > 0:
+            num_restrict_elems = max(num_restrict)
+            restrict_elems = copy_elem('cell_line/phenotype_dataset/phenotype/motility/restricted',num_restrict_elems)
+        else:
+            restrict_elems = []
+
+        num_unrestrict = []
+        for sample in exist_unrestricted_dict.keys():
+            num_unrestrict.append(len(exist_unrestricted_dict[sample]))
+        if len(num_unrestrict) > 0:
+            num_unrestrict_elems = max(num_unrestrict)
+            unrestrict_elems = copy_elem('cell_line/phenotype_dataset/phenotype/motility/unrestricted',num_unrestrict_elems)
+        else:
+            unrestrict_elems = []
+
     elif "PKPD" in a_file:
         exist_assay_names.append('PKPD')
         PKPD_df = pd.read_csv(os.path.join(ISA_file_folder, a_file), sep='\t', dtype = str)
         exist_assay_path.append('cell_line/phenotype_dataset/phenotype/PKPD/pharmacodynamics')
-
 
     elif "StateTransition" in a_file:
         exist_assay_names.append('StateTransition')
@@ -625,7 +731,7 @@ def ClinicalStainAssay(df, stain_path_def, stain_meas_path):
             param_name = paired_param.replace('Parameter Value[', '').replace(']', '').strip()
             new_col = param_name + ' - Units'
             df.rename({col: new_col}, axis=1, inplace=True)
-    print(df)
+
     rel_stain_props_df = pd.read_excel(rF'{db}', sheet_name='A_ClinicalStain', usecols=
         ['Clinical Stain Properties ISA Headers', 'Clinical Stain Properties xPaths']).dropna()
     rel_stain_meas_df = pd.read_excel(rF'{db}', sheet_name='A_ClinicalStain', usecols=
@@ -667,6 +773,132 @@ def ClinicalStainAssay(df, stain_path_def, stain_meas_path):
 
     # remove columns from dataframe that aren't used for writing data when looping through dataframe
     # i.e. associated header/xpath not in relationship xlsx
+
+def GeoPropsAssay(df, elem_dict, cellpart_elems, subpart_elems):
+    '''
+    :param df: dataframe of the geomtrical properties assay.txt file
+    :param elem_dict: dictionary of existing geometrical property "level" names (sample, cell_part, cell_part/cell_part)
+    :param cellpart_elems: list of cell_part elements in the xml (can be none)
+    :param subpart_elems: list of cell_part/cell_part elements in the xml (can be none)
+    :return:
+    '''
+    for col in df.columns:
+        if 'Units' in col:
+            unit_ind = df.columns.get_loc(col)
+            paired_param = df.columns[unit_ind - 1]
+            param_name = paired_param.replace('Parameter Value[', '').replace(']', '').strip()
+            new_col = param_name + ' Measurement - Units'
+            df.rename({col: new_col}, axis=1, inplace=True)
+
+    df_geo_val_in = pd.read_excel(rF'{db}', sheet_name='A_GeometricalProperties', keep_default_na=False, usecols=
+    ['Cell Geometrical Properties ISA Measurement Name', 'Cell Geometrical Properties xPaths'])
+    df_geo_attr_in = pd.read_excel(rF'{db}', sheet_name='A_GeometricalProperties', keep_default_na=True, usecols=
+    ['Cell Geometrical Properties Attributes', 'Cell Geometrical Properties ISA Entity Beginning',
+     'Cell Geometrical Properties ISA Entity Tail']).dropna(how='all').fillna("")
+    # remove blanks from geo_measure_paths, geo_measure, and geo_attr
+    # Don't remove blanks from ISA entity beginning + tail lists (blank may be valid
+    geo_measure_paths = [str(i) for i in df_geo_val_in['Cell Geometrical Properties xPaths'].tolist() if i]
+    geo_measure = [str(i) for i in df_geo_val_in['Cell Geometrical Properties ISA Measurement Name'].tolist() if i]
+    geo_attr = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties Attributes'].tolist() if i]
+    geo_header_begin = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties ISA Entity Beginning'].tolist()]
+    geo_header_tail = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties ISA Entity Tail'].tolist()]
+
+    #combine xlsx relationship sheet data to get dictionary with {ISA Header : xPath}
+    geo_headers_paths = {}
+    for j, meas in enumerate(geo_measure):
+        geo_headers_paths[f'Parameter Value[{meas}]'] = '/geometrical_properties' + geo_measure_paths[j]
+        for k, attr in enumerate(geo_attr):
+            header = geo_header_begin[k] + meas + geo_header_tail[k]
+            geo_headers_paths[header] = '/geometrical_properties' + geo_measure_paths[j] + f'[@{attr}]'
+
+    #create dictionary of [assay file row: [elem base xPath, cell_part name]]
+    cellpart_paths = [tree.getelementpath(x).rsplit('/',1)[1] for x in cellpart_elems]
+    subpart_paths = [tree.getelementpath(x).rsplit('/',1)[1] for x in subpart_elems]
+    row_base_paths = {}
+    i = 0
+    for sample in elem_dict.keys():
+        sample_base = pheno_data_paths[sample]
+        row_base_paths[i] = [sample_base + '/phenotype', 'nan']
+        i+=1
+        for j,part in enumerate(elem_dict[sample]):
+            part_base = sample_base +'/'+ cellpart_paths[j]
+            row_base_paths[i] = [part_base + '/phenotype', part]
+            i += 1
+            for k, subpart in enumerate(elem_dict[sample][part]):
+                subpart_base = part_base +'/'+ subpart_paths[k]
+                row_base_paths[i] = [subpart_base + '/phenotype', subpart]
+                i += 1
+    for row_ind in df.index:
+        base_path = row_base_paths[row_ind][0]
+        part_name = row_base_paths[row_ind][1]
+        #write phenotype[@type] for rows and part name if cell_part or cell_part/cell_part
+        pheno_type = str(df.at[row_ind,'Characteristic[Phenotype Type]'])
+        write_by_xPath(base_path + '[@type]', pheno_type)
+        if part_name != 'nan':
+            write_by_xPath(base_path.rsplit('/',1)[0] + '[@name]', part_name)
+        for col in df.columns:
+            if col in geo_headers_paths:
+                val_to_write = str(df.at[row_ind,col])
+                val_path = base_path + geo_headers_paths[col]
+                write_by_xPath(val_path, val_to_write)
+
+def MechanicsAssay(df, elem_dict, cellpart_elems, subpart_elems):
+    '''
+    :param df: dataframe of the mechanics assay.txt file
+    :param elem_dict: dictionary of existing mechanics "level" names (sample, cell_part, cell_part/cell_part)
+    :param cellpart_elems: list of cell_part elements in the xml (can be none)
+    :param subpart_elems: list of cell_part/cell_part elements in the xml (can be none)
+    :return:
+    '''
+    for col in df.columns:
+        if 'Units' in col:
+            unit_ind = df.columns.get_loc(col)
+            paired_param = df.columns[unit_ind - 1]
+            param_name = paired_param.replace('Parameter Value[', '').replace(']', '').strip()
+            new_col = param_name + ' - Units'
+            df.rename({col: new_col}, axis=1, inplace=True)
+
+    # Import cell mechanics xPaths, correlate cell mechanics ISA headers from excel file and write each entity as string to list
+    df_mech_in = pd.read_excel(rF'{db}', sheet_name='A_Mechanics', keep_default_na=False, usecols=
+    ['Cell Mechanics ISA Entities', 'Cell Mechanics xPaths'])
+    mech_paths = [str(i) for i in df_mech_in['Cell Mechanics xPaths'].tolist() if i]
+    mech_headers = [str(i) for i in df_mech_in['Cell Mechanics ISA Entities'].tolist() if i]
+
+    #combine xlsx relationship sheet data to get dictionary with {ISA Header : xPath}
+    mech_headers_paths = {}
+    for j, meas in enumerate(mech_headers):
+        mech_headers_paths[mech_headers[j]] = '/mechanics' + mech_paths[j]
+
+    #create dictionary of [assay file row: [elem base xPath, cell_part name]]
+    cellpart_paths = [tree.getelementpath(x).rsplit('/',1)[1] for x in cellpart_elems]
+    subpart_paths = [tree.getelementpath(x).rsplit('/',1)[1] for x in subpart_elems]
+    row_base_paths = {}
+    i = 0
+    for sample in elem_dict.keys():
+        sample_base = pheno_data_paths[sample]
+        row_base_paths[i] = [sample_base + '/phenotype', 'nan']
+        i+=1
+        for j,part in enumerate(elem_dict[sample]):
+            part_base = sample_base +'/'+ cellpart_paths[j]
+            row_base_paths[i] = [part_base + '/phenotype', part]
+            i += 1
+            for k, subpart in enumerate(elem_dict[sample][part]):
+                subpart_base = part_base +'/'+ subpart_paths[k]
+                row_base_paths[i] = [subpart_base + '/phenotype', subpart]
+                i += 1
+    for row_ind in df.index:
+        base_path = row_base_paths[row_ind][0]
+        part_name = row_base_paths[row_ind][1]
+        #write phenotype[@type] for rows and part name if cell_part or cell_part/cell_part
+        pheno_type = str(df.at[row_ind,'Characteristic[Phenotype Type]'])
+        write_by_xPath(base_path + '[@type]', pheno_type)
+        if part_name != 'nan':
+            write_by_xPath(base_path.rsplit('/',1)[0] + '[@name]', part_name)
+        for col in df.columns:
+            if col in mech_headers_paths:
+                val_to_write = str(df.at[row_ind,col])
+                val_path = base_path + mech_headers_paths[col]
+                write_by_xPath(val_path, val_to_write)
 
 def MicroenvironmentAssay(df, sample_list, var_names, var_elems):
     '''
@@ -746,6 +978,103 @@ def MicroenvironmentAssay(df, sample_list, var_names, var_elems):
                             var_tail = '/material_amount[@' + attrib + ']'
                         write_by_xPath(var_path + var_tail , val_to_write)
 
+def MotilityAssay(df, elem_dict, unrestrict_elem, restrict_elem):
+    '''
+    :param df: dataframe of Motility assay .txt file
+    :param unrestrict_elem: list of unrestricted elems (may be empty if none from )
+    :param restrict_elem:
+    :return:
+    '''
+
+    for col in df.columns:
+        if 'Units' in col:
+            unit_ind = df.columns.get_loc(col)
+            paired_param = df.columns[unit_ind - 1]
+            param_name = paired_param.replace('Parameter Value[', '').replace(']', '').strip()
+            new_col = param_name + ' - Units'
+            df.rename({col: new_col}, axis=1, inplace=True)
+
+    df_motility_val_in = pd.read_excel(rF'{db}', sheet_name='A_Motility', keep_default_na=False, usecols=
+    ['Cell Motility ISA Measurement Name', 'Cell Motility xPaths'])
+    df_motility_attr_in = pd.read_excel(rF'{db}', sheet_name='A_Motility', keep_default_na=True, usecols=
+    ['Cell Motility Attributes', 'Cell Motility ISA Entity Beginning',
+     'Cell Motility ISA Entity Tail']).dropna(how='all').fillna("")
+    # remove blanks from motility_measure_paths, motility_measure, and motility_attr
+    # Don't remove blanks from ISA entity beginning + tail lists (blank may be valid)
+    motility_measure_paths = [str(i) for i in df_motility_val_in['Cell Motility xPaths'].tolist() if i]
+    motility_measure = [str(i) for i in df_motility_val_in['Cell Motility ISA Measurement Name'].tolist() if i]
+    motility_attr = [str(i) for i in df_motility_attr_in['Cell Motility Attributes'].tolist() if i]
+    motility_header_begin = [str(i) for i in df_motility_attr_in['Cell Motility ISA Entity Beginning'].tolist()]
+    motility_header_tail = [str(i) for i in df_motility_attr_in['Cell Motility ISA Entity Tail'].tolist()]
+
+    motility_dict = {}
+    for j,meas in enumerate(motility_measure):
+        motility_dict[f'Parameter Value[{meas}]'] = motility_measure_paths[j]
+        for k,attr in enumerate(motility_attr):
+            header = motility_header_begin[k] + meas + motility_header_tail[k]
+            motility_dict[header] = motility_measure_paths[j] + f'[@{attr}]'
+    #found without xPath in ISA script, added manually here
+    motility_dict['Characteristic[Restriction Surface Name]'] = '/restriction/surface_variable[@name]'
+    motility_dict['Characteristic[Restriction Surface MeSH ID]'] = '/restriction/surface_variable[@MeSH_ID]'
+
+    unrestrict_path = [tree.getelementpath(x).split('/',2)[2] for x in unrestrict_elem]
+    restrict_path = [tree.getelementpath(x).split('/',2)[2] for x in restrict_elem]
+
+    row_base_paths = {}
+    ind_cnt = 0
+    for i, sample in enumerate(elem_dict.keys()):
+        sample_base = pheno_data_paths[sample]
+        j = 0
+        k = 0
+        for model in elem_dict[sample]:
+            if model == 'restricted':
+                model_path_base = '/'.join([sample_base,restrict_path[j]])
+                id_num = j
+                j+= 1
+            elif model == 'unrestricted':
+                model_path_base = '/'.join([sample_base, unrestrict_path[k]])
+                id_num = k
+                k+=1
+            row_base_paths[ind_cnt] = [model_path_base, id_num]
+            ind_cnt += 1
+
+    #write motility elements
+    for row_ind in df.index:
+        base_path = row_base_paths[row_ind][0]
+        elem_id = row_base_paths[row_ind][1]
+        write_by_xPath(base_path + '[@ID]', elem_id)
+        for col in df.columns:
+            if col in motility_dict:
+                val_to_write = str(df.at[row_ind,col])
+                path_tail = motility_dict[col]
+                write_by_xPath(base_path + path_tail, val_to_write)
+
+
+def pkpdAssay(df):
+    '''
+
+    :param df: dataframe of pkpd assay .txt file
+    :return:
+    '''
+    pkpd_heads_paths = {
+    "Measurement Set ID#" : '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set[@ID]',
+    "Drug #1: Parameter Value[Drug Dose]" : '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/therapy/drug/dose',
+    "Units" : "/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/therapy/drug/dose[@units]",
+    "Drug #1: Characteristic[Drug Dose Measurement Type]" : "/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/therapy/drug/dose[@type]",
+    "Parameter Value[IC50]" : '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/response/custom/IC_50',
+    "Units.1" : '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/response/custom/IC_50[@units]',
+    "Characteristic[IC50 Measurement Type]" : '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/response/custom/IC_50[@measurement_type]'
+    }
+    for row_ind in df.index:
+        sample = str(PKPD_df.at[row_ind, 'Sample Name'])
+        sample_base = pheno_data_paths[sample]
+        write_by_xPath(sample_base + '/phenotype/PKPD/drug[@ID]', row_ind)
+        write_by_xPath(sample_base + '/phenotype/PKPD/pharmacodynamics/therapy_measurement_set/therapy/drug[@ID]', row_ind)
+        for col in df.columns:
+            if col in pkpd_heads_paths.keys():
+                val_to_write = str(PKPD_df.at[row_ind, col])
+                val_path = sample_base + pkpd_heads_paths[col]
+                write_by_xPath(val_path,val_to_write)
 
 def StateTransitionAssay(df, pheno_collect_dict, state_cond_dict):
     '''
@@ -885,9 +1214,16 @@ if 'CellDeath' in exist_assay_names:
     CellDeathAssay(df = celldeath_df, elem_dict = exist_death_dict, death_type_elems= death_type_elems)
 if 'ClinicalStain' in exist_assay_names:
     ClinicalStainAssay(df = clinstain_df, stain_path_def = stain_def, stain_meas_path = stain_meas)
-
+if 'GeometricalProperties' in exist_assay_names:
+    GeoPropsAssay(df = geoprops_df, elem_dict = exist_geoprops_dict, cellpart_elems = geo_cellpart_elems, subpart_elems = geo_subpart_elems)
+if 'Mechanics' in exist_assay_names:
+    MechanicsAssay(df = mechanics_df, elem_dict = exist_mechanics_dict, cellpart_elems = mech_cellpart_elems, subpart_elems = mech_subpart_elems)
 if 'Microenvironment' in exist_assay_names:
     MicroenvironmentAssay(df = micro_df, sample_list = exist_micro_samples, var_names = micro_var_names, var_elems = micro_var_elems)
+if 'Motility' in exist_assay_names:
+    MotilityAssay(df = motility_df, elem_dict= all_mot_dict, unrestrict_elem = unrestrict_elems, restrict_elem = restrict_elems)
+if 'PKPD' in exist_assay_names:
+    pkpdAssay(df = PKPD_df)
 if 'StateTransition' in exist_assay_names:
     StateTransitionAssay(df = statetrans_df, pheno_collect_dict = pheno_collect_dict, state_cond_dict = state_cond_dict)
 if 'TransportProcesses' in exist_assay_names:

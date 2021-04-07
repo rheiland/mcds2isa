@@ -35,7 +35,7 @@ Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_00000000
 DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 #These are removed because they have been updated to cell lines 238-242, in same order as original
 
-DCL_file = DCL_list[DCL_list.index('MCDS_L_0000000066.xml')]
+DCL_file = DCL_list[DCL_list.index('MCDS_L_0000000238.xml')]
 DCL_in = os.path.join(DCL_xml_dir, DCL_file)
 print('Input file: ', DCL_file)
 output_dir = os.path.join(cwd,'ISATabOutput')
@@ -324,17 +324,14 @@ def a_microenvironment(micro_elems):
     for variable in assay_variables:
         if ('Parameter Value['+variable+' type]') in df_micro.columns:
             var_type = list(set([x for x in df_micro['Parameter Value['+variable+' type]'] if x]))
-            print(var_type)
             if len(var_type) == 1:
                 var_type = var_type[0]
-                print(var_type)
                 df_micro = df_micro.drop(labels = ['Parameter Value['+variable+' type]'], axis = 1)
                 for col in df_micro.columns:
                     if variable in col:
                         var_name_type = '.'.join([variable.strip(), var_type.strip()])
                         new_col = col.replace(variable, var_name_type)
                         df_micro.rename({col: new_col}, axis=1, inplace=True)
-    print(df_micro.columns)
     params, param_comps = a_header_fix(micro_filename,df_micro,micro_protocol,1)
 
     return(micro_filename, micro_protocol, params,param_comps)
@@ -626,7 +623,7 @@ def a_mechanics(cell_mechanics_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -637,7 +634,7 @@ def a_mechanics(cell_mechanics_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'] + '"')
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
@@ -787,7 +784,7 @@ def a_geo_props(cell_geo_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                            .getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().attrib['type'] + '"')
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -798,7 +795,7 @@ def a_geo_props(cell_geo_elems):
             data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                            .getparent().getparent().getparent().attrib['ID'].strip() + '"')
             try:
-                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().getparent().getparent().attrib['type'] + '"')
+                data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
             except:
                 data_out['Characteristic[Phenotype Type]'].append('""')
             pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
