@@ -230,13 +230,6 @@
 					</variable>
 				</transport_processes>
 			</phenotype>
-			<custom>
-				<state>
-					<name>
-						phalanx
-					</name>
-				</state>
-			</custom>
 		</phenotype_dataset>
 		<phenotype_dataset ID="1" keywords="normoxic,tip,CD34+,vegfA165+,glass surface">
 			<microenvironment>
@@ -315,13 +308,6 @@
 					</restricted>
 				</motility>
 			</phenotype>
-			<custom>
-				<state>
-					<name>
-						tip
-					</name>
-				</state>
-			</custom>
 		</phenotype_dataset>
 		<phenotype_dataset ID="2" keywords="normoxic,stalk,CD34-,vegfA165,multiple_words_together">
 			<microenvironment>
@@ -377,13 +363,6 @@
 					</duration> 
 				</cell_death>
 			</phenotype>
-			<custom>
-				<state>
-					<name>
-						stalk
-					</name>
-				</state>
-			</custom>
 		</phenotype_dataset>
 		<phenotype_dataset ID="3" keywords="normoxic,tip,CD34+,vegfA165+,fibrin surface">
 			<microenvironment>
@@ -472,13 +451,6 @@
 					</restricted>
 				</motility>
 			</phenotype>
-			<custom>
-				<state>
-					<name>
-						tip
-					</name>
-				</state>
-			</custom>
 		</phenotype_dataset>	
 		<phenotype_dataset ID="4" keywords="normoxic,all,vegfA189+,gelatin surface">
 		<microenvironment>
