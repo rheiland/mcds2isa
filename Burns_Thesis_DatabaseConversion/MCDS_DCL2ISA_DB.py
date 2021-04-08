@@ -28,7 +28,7 @@ cwd = os.getcwd()
 db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
 #Define Master database directory path - assumes that database is in same directory as script
 
-DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
+DCL_xml_dir = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
 #TODO - Change once merged into directory
 DCL_list = os.listdir(DCL_xml_dir)
 Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
@@ -38,38 +38,42 @@ DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
 
 #DCL_file = DCL_list[DCL_list.index('MCDS_L_0000000238.xml')]
 
-create_error_txt_file = 'n'
+create_error_txt_file = 'no'
 
-for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total=len(DCL_list)):
+input_list = DCL_list
+for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', total=len(input_list), mininterval=5):
     DCL_in = os.path.join(DCL_xml_dir, DCL_file)
+    #Check file type, skip file if not xml
     if DCL_file[-4:] != '.xml':
-        print(f"\n\033[1;31;40m Error: File Input {DCL_file} is not an .xml file")
-        break
+        print(f"\n\033[1;31;40m Error: File Input {DCL_file} is not an .xml file and will be skipped")
+        continue
 
+
+   #initialize parse, check .xml file type. If not cell_line, skip
+    parser = etree.XMLParser(remove_comments=True)
+    tree = etree.parse(DCL_in, parser=parser)
+    root = tree.getroot()
+    if root.get('type') != 'cell_line':
+        print(f"\n\033[1;31;40m Error: File Input {DCL_file} is not a Digital Cell Line and will be skipped")
+        continue
+    if root.get('version') != '1.0.0':
+        print('Warning - MCDS version ' + str(root.get('version')) + ' may not be supported for this conversion script')
+
+    # Find and define DCL input file path
     output_dir = os.path.join(cwd,'ISATabOutput')
     DCL_name = DCL_file.replace('.xml','')
     file_base = DCL_name + '.txt'
     output_folder = os.path.join(output_dir,DCL_name)
-    os.makedirs(output_folder, exist_ok = True)
+    try:
+        os.mkdir(output_dir)
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        pass
 
-
-    #TODO update file base name
-    #DSS_in = os.path.join(cwd, 'All_Snapshots_MCDS_S_0000000001.xml')
-    # txt_in = os.path.join(cwd, 'DCL File List, Indexed.txt')
-    #TODO - Change to allow for multiple file input or create GUI to select folder/files
-    #Find and define DCL input file path
-    parser = etree.XMLParser(remove_comments=True)
-    tree = etree.parse(DCL_in, parser=parser)
-    root = tree.getroot()
-    #TODO - comment explanation, raise error (value errors or things of that nature)
-    if root.get('type') != 'cell_line':
-        print(f"\n\033[1;31;40m Error: File Input {DCL_file} is not a Digital Cell Line")
-        break
-    if root.get('version') != '1.0.0':
-        print('Warning - MCDS version ' + str(root.get('version')) + ' may not be supported for this conversion script')
-
-    #Intialize XML parser, check file type
-    print('Input file: ', DCL_file)
+    #print('Input file: ', DCL_file)
     df = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                           'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
 
@@ -224,7 +228,7 @@ for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total
                             else:
                                 micro_var[var_name] = {attr: [var_name_paths + path_ends]}
                         except:
-                            None
+                            pass
         #Write content to data out dictionary in order of "Variable name" then other found variable elements
         #Find content based on the xPaths for variable names and variable elements in the created dictionaries
         for var_name,all_var in micro_var.items():
@@ -1882,7 +1886,7 @@ for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total
                         try:
                             join_list.append(elem.text)
                         except:
-                            None
+                            pass
                     if len(join_list) > 0:
                         str_list.append(' ; '.join(join_list))
                     else:
@@ -1907,7 +1911,7 @@ for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total
                                     str_list.append(root.find(path).attrib[attr])
                                     break
                                 except:
-                                    None
+                                    pass
                                     #print('Attr Does Not Exist')
                             elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
                                 mult_list = match_mult(path)
@@ -1934,7 +1938,7 @@ for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total
                                         str_list.append(root.find(result).getparent().getparent().tag.replace('_', ' ').title())
                                     break
                                 except:
-                                    None
+                                    pass
                                     #print('Tag Does Not Exist')
                             elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
                                 mult_list = match_mult(result)
@@ -1957,16 +1961,16 @@ for DCL_file in tqdm(DCL_list, desc= 'DCL.xml to ISA.txt file conversion', total
 
                             if 'Single' in str(df.at[i,'Multiples for xPath']):
                                 try:
-                                    str_list.append(root.find(path).text.strip().replace('\n', ' ').replace('\t', ''))
+                                    str_list.append(root.find(path).text.strip().replace('\t', '').replace('   ','').replace('\n', ' ;; '))
                                     break
                                 except:
-                                    None
+                                    pass
                                     #print('Text Does Not Exist')
                             elif 'Multiple' in str(df.at[i,'Multiples for xPath']):
                                 mult_list = match_mult(path)
                                 for mult_elem in mult_list:
                                     try:
-                                        str_list.append(mult_elem.text.strip().replace('\n', ' ').replace('\t', ''))
+                                        str_list.append(mult_elem.text.strip().replace('\t', '').replace('   ','').replace('\n', ' ;; '))
                                     except:
                                         str_list.append(I_blank)
                                         #print('Text Does Not Exist')

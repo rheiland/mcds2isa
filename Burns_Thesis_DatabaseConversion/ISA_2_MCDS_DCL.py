@@ -20,12 +20,20 @@ import pandas as pd
 from tqdm import tqdm
 
 cwd = os.getcwd()
-DCL_xml_dir = os.path.join(cwd,'ISA to MCDS')
-DCL_template = os.path.join(DCL_xml_dir, 'DCL Template' ,"DCL_CleanTemplate.xml")
+conv_dir = os.path.join(cwd,'ISA to MCDS')
+DCL_template = os.path.join(conv_dir, 'DCL Template' ,"DCL_CleanTemplate.xml")
 ISA_inputs = os.path.join(cwd,'ISATabOutput')
 ISA_folder_list = os.listdir(ISA_inputs)
+DCL_output_folder = os.path.join(conv_dir, 'MCDS Conversion Output')
 
-for ISA_file_base in tqdm(ISA_folder_list, desc= 'ISA.txt to DCL.xml', total=len(ISA_folder_list)):
+#Create output folder if it does not exist
+try:
+    os.mkdir(DCL_output_folder)
+except:
+    pass
+
+input_list = ISA_folder_list
+for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(input_list), mininterval=5):
 
     parser = etree.XMLParser(remove_comments=True)
     tree = etree.parse(DCL_template, parser=parser)
@@ -57,16 +65,24 @@ for ISA_file_base in tqdm(ISA_folder_list, desc= 'ISA.txt to DCL.xml', total=len
 
     def write_by_xPath(xPath, value):
         if value != 'nan':
+            value = str(value).strip()
             if '@' not in xPath:
+                if ' ;; ' in value:
+                    #correctly insert new lines and tabs in text if it was multiline, marked with ' ;; ' in ISA doc
+                    val_list = [x.strip() for x in value.split(' ;; ')]
+                    new_ln_tab = '\n' + '\t'*(xPath.count('/')+2)
+                    end_ln_tab = '\n' + '\t'*(xPath.count('/')+1)
+                    value = new_ln_tab.join(val_list)
+                    value = new_ln_tab + value + end_ln_tab
                 try:
-                    root.find(xPath).text = str(value)
+                    root.find(xPath).text = value
                 except:
                     print('no element at ', xPath)
             else:
                 elem_path = xPath.rsplit('[',1)[0]
                 attr = xPath.split('@')[1].strip(']').strip()
                 try:
-                    root.find(elem_path).set(attr, str(value))
+                    root.find(elem_path).set(attr, value)
                 except:
                     print('no attrib at ', xPath)
                     print(type(value))
@@ -1253,12 +1269,13 @@ for ISA_file_base in tqdm(ISA_folder_list, desc= 'ISA.txt to DCL.xml', total=len
 
     #Purge tree of attributes with no value and elements with no text values/attribute values/children with values
 
-    #delete attribute keys that have no value
+    #delete attribute keys that have no value, except for cell_line (keep label attribute even if blank)
     for child in root.iter():
         if len(child.attrib) > 0:
             for key in child.attrib:
-                if len(child.attrib[key]) == 0:
-                  del child.attrib[key]
+                if not (child.tag == 'cell_line' and key == 'label'):
+                    if len(child.attrib[key]) == 0:
+                        del child.attrib[key]
 
     #while loop: Ends when the number of elements does not change from iteration to iteration (there is nothing to remove)
     # 0 <= level_ind < 15 used as "safety stop" - will stop after 15 iterations instead of looping forever
@@ -1266,6 +1283,7 @@ for ISA_file_base in tqdm(ISA_folder_list, desc= 'ISA.txt to DCL.xml', total=len
     #   type(child.text) != str or len(child.text.strip()) == 0 : element has no text (either closed tag or only space in text)
     #   len(child.attrib) == 0  : element has no attributes (attributes with no value were removed)
     #   len(child) == 0  : element has no children of its own
+
     num_children_list = []
     level_ind = 0
     while 0 <= level_ind < 15:
@@ -1282,17 +1300,25 @@ for ISA_file_base in tqdm(ISA_folder_list, desc= 'ISA.txt to DCL.xml', total=len
             num_children_list.append(num_children)
             level_ind += 1
 
-    #TODO - fix tabbing, write <elem> \n text \n <elem> for elem with text and attributes
-    print(DCL_xml_dir)
-    print(ISA_file_base)
-    conv_DCL = os.path.join(DCL_xml_dir, 'MCDS Conversion Output', ISA_file_base + '_converted.xml')
-    #print(conv_DCL)
-    # from xml.dom import minidom
-    # xmlstr = minidom.parseString(etree.tostring(root).toprettyxml(indent="   "))
-    # xmlstr = etree.tostring(tree, encoding="UTF-8", pretty_print=True)
+    conv_DCL = os.path.join(DCL_output_folder, ISA_file_base + '_converted.xml')
+
+    #properly indent elements
+    def indent(elem, level=0):
+        i = '\n' + level * '\t'
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + '\t'
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for elem in elem:
+                indent(elem, level + 1)
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
+    indent(root)
+
     with open(conv_DCL, 'wb') as f_xml:
         tree.write(f_xml, pretty_print = True, xml_declaration = True, encoding = "utf-8")
-    # print(conv_DCL)
-    # tree.write(conv_DCl_path, pretty_print = True)
-
 
