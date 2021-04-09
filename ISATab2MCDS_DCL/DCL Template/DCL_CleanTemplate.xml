@@ -1,0 +1,337 @@
+<MultiCellDS type="" version="">
+	<cell_line ID="" curated="" label="">
+		<metadata>
+			<MultiCellDB>
+				<ID/>
+				<name/>
+			</MultiCellDB>
+			<description/>
+			<citation>
+				<text/>
+				<DOI/>
+				<URL/>
+				<notes/>
+			</citation>
+			<curation curated="">
+				<created/>
+				<last_modified/>
+				<classification>
+					<classification_number/>
+					<line/>
+					<variant/>
+					<branch/>
+					<version/>
+				</classification>
+				<creator>
+					<orcid-identifier>
+						<path/>
+						<given-names/>
+						<family-name/>
+						<email/>
+						<url/>
+						<organization-name/>
+						<department-name/>
+					</orcid-identifier>
+				</creator>
+				<current_contact>
+					<orcid-identifier>
+						<path/>
+						<given-names/>
+						<family-name/>
+						<email/>
+						<url/>
+						<organization-name/>
+						<department-name/>
+					</orcid-identifier>
+				</current_contact>
+				<curator>
+					<orcid-identifier>
+						<path/>
+						<given-names/>
+						<family-name/>
+						<email/>
+						<url/>
+						<organization-name/>
+						<department-name/>
+					</orcid-identifier>
+				</curator>
+				<last_modified_by>
+					<orcid-identifier>
+						<path/>
+						<given-names/>
+						<family-name/>
+						<email/>
+						<url/>
+						<organization-name/>
+						<department-name/>
+					</orcid-identifier>
+				</last_modified_by>
+			</curation>
+			<data_origins>
+				<data_origin>
+					<citation>
+						<text/>
+						<DOI/>
+						<URL/>
+						<PMID/>
+						<PMCID/>
+						<notes/>
+						<custom/>
+					</citation>
+					<xpath/>
+					<notes/>
+				</data_origin>
+			</data_origins>
+			<data_analysis>
+				<URL/>
+				<citation>
+					<text/>
+					<DOI/>
+					<URL/>
+					<PMID/>
+					<PMCID/>
+					<notes/>
+					<custom/>
+				</citation>
+				<xpath/>
+				<notes/>
+			</data_analysis>
+			<rights>
+				<license>
+					<LicenseDocument>
+						<name/>
+						<URL/>
+					</LicenseDocument>
+				</license>
+			</rights>
+			<cell_origin>
+				<BTO_ID/>
+				<CLO_ID/>
+				<species/>
+				<strain/>
+				<organ/>
+				<disease/>
+				<morphology/>
+				<patient_derived patient_ID=""/>
+				<custom>
+					<company>
+						<name/>
+					</company>
+				</custom>
+			</cell_origin>
+			<notes/>
+			<custom>
+				<clinical>
+					<diagnosis>
+						<alive_patient/>
+						<pathology>
+							<pathology_definitions>
+								<stain ID="" name="">
+									<target/>
+									<source/>
+									<nuclear_stain/>
+									<cytoplasmic_stain/>
+									<membrane_stain/>
+								</stain>
+							</pathology_definitions>
+							<pathology_grade/>
+							<pathology_type/>
+							<stain ID="" name="">
+								<positive_fraction measurement_type="" units=""/>
+							</stain>
+						</pathology>
+						<clinical_correlates>
+							<d_over_rho measurement_type="" units=""/>
+							<rho_over_d max="" measurement_type="" min="" std="" units=""/>
+							<overall_survival measurement_type="" units=""/>
+							<age_at_diagnosis measurement_type="" units=""/>
+						</clinical_correlates>
+					</diagnosis>
+				</clinical>
+			</custom>
+		</metadata>
+		<phenotype_dataset ID="" keywords="">
+			<microenvironment>
+				<domain>
+					<variables>
+						<variable name="" type="" units="" ChEBI_ID="" GO_ID="" MeSH_ID="" UniProt_ID="" PR_ID ="">
+							<material_amount measurement_type="" units = "" min="" max="" range="" standard_deviation="" uncertainty=""/>
+						</variable>
+						<physical_parameter_set>
+							<conditions>
+								<temperature units=""/>
+							</conditions>
+						</physical_parameter_set>	
+					</variables>
+					<experimental_condition>
+						<dimensionality/>
+						<system/>
+						<conditions/>
+						<surface_variable name="" ChEBI_ID="" MeSH_ID=""/>
+					</experimental_condition>
+				</domain>
+			</microenvironment>			
+			<phenotype type="">
+				<cell_cycle ID="" model="">
+					<cell_cycle_phase ID="" name="">
+						<birth_rate measurement_type="" units=""/>
+						<duration measurement_type="" units=""/>
+						<death_rate measurement_type="" type="" units=""/>
+						<net_birth_rate measurement_type="" standard_error_of_the_mean="" units=""/>
+						<cell_cycle_arrest>
+							<condition measurement_type="" standard_error_of_the_mean="" type="" units=""/>
+						</cell_cycle_arrest>
+					</cell_cycle_phase>
+					<summary_elements>
+						<population_doubling_time measurement_type="" units=""/>
+					</summary_elements>
+					<custom>
+						<velocity units=""></velocity>
+					</custom>
+				</cell_cycle>
+				<cell_death ID="" type="">
+					<duration measurement_type="" units=""/>
+				</cell_death>
+				<geometrical_properties>
+					<lengths>
+						<major_axis measurement_type="" units="" range=""/>
+						<minor_axis measurement_type="" units="" range=""/>
+						<radius measurement_type="" units="" min="" max="" range="" uncertainty=""/>
+					</lengths>
+					<areas>
+						<total_surface_area measurement_type="" units=""></total_surface_area>
+					</areas>
+					<volumes>
+						<total_volume measurement_type="" units="" uncertainty=""/>
+					</volumes>
+					<cross_section>
+						<areas>
+							<total_area measurement_type="" units=""/>
+						</areas>
+					</cross_section>
+				</geometrical_properties>
+				<mechanics>
+					<maximum_cell_deformation measurement_type="" units="" range=""/>
+					<poisson_ratio measurement_type="" units=""/>
+					<youngs_modulus measurement_type="" units="" standard_deviation="" uncertainty=""/>
+				</mechanics>
+				<motility>
+					<unrestricted ID="">
+						<timescale measurement_type="" units=""/>
+						<diffusion_coefficient measurement_type="" units=""/>
+					</unrestricted>
+					<restricted ID="">
+						<timescale units=""/>
+						<restriction>
+							<surface_variable name="" MeSH_ID=""/>
+						</restriction>
+						<mean_speed units="" standard_deviation="" number_obs=""/>
+						<persistence units="" standard_deviation="" number_obs=""/>
+						<diffusion_coefficient units="" standard_deviation="" number_obs=""/>
+					</restricted>
+				</motility>
+				<PKPD>
+					<drug ID="" name="" ChEBI_ID="" MeSH_ID="" DrugBank_ID=""/>					
+					<pharmacodynamics>
+						<therapy_measurement_set ID="">
+							<therapy>
+								<drug ID="">
+									<dose units="" type=""/>
+								</drug>
+							</therapy>
+							<response>
+								<custom>
+									<IC_50 units="" measurement_type=""/>
+								</custom>
+							</response>
+						</therapy_measurement_set>
+					</pharmacodynamics>
+				</PKPD>
+				<transport_processes>
+					<variable name="" UniProt_ID="" ChEBI_ID="" MeSH_ID="" PR_ID="">
+						<export_rate units="" measurement_type=""/>
+					</variable>
+				</transport_processes>
+			</phenotype>
+			<cell_part name="">
+				<phenotype type="">
+					<geometrical_properties>
+						<lengths>
+							<major_axis measurement_type="" units="" range=""/>
+							<minor_axis measurement_type="" units="" range=""/>
+							<radius measurement_type="" units="" min="" max="" range="" uncertainty=""/>
+						</lengths>
+						<areas>
+							<total_surface_area measurement_type="" units=""></total_surface_area>
+						</areas>
+						<volumes>
+							<total_volume measurement_type="" units="" uncertainty=""/>
+						</volumes>
+						<cross_section>
+							<areas>
+								<total_area measurement_type="" units=""/>
+							</areas>
+						</cross_section>
+					</geometrical_properties>
+					<mechanics>
+						<maximum_cell_deformation measurement_type="" units="" range=""/>
+						<poisson_ratio measurement_type="" units=""/>
+						<youngs_modulus measurement_type="" units="" standard_deviation="" uncertainty=""/>
+					</mechanics>
+				</phenotype>
+				<cell_part name="">
+					<phenotype type="">
+						<geometrical_properties>
+							<lengths>
+								<major_axis measurement_type="" units="" range=""/>
+								<minor_axis measurement_type="" units="" range=""/>
+								<radius measurement_type="" units="" min="" max="" range="" uncertainty=""/>
+							</lengths>
+							<areas>
+								<total_surface_area measurement_type="" units="" uncertainty=""></total_surface_area>
+							</areas>
+							<volumes>
+								<total_volume measurement_type="" units="" uncertainty=""/>
+							</volumes>
+							<cross_section>
+								<areas>
+									<total_area measurement_type="" units=""/>
+								</areas>
+							</cross_section>
+						</geometrical_properties>
+						<mechanics>
+							<maximum_cell_deformation measurement_type="" units="" range=""/>
+							<poisson_ratio measurement_type="" units=""/>
+							<youngs_modulus measurement_type="" units="" standard_deviation="" uncertainty=""/>
+						</mechanics>
+					</phenotype>				
+				</cell_part>				
+			</cell_part>
+			<custom>
+				<state>
+					<name/>
+				</state>
+			</custom>
+		</phenotype_dataset>
+		<transitions>
+			<phenotype_dataset_collection ID="">
+				<name/>
+				<IDs/>
+			</phenotype_dataset_collection>
+			<transition>
+				<start>
+					<phenotype_dataset_collection_ID/>
+				</start>
+				<finish>
+					<phenotype_dataset_collection_ID/>
+				</finish>
+				<probability units=""/>
+				<conditions>
+					<variable name="" UniProt_ID="" PR_ID="">
+						<condition condition_type="" uncertainty="" units=""/>
+					</variable>
+				</conditions>
+			</transition>
+		</transitions>
+	</cell_line>
+</MultiCellDS>
