@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000027.0"	"Digital Cell Line Creation"	"NCI_PBCF_HTB_38"	"HT-29"	"0000182"	"0004283"	"N/A"	"Homo Sapiens"	"Colon"	"colorectal adenocarcinoma"	"MCDS_L_0000000027.0.0"

@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Death Type]"	"Protocol REF"	"Parameter Value[Duration]"	"Units"	"Characteristic[Duration - Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000048.0.0"	"expected"	"apoptosis"	"Cell Death Characterization"	"5"	"hour"	"estimated"	"normoxic"	"MCDS_L_0000000048.xml"

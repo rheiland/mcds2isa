@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000008.0"	"Digital Cell Line Creation"	"Caco_2"	"Caco-2"	"0000195"	"0002172"	"N/A"	"Homo Sapiens"	"Colon"	"colorectal adenocarcinoma"	"MCDS_L_0000000008.0.0"

@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000019.0"	"Digital Cell Line Creation"	"LoVo"	"LoVo"	"0000666"	"0007377"	"N/A"	"Homo Sapiens"	"Colon"	"colorectal adenocarcinoma - Dukes' type C, grade IV - left supraclavicular region'"	"MCDS_L_0000000019.0.0"

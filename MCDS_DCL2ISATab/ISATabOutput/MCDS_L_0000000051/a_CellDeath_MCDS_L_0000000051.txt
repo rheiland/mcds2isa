@@ -1,0 +1,6 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Death Type]"	"Protocol REF"	"Parameter Value[Duration]"	"Units"	"Characteristic[Duration - Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000051.0.0"	"expected"	"apoptosis"	"Cell Death Characterization"	"8.6"	"hour"	"estimated"	"viable"	"MCDS_L_0000000051.xml"
+"MCDS_L_0000000051.0.1"	"expected"	"apoptosis"	"Cell Death Characterization"	"8.6"	"hour"	"estimated"	"hypoxic"	"MCDS_L_0000000051.xml"
+"MCDS_L_0000000051.0.2"	"expected"	"apoptosis"	"Cell Death Characterization"	"8.6"	"hour"	"estimated"	"physioxia(standard)"	"MCDS_L_0000000051.xml"
+"MCDS_L_0000000051.0.3"	"expected"	"apoptosis"	"Cell Death Characterization"	"8.6"	"hour"	"estimated"	"physioxia(breast)"	"MCDS_L_0000000051.xml"
+"MCDS_L_0000000051.0.4"	"expected"	"necrosis"	"Cell Death Characterization"	"1440.0"	"hour"	"estimated"	"necrotic,chronic hypoxia"	"MCDS_L_0000000051.xml"

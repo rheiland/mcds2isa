@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Protocol REF"	"Characteristic[Motility Type]"	"Parameter Value[Timescale]"	"Units"	"Characteristic[Timescale Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000165.0.0"	"expected"	"Cell Motility Characterization"	"unrestricted"	"4.0"	"days"	"inferred"	"clinical,patient,MRI"	"MCDS_L_0000000165.xml"

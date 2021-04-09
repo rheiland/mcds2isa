@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000018.0"	"Digital Cell Line Creation"	"LNCAP_CLONE_FGC"	"LNCaP"	"0001321"	"0007365"	"N/A"	"Homo Sapiens"	"Prostate"	"carcinoma - brain - left supraclavicular lymph node"	"MCDS_L_0000000018.0.0"

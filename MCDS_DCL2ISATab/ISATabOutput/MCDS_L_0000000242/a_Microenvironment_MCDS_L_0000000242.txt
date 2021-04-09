@@ -1,0 +1,2 @@
+"Sample Name"	"Protocol REF"	"Parameter Value[Oxygen]"	"Characteristic[Oxygen measurement type]"	"Units"	"Characteristic[Oxygen ChEBI ID]"	"Parameter Value[Temperature]"	"Units"	"Characteristic[Experiment System]"	"Characteristic[Experiment Condition]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000242.0.0"	"Microenvironment Characterization"	"160"	"assumed"	"mmHg"	"15379"	"37"	"Celsius"	"in vitro"	"surface"	"normal"	"MCDS_L_0000000242.xml"

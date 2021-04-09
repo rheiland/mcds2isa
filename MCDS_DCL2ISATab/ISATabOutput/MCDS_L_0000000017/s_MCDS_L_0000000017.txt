@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000017.0"	"Digital Cell Line Creation"	"line_22Rv1"	"22Rv1"	"0002999"	"0001199"	"Epithelial"	"Homo Sapiens"	"Prostate"	"Carcinoma"	"MCDS_L_0000000017.0.0"

@@ -1,0 +1,2 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Protocol REF"	"Measurement Set ID#"	"Drug #1: Drug Name"	"Drug #1: Parameter Value[Drug Dose]"	"Units"	"Drug #1: Characteristic[Drug Dose Measurement Type]"	"Parameter Value[IC50]"	"Units"	"Characteristic[IC50 Measurement Type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000048.0.0"	"expected"	"Drug Pharmacodynamic Measurements"	"0"	"Doxorubicin"	"3.5"	"nM"	"bolus"	"48"	"hour"	"direct"	"normoxic"	"MCDS_L_0000000048.xml"

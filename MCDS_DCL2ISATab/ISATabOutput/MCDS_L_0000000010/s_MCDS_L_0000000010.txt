@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000010.0"	"Digital Cell Line Creation"	"Capan_1"	"Capan-1"	"0002744"	"0002197"	"N/A"	"Homo Sapiens"	"Pancreas"	"Adenocarinoma - liver"	"MCDS_L_0000000010.0.0"

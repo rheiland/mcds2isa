@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000034.0"	"Digital Cell Line Creation"	"SK_OV_3"	"SK-OV-3"	"0000948"	"0009063"	"N/A"	"Homo Sapiens"	"Ovary"	"Adenocarcinoma - Ascites"	"MCDS_L_0000000034.0.0"

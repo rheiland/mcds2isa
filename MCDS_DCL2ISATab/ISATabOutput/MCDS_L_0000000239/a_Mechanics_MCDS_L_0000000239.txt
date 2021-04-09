@@ -1,0 +1,5 @@
+"Sample Name"	"Characteristic[Phenotype Type]"	"Characteristic[Cell Part]"	"Protocol REF"	"Parameter Value[Poisson Ratio]"	"Units"	"Characteristic[Poisson Ratio - Measurement Type]"	"Parameter Value[Young's Modulus]"	"Units"	"Characteristic[Young's Modulus - Measurement Type]"	"Parameter Value[Young's Modulus - Uncertainty]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000239.0.0"	"expected"	"Entire Cell"	"Cell Mechanics Measurements"	"0.4"	"dimensionless"	"estimated"	"1270"	"Pascals"	"inferred"	"3410"	"normoxic"	"MCDS_L_0000000239.xml"
+"MCDS_L_0000000239.0.0"	"expected"	"nucleus"	"Cell Mechanics Measurements"	"0.4"	"dimensionless"	"estimated"	"1090"	"Pascals"	"inferred"	"2359"	"normoxic"	"MCDS_L_0000000239.xml"
+"MCDS_L_0000000239.0.0"	"expected"	"nucleolus of nucleus"	"Cell Mechanics Measurements"	"0.4"	"dimensionless"	"estimated"	"1585"	"Pascals"	"inferred"	"1044"	"normoxic"	"MCDS_L_0000000239.xml"
+"MCDS_L_0000000239.0.0"	"expected"	"cytoplasm"	"Cell Mechanics Measurements"	"0.4"	"dimensionless"	"estimated"	"1621"	"Pascals"	"inferred"	"5279"	"normoxic"	"MCDS_L_0000000239.xml"

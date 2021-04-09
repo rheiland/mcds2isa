@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000016.0"	"Digital Cell Line Creation"	"HTERT_HPNE"	"hTERT HPNE"	"000000"	"0004290"	"Epithelial-like"	"Homo Sapiens"	"Pancreas, duct"	"N/A"	"MCDS_L_0000000016.0.0"

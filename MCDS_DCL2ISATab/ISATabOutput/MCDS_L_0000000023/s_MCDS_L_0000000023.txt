@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000023.0"	"Digital Cell Line Creation"	"NCI_BL2087"	"NCI-BL2087"	"0003764"	"0007970"	"B lymphoblast; Epstein-Barr virus (EBV) transformed"	"Homo Sapiens"	"Peripheral blood"	"N/A"	"MCDS_L_0000000023.0.0"

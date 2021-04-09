@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000007.0"	"Digital Cell Line Creation"	"A_375"	"A-375"	"0002806"	"0001582"	"Epithelial-like"	"Homo Sapiens"	"Skin"	"Malignant Melanoma - Mesenchyme"	"MCDS_L_0000000007.0.0"

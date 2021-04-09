@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"PKPD Drug Name"	"Characteristic[PKPD Drug ChEBI ID]"	"Characteristic[PKPD Drug DrugBank ID]"	"Characteristic[PKPD Drug MeSH ID]"	"Sample Name"
+"MCDS_L_0000000048.0"	"Digital Cell Line Creation"	"Eu-myc/p53-/-"	"p53_null"	"0002904"	"Drug-resistant tumorgenic"	"mouse"	"lymphoma"	"Non-Hodgins' Lymphoma"	"Doxorubicin"	"28748"	"DB00997"	"D004317"	"MCDS_L_0000000048.0.0"

@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000039.0"	"Digital Cell Line Creation"	"U_87"	"U-87 MG"	"0002036"	"0009464"	"N/A"	"Homo Sapiens"	"Brain"	"glioblastoma; astrocytoma; classified as grade IV as of 2007"	"MCDS_L_0000000039.0.0"

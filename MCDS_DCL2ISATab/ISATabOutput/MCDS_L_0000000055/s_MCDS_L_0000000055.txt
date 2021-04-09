@@ -1,0 +1,6 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000055.0"	"Digital Cell Line Creation"	""	"DCIS_ACP2011_18.2"	"mixed"	"Homo sapiens"	"Mammary gland; Breast"	"ductal carcinoma in situ"	"MCDS_L_0000000055.0.0"
+"MCDS_L_0000000055.0"	"Digital Cell Line Creation"	""	"DCIS_ACP2011_18.2"	"mixed"	"Homo sapiens"	"Mammary gland; Breast"	"ductal carcinoma in situ"	"MCDS_L_0000000055.0.1"
+"MCDS_L_0000000055.0"	"Digital Cell Line Creation"	""	"DCIS_ACP2011_18.2"	"mixed"	"Homo sapiens"	"Mammary gland; Breast"	"ductal carcinoma in situ"	"MCDS_L_0000000055.0.2"
+"MCDS_L_0000000055.0"	"Digital Cell Line Creation"	""	"DCIS_ACP2011_18.2"	"mixed"	"Homo sapiens"	"Mammary gland; Breast"	"ductal carcinoma in situ"	"MCDS_L_0000000055.0.3"
+"MCDS_L_0000000055.0"	"Digital Cell Line Creation"	""	"DCIS_ACP2011_18.2"	"mixed"	"Homo sapiens"	"Mammary gland; Breast"	"ductal carcinoma in situ"	"MCDS_L_0000000055.0.4"

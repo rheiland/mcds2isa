@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000011.0"	"Digital Cell Line Creation"	"DU4475"	"DI4475"	"000000"	"0002842"	"Epithelial-like"	"Homo Sapiens"	"Mammary gland; Breast"	"N/A"	"MCDS_L_0000000011.0.0"

@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000025.0"	"Digital Cell Line Creation"	"NCI_H2087"	"NCI-H2087"	"0003241"	"0008048"	"N/A"	"Homo Sapiens"	"Lung"	"adenocarcinoma; non-small cell lung cancer; stage 1 - lymph node"	"MCDS_L_0000000025.0.0"

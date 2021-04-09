@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000004.0"	"Digital Cell Line Creation"	"MDA_MB_231"	"MDA-MB-231"	"0000815"	"0007634"	"N/A"	"Homo Sapiens"	"Mammary gland; Breast"	"adenocarcinoma - Pleural effusion"	"MCDS_L_0000000004.0.0"

@@ -1,0 +1,6 @@
+"Sample Name"	"Protocol REF"	"Parameter Value[oxygen.partial_pressure]"	"Units"	"Characteristic[oxygen.partial_pressure measurement type]"	"Characteristic[oxygen.partial_pressure ChEBI ID]"	"Parameter Value[DCIS_cell_area_fraction.area_fraction]"	"Units"	"Characteristic[DCIS_cell_area_fraction.area_fraction measurement type]"	"Parameter Value[DCIS_cell_volume_fraction.volume_fraction]"	"Units"	"Characteristic[DCIS_cell_volume_fraction.volume_fraction measurement type]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000065.0.0"	"Microenvironment Characterization"	"7.8"	"mmHg"	"inferred"	"15379"	"1.0"	"dimensionless"	"estimated"	"1.0"	"dimensionless"	"estimated"	"viable"	"MCDS_L_0000000065.xml"
+"MCDS_L_0000000065.0.1"	"Microenvironment Characterization"	"8.0"	"mmHg"	"inferred"	"15379"	""	""	""	""	""	""	"hypoxic"	"MCDS_L_0000000065.xml"
+"MCDS_L_0000000065.0.2"	"Microenvironment Characterization"	"38.0"	"mmHg"	"inferred"	"15379"	""	""	""	""	""	""	"physioxia(standard)"	"MCDS_L_0000000065.xml"
+"MCDS_L_0000000065.0.3"	"Microenvironment Characterization"	"52.0"	"mmHg"	"inferred"	"15379"	""	""	""	""	""	""	"physioxia(breast)"	"MCDS_L_0000000065.xml"
+"MCDS_L_0000000065.0.4"	"Microenvironment Characterization"	"5.0"	"mmHg"	"inferred"	"15379"	""	""	""	""	""	""	"necrotic,chronic hypoxia"	"MCDS_L_0000000065.xml"

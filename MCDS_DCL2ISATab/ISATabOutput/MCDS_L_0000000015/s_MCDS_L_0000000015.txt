@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000015.0"	"Digital Cell Line Creation"	"HTERT_HME1"	"hTERT-HME1"	"000000"	"0004291"	"Epithelial immortalized with hTERT'"	"Homo Sapiens"	"Mammary gland; Breast"	"N/A"	"MCDS_L_0000000015.0.0"

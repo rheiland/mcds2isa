@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000013.0"	"Digital Cell Line Creation"	"HCC1937"	"HCC1937"	"0003323"	"0003645"	"Epithelial-like"	"Homo Sapiens"	"Breast"	"Primary ductal carcinoma"	"MCDS_L_0000000013.0.0"

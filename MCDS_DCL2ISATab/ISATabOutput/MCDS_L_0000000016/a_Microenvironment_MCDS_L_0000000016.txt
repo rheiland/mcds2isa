@@ -1,0 +1,2 @@
+"Sample Name"	"Protocol REF"	"Parameter Value[oxygen.concentration]"	"Units"	"Characteristic[oxygen.concentration measurement type]"	"Characteristic[oxygen.concentration ChEBI ID]"	"Assay Name"	"MCDS-DCL File"
+"MCDS_L_0000000016.0.0"	"Microenvironment Characterization"	"0.2"	"mmHg"	"Estimated"	"15379"	"Normoxia"	"MCDS_L_0000000016.xml"

@@ -1,0 +1,2 @@
+"Source Name"	"Protocol REF"	"Cell Line Label"	"MultiCellDB Name"	"Cell BTO ID"	"Cell CLO ID"	"Characteristic[Morphology]"	"Characteristic[Species]"	"Characteristic[Organ]"	"Characteristic[Cell Disease]"	"Sample Name"
+"MCDS_L_0000000042.0"	"Digital Cell Line Creation"	"ZR_75_1"	"ZR-75-1"	"0003136"	"0009727"	"N/A"	"Homo Sapiens"	"Mammary gland; Breast"	"ductal carcinoma ascites"	"MCDS_L_0000000042.0.0"
