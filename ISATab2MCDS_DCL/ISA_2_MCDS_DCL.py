@@ -5,12 +5,12 @@ Input:
   Folder containing ISA files that belong to a single DCL
 
 Output:
-  1 MCDS-DCL .xml files:
+  1 MCDS-DCL .xml file:
    <DCL-root-filename>_converted.xml
 
 Author: Connor Burns
 Date:
-  v0.1 - Apr 2021
+  v1.0 - Apr 2021
 
 '''
 import os
@@ -18,13 +18,20 @@ from lxml import etree
 import copy
 import pandas as pd
 from tqdm import tqdm
+import sys
 
+
+os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 cwd = os.getcwd()
-conv_dir = os.path.join(cwd,'ISA to MCDS')
-DCL_template = os.path.join(conv_dir, 'DCL Template' ,"DCL_CleanTemplate.xml")
-ISA_inputs = os.path.join(cwd,'ISATabOutput')
+DCL_template = os.path.join(cwd, 'DCL Template' ,"DCL_CleanTemplate.xml")
+ISA_inputs = os.path.join(os.path.dirname(cwd),'MCDS_DCL2ISATab','ISATabOutput')
 ISA_folder_list = os.listdir(ISA_inputs)
-DCL_output_folder = os.path.join(conv_dir, 'MCDS Conversion Output')
+DCL_output_folder = os.path.join(cwd, 'MCDS Conversion Output')
+
+#If command line is used, use name of specific input folder as second argument (do not give path - must be in ISATab Out folder)
+if len(sys.argv) > 1:
+    ISA_folder_list = [sys.argv[1]]
+
 
 #Create output folder if it does not exist
 try:
@@ -32,9 +39,9 @@ try:
 except:
     pass
 
+#If indexing of list desired, do it here
 input_list = ISA_folder_list
 for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(input_list), mininterval=5):
-
     parser = etree.XMLParser(remove_comments=True)
     tree = etree.parse(DCL_template, parser=parser)
     root = tree.getroot()
@@ -42,7 +49,8 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
     root.set('type',"cell_line")
     root.set('version', "1.0.0")
 
-    print('MCDS File: ', ISA_file_base)
+    #print('MCDS File: ', ISA_file_base)
+
     ISA_file_folder = os.path.join(ISA_inputs,ISA_file_base)
     I_filename = os.path.join(ISA_file_folder, 'i_' + ISA_file_base + '.txt')
     f_I = open(I_filename, 'r')
@@ -60,9 +68,6 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
             if len([x for x in line_content if x]) > 0:
                 I_data[line_list[0]] = [x.strip('"') for x in line_list[1:]]
 
-    #default is first match
-    #TODO - remove except clause? Throw error instead if there is no match (need to update xml template)
-
     def write_by_xPath(xPath, value):
         if value != 'nan':
             value = str(value).strip()
@@ -77,15 +82,15 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
                 try:
                     root.find(xPath).text = value
                 except:
-                    print('no element at ', xPath)
+                    print('Update xml template - no element at ', xPath)
             else:
                 elem_path = xPath.rsplit('[',1)[0]
                 attr = xPath.split('@')[1].strip(']').strip()
                 try:
                     root.find(elem_path).set(attr, value)
                 except:
-                    print('no attrib at ', xPath)
-                    print(type(value))
+                    print('Update xml template - no attrib at ', xPath)
+
 
     def remove_elem(path):
         '''
@@ -96,8 +101,8 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
         del_elem_list = root.findall(path)
         for elem in del_elem_list:
             elem.getparent().remove(elem)
-    #Copy elem function - no issues with 1 input, will return list regardless of one or more elements
 
+    #Copy elem function - no issues with 1 input, will return list regardless of one or more elements
     def copy_elem(elem_path,num_elems):
         '''
         :param elem_path: The xPath of the element to be copied
@@ -161,7 +166,7 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
     write_by_xPath('cell_line/metadata/MultiCellDB/ID',mcdb_ID)
     phenodataset_IDs = [x.rsplit('.',1)[1] for x in study_df['Sample Name']]
     sample_names = [x for x in study_df['Sample Name']]
-    db = 'ISA_MCDS_Relationships_Py_CB.xlsx'
+    db = os.path.join(os.path.dirname(cwd),'MCDS_DCL2ISATab','ISA_MCDS_Relationships_Py_CB.xlsx')
 
     #Study relationships are one to one, with the same content repeated for each sample in the study ISA file
     #Import relationship study dataframe, import PKPD study dataframe, transpose and append to study dataframe
@@ -188,7 +193,7 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
 
     rel_df_inv = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity',
                                     'MCDS-DCL Correlate X-Path','Multiples for xPath']).dropna()
-    pd.set_option("display.max_rows", None, "display.max_columns", None)
+
     #remove rows without non xPath entry in correlate xPath column
     rel_df_inv = rel_df_inv.loc[rel_df_inv['MCDS-DCL Correlate X-Path'].str.contains('/')]
 
@@ -350,7 +355,6 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
 
     #Import all assay files as pandas dataframes. If the assay exists, copy elements where necessary before copying phenotype
     #dataset elements. If the assay does not exist, remove its elements from the element tree
-    #TODO - Add adding of additional things here? Might be easier to supply now (will have extras for phenotype datasets)
 
     all_assay_paths = ['cell_line/phenotype_dataset/phenotype/cell_cycle',
                        'cell_line/phenotype_dataset/phenotype/cell_death',
@@ -479,7 +483,7 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
             exist_assay_path.append('cell_line/phenotype_dataset/phenotype/mechanics')
             exist_assay_path.append('cell_line/phenotype_dataset/cell_part/phenotype/mechanics')
             exist_assay_path.append('cell_line/phenotype_dataset/cell_part/cell_part/phenotype/mechanics')
-            #find existing mechaincs elements
+            #find existing mechanics elements
             exist_mechanics_dict = {}
             for sample_ind in mechanics_df.index:
                 sample = str(mechanics_df.at[sample_ind, 'Sample Name'])

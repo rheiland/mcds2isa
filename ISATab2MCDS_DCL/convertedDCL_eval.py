@@ -24,11 +24,12 @@ from xmldiff import formatting
 #Make two sheets in PD dataframe : summary (eval true or false, total elements, num issues (whitespace stuff removed))
 #second sheet - issues: write issue type
 
+os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 cwd = os.getcwd()
 conv_folder = os.path.join(cwd, 'MCDS Conversion Output')
 conv_file_list = os.listdir(conv_folder)
 
-og_DCL_dir = os.path.join(os.path.dirname(os.path.dirname(cwd)), 'All_Digital_Cell_Lines')
+og_DCL_dir = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
 og_DCL_list = os.listdir(og_DCL_dir)
 parser = etree.XMLParser(remove_comments=True)
 
@@ -38,7 +39,7 @@ schema_file_path = os.path.join(schema_folder_path, 'MultiCellDS.xsd')
 try:
     schema = xmlschema.XMLSchema(schema_file_path)
 except:
-    #TODO update schema link to master branch once transitions update is pushed
+    #TODO update schema link to master branch once transitions update is pushed in GitLab
     sys.exit(f"\n\033[1;31;40mError: Could not find Schema .xsd files for MCDS validation\n"
              f"MCDS Schema files can be downloaded from https://gitlab.com/MultiCellDS/MultiCellDS/-/tree/transitions/v1.0/v1.0.0\n"
              f"Download directory as zip and extract all to 'ISA to MCDS' folder\n"
@@ -86,19 +87,19 @@ def count_ents(root):
     return(ent_count)
 
 #If not all converted DCL files are desired for validation/evaluation, change eval_list
-eval_list = conv_file_list
+eval_list = conv_file_list[:]
 
 for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evaluation', total=len(eval_list), mininterval=1):
     mcds_base = conv_DCL_file.split('_converted')[0]
     full_conv_path = os.path.join(conv_folder, conv_DCL_file)
     ErrorCount_dict['DCL Filename'].append(mcds_base)
 
-    #Validate xml file against schema
+    #Validate xml file against schema and add validation result (T/F) to dictionary
     valid = schema.is_valid(full_conv_path)
     ErrorCount_dict['Passed Validation'].append(valid)
 
     conv_tree = etree.parse(full_conv_path, parser=parser)
-
+    #Initialize diff formatter (xml for viewing XML tree output with diffs in tree)
     diff_form_xml = formatting.XMLFormatter(normalize = formatting.WS_BOTH, pretty_print = True)
     diff_form_txt = formatting.DiffFormatter(normalize = formatting.WS_TAGS, pretty_print = True)
 
@@ -111,8 +112,8 @@ for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evalu
         ErrorCount_dict['Num of Issues in New File'].append('No original DCL found')
     else:
         full_og_path = os.path.join(og_DCL_dir, og_file_name)
-        #parse to clean original DCL so that only non-whitespace characters of element text/attribute and location
-        #of element are compared
+        #parse to clean original DCL so that only non-whitespace characters of element text/attribute (besides what is inside
+        # text characters and location of element are compared
 
         # parse to remove closed tags
         old_tree = etree.parse(full_og_path, parser=parser)
@@ -126,7 +127,7 @@ for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evalu
                     if len(child.attrib[key]) > 0:
                         child.attrib[key] = child.attrib[key].strip()
 
-
+        #TODO - Update to a canonical form for comparison, ignoring order of child elements and attributes, if possible?
         new_tree = etree.parse(full_conv_path, parser=parser)
         new_root = new_tree.getroot()
         for child in new_root.iter():

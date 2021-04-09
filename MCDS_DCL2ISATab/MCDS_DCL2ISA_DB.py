@@ -1,19 +1,22 @@
+'''
+MCDS_DCL2ISA_DB.py - using a MultiCellDS digital cell line XML file, generate associated ISA-Tab files
 
-# MCDS_DCL2ISA_DB.py - using a MultiCellDS digital cell line XML file, generate associated ISA-Tab files
-#
-# Input:
-#   a MultiCellDS digital cell line file  <DCL-root-filename>.xml
-# Output:
-#   3 ISA files:
-#    i_<DCL-root-filename>.txt
-#    s_<DCL-root-filename>.txt
-#    a_<DCL-root-filename>.txt
+Input:
+  1 MultiCellDS digital cell line file  <DCL-root-filename>.xml
+Output:
+  3 ISA files types:
+   i_<DCL-root-filename>.txt
+   s_<DCL-root-filename>.txt
+   a_<DCL-root-filename>.txt
+        up to 10 assay files
 
-# Author: Connor Burns
-# Date:
-#   v0.1 - Feb 2021
-#   v0.2 - Apr 2021
-#           Passes CSSI ISA-Tab validation, all existing xPaths are placed
+Author: Connor Burns
+Date:
+  v0.1 - Feb 2021
+  v0.2 - Apr 2021
+          Passes CSSI ISA-Tab validation, all existing xPaths are placed, added command line run ability
+  v1.0 - Apr 2021
+'''
 
 import os
 import sys
@@ -21,33 +24,66 @@ import re
 import pandas as pd
 from lxml import etree
 from tqdm import tqdm
+import argparse
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 #change current working directory to script location
 cwd = os.getcwd()
 db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
-#Define Master database directory path - assumes that database is in same directory as script
+DCL_folder = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
+ISA_out = os.path.join(cwd, 'ISATabOutput')
 
-DCL_xml_dir = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
-#TODO - Change once merged into directory
-DCL_list = os.listdir(DCL_xml_dir)
+#All optional arguments, with default to convert all DCL's in All_Digital_Cell_Lines folder except 'obsolete' files
+#File input '-i' can be folder containing DCL's, full file path of DCL, or file name within All_Digital_Cell_Lines folder
+my_parser = argparse.ArgumentParser(description='Convert MCDS-DCL to ISATab.txt files \nInput "infile" folder path containing DCLs or file path for single DCL file')
+my_parser.add_argument('-i' ,'--infile_or_dir', type=str, action ='store', help = 'Input file path or folder path', default = DCL_folder)
+my_parser.add_argument('-o','--outfolder', type=str, action ='store', help = 'Desired ISATab Output Directory', default = ISA_out)
+my_parser.add_argument('--keep_obs_DCL', help = 'T/F Certain files may not be supported for conversion. By default, they are removed from the input folder. Call "--print_obs_DCL" to see list' , action='store_true')
+my_parser.add_argument('--print_obs_DCL', help = 'T/F Option to print list of obsolete DCL files', action='store_true')
+my_parser.add_argument('--check_elems', help = 'T/F Check to see if there are unsupported conversion elems in DCL.xml', action='store_true')
+args = my_parser.parse_args()
+in_file_path = args.infile_or_dir
+output_dir = args.outfolder
+keep_obs_DCL = args.keep_obs_DCL
+print_obs_DCL = args.print_obs_DCL
+
+check_elems = args.check_elems
+
+try:
+    os.mkdir(output_dir)
+except FileExistsError:
+    pass
+
 Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
                 ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
-DCL_list = [DCL for DCL in DCL_list if DCL not in Obsolete_DCL]
-#These are removed because they have been updated to cell lines 238-242, in same order as original
+if print_obs_DCL == True:
+    print(Obsolete_DCL)
 
-#DCL_file = DCL_list[DCL_list.index('MCDS_L_0000000238.xml')]
+#for directory input
+if os.path.isdir(in_file_path):
+    DCL_f_list = os.listdir(in_file_path)
+    if keep_obs_DCL == False:
+        DCL_f_list = [DCL for DCL in DCL_f_list if DCL not in Obsolete_DCL]
+        # These files are removed because they have been updated to cell lines 238-242, in same order as original
+    DCL_list = [os.path.join(in_file_path, x) for x in DCL_f_list]
 
-create_error_txt_file = 'no'
+    #for file input with absolute path
+elif os.path.isfile(in_file_path):
+    DCL_list = [in_file_path]
+else:
+    #for file name only inputs: assume in All_Digital_CellLines
+    DCL_list = [os.path.join(DCL_folder, in_file_path)]
 
-input_list = DCL_list
-for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', total=len(input_list), mininterval=5):
-    DCL_in = os.path.join(DCL_xml_dir, DCL_file)
+
+#Use this to limit input by index if desired
+input_list = DCL_list[:]
+
+for DCL_in in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', total=len(input_list), mininterval=5):
+    DCL_file = os.path.basename(DCL_in)
     #Check file type, skip file if not xml
     if DCL_file[-4:] != '.xml':
         print(f"\n\033[1;31;40m Error: File Input {DCL_file} is not an .xml file and will be skipped")
         continue
-
 
    #initialize parse, check .xml file type. If not cell_line, skip
     parser = etree.XMLParser(remove_comments=True)
@@ -59,25 +95,41 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
     if root.get('version') != '1.0.0':
         print('Warning - MCDS version ' + str(root.get('version')) + ' may not be supported for this conversion script')
 
+    #performs root iter and compares results against supported MCDS element conversion list
+    if check_elems == True:
+        exist_elem_series = pd.read_excel(f'{db}', sheet_name='Supported MCDS Elems', usecols=['xPath - Index Removed'])
+        exist_list = exist_elem_series['xPath - Index Removed'].tolist()
+        nonexist_list = []
+        check_tree = etree.parse(DCL_in, parser=parser)
+        check_root = check_tree.getroot()
+        for child in check_root.iter():
+            # Entity type will be text if it has text and attributes
+            if (type(child.text) == str and len(child.text.strip()) > 0):
+                check_path = re.sub(r"\[[0-9]]", "", check_tree.getelementpath(child))
+                if check_path not in exist_list:
+                    nonexist_list.append(check_path)
+            if len(child.keys()) > 0:
+                for attr in child.keys():
+                    check_path =  "".join([re.sub(r"\[[0-9]]", "", check_tree.getelementpath(child)), "[@", attr, "]"])
+                    if check_path not in exist_list:
+                        nonexist_list.append(check_path)
+        if len(nonexist_list) > 0:
+            print(f'\nThe following XML elements may not be supported:\n File Name: {DCL_file}  \tElements:\n', nonexist_list)
+
     # Find and define DCL input file path
-    output_dir = os.path.join(cwd,'ISATabOutput')
     DCL_name = DCL_file.replace('.xml','')
     file_base = DCL_name + '.txt'
     output_folder = os.path.join(output_dir,DCL_name)
-    try:
-        os.mkdir(output_dir)
-    except FileExistsError:
-        pass
+
     try:
         os.mkdir(output_folder)
     except FileExistsError:
         pass
 
     #print('Input file: ', DCL_file)
+
     df = pd.read_excel(rF'{db}', sheet_name='MCDS-DCL to ISA-Tab', usecols=['ISA-Tab Entity', 'ISA File Location', 'ISA Entity Type',
                                           'MCDS-DCL Correlate Entity', 'MCDS-DCL Correlate X-Path', 'Multiples for xPath'])
-
-    #print('\n Assays \n')
 
     #Assay files:
     sample_name_base = root.find('cell_line/metadata/MultiCellDB/ID').text +'.' + root.find('cell_line[@ID]').attrib['ID']
@@ -360,7 +412,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_param_components.append(micro_results[3])
 
     else:
-        None
+        pass
         #print('No Microenvironment Assay')
 
     def a_cellcycle(cell_cycle_elems,cell_phase_elems):
@@ -496,7 +548,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_parameters.append(cellcycle_results[2])
         assay_param_components.append(cellcycle_results[3])
     else:
-        None
+        pass
         #print('No Cell Cycle Assay')
 
     def a_celldeath(cell_death_elems):
@@ -515,7 +567,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
         if len(death_paths) != len(death_headers):
             print('Cell Death - Issue in Excel File')
-            #TODO change to error logging
+
         #Initialize dictionary for writing to pandas dataframe
         data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': []}
         ent_in_file = []
@@ -571,7 +623,6 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         #Write data_out dictionary to dataframe, then write dataframe to output text file
         data_out['Assay Name'] = pheno_keywords
         data_out['MCDS-DCL File'] = ['"' + DCL_file + '"']*len(data_out['Sample Name'])
-        df_death = pd.DataFrame(data=data_out)
         death_filename = 'a_CellDeath_' + file_base
         death_protocol = 'Cell Death Characterization'
         for data in data_out:
@@ -592,7 +643,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_parameters.append(results[2])
         assay_param_components.append(results[3])
     else:
-        None
+        pass
         #print('No Cell Death Assay')
 
     def a_mechanics(cell_mechanics_elems):
@@ -629,7 +680,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                                .attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
@@ -638,7 +689,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                                .getparent().attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -649,7 +700,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                                .getparent().getparent().getparent().attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
@@ -658,7 +709,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                     .strip()+ " of " + root.find(elem_path).getparent().getparent().getparent().attrib['name'].strip() + '"')
             else:
                 print("Issue - cell_part/cell_part/cell_part structure is not supported by current version")
-                #TODO change to error logging
+
 
         # Loop through each potential mechanics/"element" for each .//mechanics element
         # If the element exists and if the correlate ISA entity is not in the ent_in_file list, append it
@@ -727,7 +778,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_param_components.append(results[3])
 
     else:
-        None
+        pass
         #print('No Cell Mechanics Assay')
 
     def a_geo_props(cell_geo_elems):
@@ -768,10 +819,10 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         geo_header_tail = [str(i) for i in df_geo_attr_in['Cell Geometrical Properties ISA Entity Tail'].tolist()]
         if len(geo_measure_paths) != len(geo_measure):
             print('Cell Geometrical Properties - Issue in Excel File, Value Section')
-             # TODO change to error logging
+
         if not (len(geo_attr) == len(geo_header_begin) == len(geo_header_tail)):
             print('Cell Geometrical Properties - Issue in Excel File, Attribute Section')
-            # TODO change to error logging
+
 
         data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]' : [] ,'Characteristic[Cell Part]': []}
         pheno_keywords = []
@@ -791,7 +842,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                                .attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().attrib['keywords'].strip() + '"')
@@ -800,7 +851,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent().getparent()
                                                .getparent().attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent()
@@ -811,7 +862,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 data_out['Sample Name'].append('"' + sample_name_base + '.' + root.find(elem_path).getparent()
                                                .getparent().getparent().getparent().attrib['ID'].strip() + '"')
                 try:
-                    data_out['Characteristic[Phenotype Type]'].append('"' + elem.getparent().attrib['type'] + '"')
+                    data_out['Characteristic[Phenotype Type]'].append('"' + root.find(elem_path).getparent().attrib['type'] + '"')
                 except:
                     data_out['Characteristic[Phenotype Type]'].append('""')
                 pheno_keywords.append('"' + root.find(elem_path).getparent().getparent().getparent().getparent()
@@ -820,7 +871,6 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                         .strip() + " of " + root.find(elem_path).getparent().getparent().getparent().attrib['name'].strip() + '"')
             else:
                 print("Issue - cell_part/cell_part/cell_part structure is not supported by current version")
-                # TODO change to error logging
 
         #Create dictionary with geo property measurements in file as keys, in order, and initialize as list
         measure_in_file = {}
@@ -907,14 +957,13 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
 
     else:
-        None
+        pass
         #print('No Cell Geometrical Properties Assay')
 
     def a_motility(cell_motility_elems):
         '''
         :param cell_motility_elems: List of all cell motility elements found with root.findall(.//motility)
         :return: cell motility assay file name, to be appended to list of assay file names
-
         '''
 
         # Import motility parameter value xPaths, correlate ISA value name, potential attributes
@@ -935,10 +984,10 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         motility_header_tail = [str(i) for i in df_motility_attr_in['Cell Motility ISA Entity Tail'].tolist()]
         if len(motility_measure_paths) != len(motility_measure):
             print('Cell Motility - Issue in Excel File, Value Section')
-            # TODO change to error logging
+
         if not (len(motility_attr) == len(motility_header_begin) == len(motility_header_tail)):
             print('Cell Motility - Issue in Excel File, Attribute Section')
-            # TODO change to error logging
+
 
         data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': [],'Characteristic[Motility Type]': []}
         pheno_keywords = []
@@ -1045,7 +1094,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_parameters.append(results[2])
         assay_param_components.append(results[3])
     else:
-        None
+        pass
         #print('No Cell Motility Assay')
 
     pkpd_s_data = {}
@@ -1066,11 +1115,9 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
         if len(drug_attr) != len(drug_header):
             print('PKPD - Issue in Excel File, Drug Section')
-            # TODO change to error logging
 
         if len(pd_paths) != len(pd_header):
             print('PKPD - Issue in Excel File, Pharmacodynamics')
-            # TODO change to error logging
 
         #TODO - Is drug ID global (will it match drug ID of other phenotype datasets, or is it only a local ID?)
         drug_ID_name = {}
@@ -1102,7 +1149,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                 except:
                     s_data_out[header].append('""')
 
-        #TODO - may need to update in future for cases of different drugs under different phenotype_datasets
+        #TODO - may need to update in future for cases if there are different drugs under different phenotype_datasets
         #section below commented out because we are writing data to study file instead of PKPD_study
         # df_s_PKPD = pd.DataFrame(data=s_data_out)
         # s_PKPD_filename = 's_PKPD_' + file_base
@@ -1243,7 +1290,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_param_components.append(results[4])
 
     else:
-        None
+        pass
         #print('No PKPD Assay')
 
     def a_trans_processes(trans_processes_elems):
@@ -1280,13 +1327,13 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         meas_header_tail = [str(i) for i in df_trans_meas_attr_in['Transport Processes ISA Entity Tail'].tolist()]
         if len(trans_var_attr) != len(trans_var):
             print('Transport Processes - Issue in Excel File, Variable Section')
-            # TODO change to error logging
+
         if len(trans_meas_path) != len(trans_meas):
             print('Transport Processes - Issue in Excel File, Measurement Section')
-            # TODO change to error logging
+
         if not (len(meas_attr) == len(meas_header_begin) == len(meas_header_tail)):
             print('Transport Processes - Issue in Excel File, Measurement Attribute Section')
-            # TODO change to error logging
+
 
         data_out = {'Sample Name': [], 'Characteristic[Phenotype Type]': []}
         pheno_keywords = []
@@ -1408,7 +1455,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_parameters.append(results[2])
         assay_param_components.append(results[3])
     else:
-        None
+        pass
         #print('No Transport Processes Assay')
 
     def transitions(cell_transitions):
@@ -1491,9 +1538,6 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
         return (transition_filename, transition_protocol, params, param_comps)
 
-        assay_params = ';'.join(params)
-        return (transition_filename, assay_params)
-
     #This is used for HUVEC Cell Line
     cell_transitions = root.findall('.//transitions')
     if len(cell_transitions) > 0:
@@ -1524,10 +1568,10 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
         if len(stain_prop_path) != len(stain_prop_head):
             print('Clinical Stain - Issue in Excel File, Properties Section')
-            # TODO change to error logging
+
         if len(stain_meas_path) != len(stain_meas_head):
             print('Clinical Stain - Issue in Excel File, Measurement Section')
-            # TODO change to error logging
+
 
         #Append the sample name base to data_out one time per different stain
         data_out = {'Sample Name': []}
@@ -1592,7 +1636,6 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
             if 'Parameter Value' in header:
                 pre_params.append(header)
 
-
         #Write content for existing ISA headers and xPaths to data_out
         #If no ID, write '""' to data_out
         #If not in matched_prop_meas, does not have a matched measurement element. Therefore, make meas_elem '""' to trigger
@@ -1613,7 +1656,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
             elif meas_elem.attrib['name'] is not None:
                 data_out['Stain Name'].append('"' + meas_elem.attrib['name'].strip() + '"')
             else:
-                elem.attrib['name'].append('""')
+                prop_elem.attrib['name'].append('""')
             for header in exist_properties:
                 prop_path = exist_properties[header][0]
                 if len(exist_properties[header]) == 1:
@@ -1699,13 +1742,12 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         assay_param_components.append(results[3])
 
     else:
-        None
+        pass
         #print('No Clinical Stain Assay')
 
-
-
-
     #print('Assay file list:', a_file_list)
+
+
 
     s_file_list = []
     phenotype_factors = []
@@ -1831,7 +1873,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                         #print('Text Does Not Exist')
                 k = len(mult_list)
             else:
-                f_E.write('Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
+                pass
        #determine which indices from generated list to concatenate
         for num_mult in range(k):
             ind_list = []
@@ -1921,8 +1963,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                                     except:
                                         str_list.append(I_blank)
                                         #print('Attr Does Not Exist')
-                            else:
-                                f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
+
 
                         elif '*' in path:
                             # '*' in xPath signifies that a parent tag is desired content
@@ -1951,8 +1992,6 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                                     except:
                                         str_list.append(I_blank)
                                         #print('Tag Does Not Exist')
-                            else:
-                                f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
 
                         else:
                             # Default state is finding the text from the element at the specified xPath
@@ -1974,10 +2013,8 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                                     except:
                                         str_list.append(I_blank)
                                         #print('Text Does Not Exist')
-                            else:
-                                f_E.write('Issue in XLSX at I-Line: ' + str(i+1) + '\t\t Issue: No multiple/single\n')
 
-                            #TODO - would there be instances of the same info being contained at different xPaths, but should only be written to the ISA output once?
+
             if df.at[i,'Multiples for xPath'] == 'Single' and len(str_list) == 0:
                 I_str += '""'
             else:
@@ -1988,14 +2025,8 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
                         I_str += I_sep + match
         else:
             I_str += I_sep + '""'
-            if pd.isnull(df.at[i,'Multiples for xPath']):
-                f_E.write('\t\t\t (No xPath) Issue in XLSX at I-Line: ' + str(i + 1) + '\t\t Issue: No multiple/single\n')
-            #Deal with blank areas that are multiples in I file correction functions
+
         f_I.write(I_str + '\n')
-
-    error_file = os.path.join(output_folder,'ErrorLog_DCL2ISA.txt')
-    f_E = open(error_file, 'w')
-
 
     I_filename = 'i_' + file_base
     f_I = open(os.path.join(output_folder,I_filename), 'w')
@@ -2050,7 +2081,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
     def fix_multi_blanks():
         '''
-        :param I_filename: Input file to modify
+        :param
         :return: Modified input file with correct number of quotes for ISA entities with no associated xPath,
                 based on number of entities on a separate line in the file
         '''
@@ -2156,7 +2187,7 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
 
     def remove_I_empty_comment():
         '''
-        :param I_filename: Input I_file
+        :param
         :return: None
         '''
         f_I = open(os.path.join(output_folder, I_filename), 'r')
@@ -2174,8 +2205,4 @@ for DCL_file in tqdm(input_list, desc= 'DCL.xml to ISA.txt file conversion', tot
         f_I.close()
 
     remove_I_empty_comment()
-    f_E.close()
-    err_command = create_error_txt_file.lower()
-    if (not err_command) or (err_command == 'no') or (err_command == 'n'):
-        os.remove(error_file)
 

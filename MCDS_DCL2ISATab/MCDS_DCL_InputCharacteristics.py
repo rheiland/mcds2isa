@@ -16,7 +16,7 @@ from lxml import etree
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 #change current working directory to script location
 cwd = os.getcwd()
-DCL_xml_dir = os.path.join(cwd[:-32], 'All_Digital_Cell_Lines')
+DCL_xml_dir = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
 DCL_list = os.listdir(DCL_xml_dir)
 Obsolete_DCL = ['MCDS_L_0000000001.xml','MCDS_L_0000000002.xml','MCDS_L_0000000043.xml'
                 ,'MCDS_L_0000000045.xml','MCDS_L_0000000046.xml']
@@ -30,7 +30,7 @@ def dcl_input_indexed_list(DCL_list):
     :param DCL_list: List of DCL files
     :return: "DCL File List, Indexed.txt" file with DCL input file name, its index in DCL list, and MCDS file type
     '''
-    f_l = open("DCL File List, Indexed.txt", 'w')
+    f_l = open("../Burns_Thesis_DatabaseConversion/DCL File List, Indexed.txt", 'w')
     dcl_ind = 0
     k = 0
     for DCL in DCL_list:
