@@ -1,0 +1,6 @@
+Sample Name	Protocol REF	Parameter Value[cell_death.type]	Parameter Value[duration]	Units	Parameter Value[cell_death.measurement_type]	Data File
+MCDS_L_0000000049.0.0	phenotype.cell_death	apoptosis	8.6	hour	estimated	MCDS_L_0000000049.xml
+MCDS_L_0000000049.0.1	phenotype.cell_death	apoptosis	8.6	hour	estimated	MCDS_L_0000000049.xml
+MCDS_L_0000000049.0.2	phenotype.cell_death	apoptosis	8.6	hour	estimated	MCDS_L_0000000049.xml
+MCDS_L_0000000049.0.3	phenotype.cell_death	apoptosis	8.6	hour	estimated	MCDS_L_0000000049.xml
+MCDS_L_0000000049.0.4	phenotype.cell_death	necrosis	1440.0	hour	estimated	MCDS_L_0000000049.xml

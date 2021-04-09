@@ -1,0 +1,2 @@
+Sample Name	Protocol REF	Parameter Value[cell_cycle.model]	Parameter Value[cell_cycle_phase.name]	Parameter Value[duration]	Units	Parameter Value[duration.measurement_type]	Parameter Value[net_birth_rate]	Units	Parameter Value[net_birth_rate.measurement_type]	Parameter Value[net_birth_rate.standard_error_of_the_mean]	Data File
+MCDS_L_0000000048.0.0	phenotype.cell_cycle	total_cells	growth_phase	24	hours	estimated					MCDS_L_0000000044.xml

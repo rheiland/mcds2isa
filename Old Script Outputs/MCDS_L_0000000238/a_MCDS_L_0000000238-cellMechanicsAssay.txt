@@ -1,0 +1,2 @@
+Sample Name	Protocol REF	Parameter Value[maximum_cell_deformation]	Units	Parameter Value[maximum_cell_deformation.measurement_type]	Parameter Value[maximum_cell_deformation.range]	Data File
+MCDS_L_0000000238.0.0	phenotype.mechanics	MCDS_L_0000000238.xml

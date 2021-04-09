@@ -1,0 +1,3 @@
+Sample Name	Protocol REF	Parameter Value[maximum_cell_deformation]	Units	Parameter Value[maximum_cell_deformation.measurement_type]	Parameter Value[maximum_cell_deformation.range]	Data File
+MCDS_L_0000000240.0.1	phenotype.mechanics	6.2	micron / hour	literature	5 11	MCDS_L_0000000240.xml
+MCDS_L_0000000240.0.3	phenotype.mechanics	6.2	micron / hour	literature	5 11	MCDS_L_0000000240.xml

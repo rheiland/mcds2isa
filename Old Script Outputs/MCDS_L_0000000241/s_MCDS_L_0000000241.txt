@@ -1,0 +1,2 @@
+"Source Name"	"Comment[data_origin/citation]"	"Characteristics[cell_origin/cell_origin]"	"Characteristics[cell_origin/species]"	"Characteristics[cell_origin/strain]"	"Factor Value[phenotype_dataset]"	"Sample Name"
+"MCDS_L_0000000241.0"	",http://dx.doi.org/10.1016/j.ultramic.2008.04.015,Eaton et al (2008) Atomic force microscopy study of the antibacterial effects of chitosans on Escherichia coli and Staphylococcus aureus,"	""	"Escherichia coli"	"NCTC 9001"	"normal"	"MCDS_L_0000000241.0.0"

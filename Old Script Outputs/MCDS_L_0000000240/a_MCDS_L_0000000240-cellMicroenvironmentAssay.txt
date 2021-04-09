@@ -1,0 +1,6 @@
+Sample Name	Protocol REF	Parameter Value[oxygen.concentration] 	Unit	Parameter Value[CO2.concentration] 	Unit	Parameter Value[ECM.density] 	Unit	Parameter Value[VEGFA 165.density] 	Unit	Parameter Value[ANGPTL4.density] 	Unit	Parameter Value[DLL4] 	Unit	Parameter Value[gelatin.volume_percentage] 	Unit	Parameter Value[VEGFA 189.density] 	Unit	Data File
+MCDS_L_0000000240.0.0	microenvironment.measurement	160	mmHg	38	mmHg													MCDS_L_0000000240.xml
+MCDS_L_0000000240.0.1	microenvironment.measurement	160	mmHg			62	1/micron^3	0.5	ng / mL	0.5	ng / mL							MCDS_L_0000000240.xml
+MCDS_L_0000000240.0.2	microenvironment.measurement	160	mmHg			62	1/micron^3					5	ng / mL					MCDS_L_0000000240.xml
+MCDS_L_0000000240.0.3	microenvironment.measurement	160	mmHg			62	1/micron^3	0.5	ng / mL	0.5	ng / mL							MCDS_L_0000000240.xml
+MCDS_L_0000000240.0.4	microenvironment.measurement	160	mmHg									5	ng / mL	0.2		0.5	ng / mL	MCDS_L_0000000240.xml

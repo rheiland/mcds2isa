@@ -1,0 +1,6 @@
+Sample Name	Protocol REF	Parameter Value[cell_cycle.model]	Parameter Value[cell_cycle_phase.name]	Parameter Value[duration]	Units	Parameter Value[duration.measurement_type]	Parameter Value[net_birth_rate]	Units	Parameter Value[net_birth_rate.measurement_type]	Parameter Value[net_birth_rate.standard_error_of_the_mean]	Data File
+MCDS_L_0000000052.0.0	phenotype.cell_cycle	total_cells	all	6264.4	hour	inferred	0.00016	1/hour	inferred		MCDS_L_0000000052.xml
+MCDS_L_0000000052.0.1	phenotype.cell_cycle	total_cells	all	1581.15	hour	inferred	0.000632	1/hour	inferred		MCDS_L_0000000052.xml
+MCDS_L_0000000052.0.2	phenotype.cell_cycle	total_cells	all	144.53	hour	inferred	0.00692	1/hour	inferred		MCDS_L_0000000052.xml
+MCDS_L_0000000052.0.3	phenotype.cell_cycle	total_cells	all	108.72	hour	inferred	0.0092	1/hour	inferred		MCDS_L_0000000052.xml
+MCDS_L_0000000052.0.4	phenotype.cell_cycle	total_cells	all	INF	hour	inferred	-0.0104	1/hour	inferred		MCDS_L_0000000052.xml

@@ -1,0 +1,2 @@
+"Source Name"	"Comment[data_origin/citation]"	"Characteristics[cell_origin/cell_origin]"	"Characteristics[cell_origin/species]"	"Characteristics[cell_origin/organ]"	"Characteristics[cell_origin/disease]"	"Characteristics[cell_origin/morphology]"	"Factor Value[phenotype_dataset]"	"Sample Name"
+"MCDS_L_0000000238.0"	",http://physics.cancer.gov/docs/bioresource/breast/NCI-PBCF-1000-SOP-052814_508.pdf,http://physics.cancer.gov/bioresources/SOPs.aspx,"	""	"Homo sapiens"	"Mammary gland; Breast"	"Fibrocystic disease; nontumorigenic"	"N/A"	"normoxic"	"MCDS_L_0000000238.0.0"
