@@ -50,7 +50,7 @@ xml_root = tree.getroot()
 def data_analyis_comments():
   uep = xml_root.find('.//metadata')
   for elm in uep.findall('data_analysis'):
-    for child in elm.getchildren():
+    for child in elm.iter():
 #      print("-------- data_analysis_comment:",child)
       print("-------- data_analysis_comment:",child.tag)
       c_str = "Comment[data-analysis_" + child.tag + "]" + sep_char 
@@ -498,7 +498,7 @@ for elm in uep.findall('data_analysis'):
 uep = xml_root.find('.//cell_origin')
 cell_origin_characteristics = []
 if (uep):
-  for elm in uep.getchildren():
+  for elm in uep.iter():
     # fp_s.write('Characteristics[' + elm.tag + ']' + sep_char)
     fp_s.write('"Characteristics[cell_origin/' + elm.tag + ']"' + sep_char)
     text_val = elm.text
@@ -525,7 +525,7 @@ for pd_elm in uep.findall('phenotype_dataset'):
   for elm in uep.findall('data_origin'):
     for elm2 in elm.findall('citation'):
       cite_str = ""
-      for cite in elm2.getchildren():
+      for cite in elm2.iter():
         text_val = cite.text
         text_val = ' '.join(text_val.split())   # strip out tabs and newlines
         text_val = text_val.replace('"', '')
