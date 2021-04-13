@@ -33,7 +33,7 @@ og_DCL_dir = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
 og_DCL_list = os.listdir(og_DCL_dir)
 parser = etree.XMLParser(remove_comments=True)
 
-#New DCL .xml validation
+#Converted DCL .xml validation
 schema_folder_path = os.path.join(cwd, 'MultiCellDS-transitions-v1.0', 'v1.0', 'v1.0.0')
 schema_file_path = os.path.join(schema_folder_path, 'MultiCellDS.xsd')
 try:
@@ -45,7 +45,7 @@ except:
              f"Download directory as zip and extract all to 'ISA to MCDS' folder\n"
              f"If issue persists, check that schema_folder_path matches the location of the local folder containing the MultiCellDS.xsd file")
 
-ErrorCount_dict = {'DCL Filename' : [], 'Passed Validation' : [], 'Total Entities in New File' : [], 'Num of Issues in New File' : []}
+ErrorCount_dict = {'DCL Filename' : [], 'Passed Validation' : [], 'Total Data Entities in Converted File' : [], 'Num of Issues in Converted File' : []}
 BadLines_dict = {'DCL Filename' : [], 'Action Needed': [], 'Issue location and correction' : []}
 
 def clean_closedtags(root):
@@ -73,7 +73,7 @@ def clean_closedtags(root):
 
 def count_ents(root):
     '''
-    :param root: root of new XML to count elements in
+    :param root: root of converted XML to count elements in
     :return ent_count: total number of XML elements, text values, and attributes in element tree
     '''
     ent_count = 0
@@ -108,8 +108,8 @@ for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evalu
     #If there is no associated original MCDS-DCL found
     if og_file_name not in og_DCL_list:
         print(og_file_name, ' not found')
-        ErrorCount_dict['Total Entities in New File'].append('No original DCL found')
-        ErrorCount_dict['Num of Issues in New File'].append('No original DCL found')
+        ErrorCount_dict['Total Data Entities in Converted File'].append('No original DCL found')
+        ErrorCount_dict['Num of Issues in Converted File'].append('No original DCL found')
     else:
         full_og_path = os.path.join(og_DCL_dir, og_file_name)
         #parse to clean original DCL so that only non-whitespace characters of element text/attribute (besides what is inside
@@ -134,7 +134,7 @@ for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evalu
             if type(child.text) == str:
                 child.text = child.text.replace('\n', ' ').replace('\t','').strip()
 
-        ErrorCount_dict['Total Entities in New File'].append(count_ents(new_root))
+        ErrorCount_dict['Total Data Entities in Converted File'].append(count_ents(new_root))
 
         txt_issue_out = diff_main.diff_trees(new_tree, old_tree, formatter=diff_form_txt)
         #Append issues (besides whitespace after node) to dictionary
@@ -166,7 +166,7 @@ for conv_DCL_file in tqdm(eval_list, desc= 'DCL.xml validation and content evalu
                     BadLines_dict['Issue location and correction'].append(x.split(',', 1)[1])
                     issue_cnt +=1
 
-        ErrorCount_dict['Num of Issues in New File'].append(issue_cnt)
+        ErrorCount_dict['Num of Issues in Converted File'].append(issue_cnt)
 
 #Write data to excel file
 writer = pd.ExcelWriter('DCLConversionEval.xlsx', engine='xlsxwriter')

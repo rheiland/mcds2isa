@@ -166,7 +166,7 @@ for ISA_file_base in tqdm(input_list, desc= 'ISA.txt to DCL.xml', total=len(inpu
     write_by_xPath('cell_line/metadata/MultiCellDB/ID',mcdb_ID)
     phenodataset_IDs = [x.rsplit('.',1)[1] for x in study_df['Sample Name']]
     sample_names = [x for x in study_df['Sample Name']]
-    db = os.path.join(os.path.dirname(cwd),'MCDS_DCL2ISATab','ISA_MCDS_Relationships_Py_CB.xlsx')
+    db = os.path.join(os.path.dirname(cwd),'MCDS_DCL2ISATab','ISA_MCDS_DCL_Relationships.xlsx')
 
     #Study relationships are one to one, with the same content repeated for each sample in the study ISA file
     #Import relationship study dataframe, import PKPD study dataframe, transpose and append to study dataframe

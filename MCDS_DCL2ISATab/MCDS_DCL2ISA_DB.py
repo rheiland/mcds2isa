@@ -29,7 +29,7 @@ import argparse
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 #change current working directory to script location
 cwd = os.getcwd()
-db = os.path.join(cwd, 'ISA_MCDS_Relationships_Py_CB.xlsx')
+db = os.path.join(cwd, 'ISA_MCDS_DCL_Relationships.xlsx')
 DCL_folder = os.path.join(os.path.dirname(cwd), 'All_Digital_Cell_Lines')
 ISA_out = os.path.join(cwd, 'ISATabOutput')
 

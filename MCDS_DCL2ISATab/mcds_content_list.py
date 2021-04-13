@@ -1,11 +1,11 @@
-# mcds_entity_list.py - look through all DCL's in MCDS folder, generate xlsx file with all tags/xPath's
+# mcds_content_list.py - look through all DCL's in MCDS folder, generate xlsx file with all tags/xPath's
 # Used to determined complete list of DCL elements and attributes used in existing DCL's
 
 # Input:
 #   Folder containing MCDS-DCL xml files: ...\MCDS_2_ISATab\All_Digital_Cell_Lines
 #   At time of script creation, MCDS-DCL #001-237 are included (numbering is not continuous)
 # Output:
-#   1 Excel File containing MCDS tags:   MCDS_DCL_All_Entities.xlsx
+#   1 Excel File containing MCDS tags:   MCDS_DCL_All_Content.xlsx
 
 # Author: Connor Burns
 # Date:
@@ -78,7 +78,7 @@ for XML_FileName in tqdm(DCL_list, desc= 'DCL File Processing:', total=len(DCL_l
 df.loc[df['xPath'].str.contains(r"\[[0-9]]"), 'Multiple or Single'] = 'Multiple'
 df.loc[~df['xPath'].str.contains(r"\[[0-9]]"), 'Multiple or Single'] = 'Single'
 
-writer = pd.ExcelWriter('MCDS_DCL_All_Entities.xlsx')
+writer = pd.ExcelWriter('MCDS_DCL_All_Content.xlsx')
 #write all content to excel sheet
 df.to_excel(writer, sheet_name='All Entities')
 
