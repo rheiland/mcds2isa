@@ -1,0 +1,1238 @@
+<?xml version="1.0"?>
+<MultiCellDS type="snapshot/clinical" version="1.0.0">
+	<metadata>
+		<MultiCellDB>
+			<ID>MCDS_S_0000000217</ID>
+			<name>S13-94 A1-15 B2</name>
+		</MultiCellDB>
+		<description>
+			This is the segmented H&amp;amp;E image for patientid='S13-94 A1-15' from [1,2], with a diagnosis of DCIS(grade=2). The current version includes nuclear morphometric parameters.
+			For updated versions of this data, please see http://MultiCellDS.org
+			[1] Dong F, Irshad H et al., Computational Pathology to Discriminate Benign from Malignant Intraductal Proliferations of the Breast. PLOS One (2014)
+			[2] Dong F, Irshad H et al., Data from: Computational pathology to discriminate benign from malignant intraductal proliferations of the breast. Dryad Digital Repository (2014).
+		</description>
+		<citation>
+			<text>
+				If this digital snapshot is used in a publication, cite it as:
+				'We used digital snapshot S13-94 A1-15 B2 [1] version 1 (MultiCellDB_ID: MCDS_S_0000000217) created with data and contributions from [2]'
+				[1] S. H. Friedman et al., MultiCellDS: a standard and a community for sharing multicellular data (2016, submitted)
+				[2] Dong F, Irshad H et al., Computational Pathology to Discriminate Benign from Malignant Intraductal Proliferations of the Breast. PLOS One (2014)
+				[3] Dong F, Irshad H et al., Data from: Computational pathology to discriminate benign from malignant intraductal proliferations of the breast. Dryad Digital Repository (2014).
+			</text>
+			<URL>
+				http://MultiCellDS.org
+			</URL>
+		</citation>
+		<curation curated="false">
+			<created>2016-03-21T17:19:43.205212Z</created>
+			<last_modified>2016-12-08T21:33:35.765497Z</last_modified>
+			<version>1.0</version>
+			<creator>
+				<orcid-identifier>
+					<path>0000-0003-2977-5611</path>
+					<given-names>Rishi</given-names>
+					<family-name>Rawat</family-name>
+					<email>rishiraw@usc.edu</email>
+					<url>MathCancer.org</url>
+					<organization-name>University of Southern California</organization-name>
+					<department-name>Center for Applied Molecular Medicine</department-name>
+				</orcid-identifier>
+			</creator>
+			<current_contact>
+				<orcid-identifier>
+					<path>0000-0002-9925-0151</path>
+					<given-names>Paul</given-names>
+					<family-name>Macklin</family-name>
+					<email>Paul.Macklin@usc.edu</email>
+					<url>http://MathCancer.org</url>
+					<organization-name>University of Southern California</organization-name>
+					<department-name>Center for Applied Molecular Medicine</department-name>
+				</orcid-identifier>
+			</current_contact>
+			<last_modified_by>
+				<orcid-identifier>
+					<path>0000-0001-8003-6860</path>
+					<given-names>Samuel</given-names>
+					<family-name>Friedman</family-name>
+					<email>friedman.samuel.h@gmail.com</email>
+					<url>http://MathCancer.org</url>
+					<organization-name>University of Southern California</organization-name>
+					<department-name>Lawrence J. Ellison Institute for Transformative Medicine of USC</department-name>
+				</orcid-identifier>
+			</last_modified_by>
+		</curation>
+		<data_origins>
+			<data_origin ID="0">
+				<citation>
+					<DOI>10.1371/journal.pone.0114885</DOI>
+					<URL>http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0114885</URL>
+					<PMID>25490766</PMID>
+				</citation>
+				<notes>To access the original image files, download the folder "Data: Original Images" from http://datadryad.org/resource/doi:10.5061/dryad.pv85m</notes>
+				<custom>
+					<file>
+						<url>http://datadryad.org/resource/doi:10.5061/dryad.pv85m</url>
+						<filename>S13-94 A1-15 B2.tif</filename>
+					</file>
+				</custom>
+			</data_origin>
+		</data_origins>
+		<data_analysis>
+			<URL>http://MathCancer.org</URL>
+			<notes>The pipeline used to process these metrics from the H&amp;E slides and Masks is open source and available online at mathcancer.org</notes>
+		</data_analysis>
+		<rights>
+			<license>
+				<LicenseDocument>
+					<name>CC-BY 4.0</name>
+					<URL>https://creativecommons.org/licenses/by/4.0/</URL>
+				</LicenseDocument>
+			</license>
+		</rights>
+		<cell_origin>
+			<species>Homo sapiens</species>
+			<organ>Breast</organ>
+			<disease EFO_ID="0000432">Ductal Carcinoma in Situ</disease>
+			<patient_derived patient_ID="S13-94 A1-15">true</patient_derived>
+			<custom>
+				<diagnosis type="primary">DCIS2Ap</diagnosis>
+				<diagnosis type="secondary">LCIS</diagnosis>
+				<diagnosis type="tertiary"/>
+				<diagnosis type="final">DCIS</diagnosis>
+				<disease_grade>
+					<histologic_disease_grade>2</histologic_disease_grade>
+				</disease_grade>
+				<location>
+					<institution>
+						<hospital>Massachusetts General Hospital</hospital>
+					</institution>
+				</location>
+				<receptor CHEBI_ID="50114" MeSH_ID="D004967" name="estrogen" threshold_type="positive">False</receptor>
+			</custom>
+		</cell_origin>
+		<notes/>
+	</metadata>
+	
+	<cellular_information>
+		<cell_populations>
+			<cell_population type="individual">
+				<cell ID="0">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.46522204</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.67723079</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.88519402</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.3825</diameter>
+											<major_axis measurement_type="direct" units="micron">8.19125</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.81075</minor_axis>
+											<perimeter measurement_type="direct" units="micron">20.546</perimeter>
+											<radius measurement_type="direct" units="micron">2.69125</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">22.75</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7507 0.6607</orientation>
+						<position measurement_type="direct" units="micron">2.49 2.88 0.0</position>
+					</state>
+				</cell>
+				<cell ID="1">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.36896439</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.55069611</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.92944353</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">3.99</diameter>
+											<major_axis measurement_type="direct" units="micron">6.90175</major_axis>
+											<minor_axis measurement_type="direct" units="micron">2.5465</minor_axis>
+											<perimeter measurement_type="direct" units="micron">16.889</perimeter>
+											<radius measurement_type="direct" units="micron">1.995</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">12.5</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9996 0.029</orientation>
+						<position measurement_type="direct" units="micron">0.9 67.63 0.0</position>
+					</state>
+				</cell>
+				<cell ID="2">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.81260445</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.82259864</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.58281559</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.9045</diameter>
+											<major_axis measurement_type="direct" units="micron">6.73175</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.47025</minor_axis>
+											<perimeter measurement_type="direct" units="micron">20.44975</perimeter>
+											<radius measurement_type="direct" units="micron">2.95225</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">27.375</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.8766 0.4813</orientation>
+						<position measurement_type="direct" units="micron">2.22 86.48 0.0</position>
+					</state>
+				</cell>
+				<cell ID="3">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.7839788</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.75654756</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.6207876</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.7825</diameter>
+											<major_axis measurement_type="direct" units="micron">7.83025</major_axis>
+											<minor_axis measurement_type="direct" units="micron">6.13875</minor_axis>
+											<perimeter measurement_type="direct" units="micron">24.49575</perimeter>
+											<radius measurement_type="direct" units="micron">3.39125</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">36.125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7686 0.6397</orientation>
+						<position measurement_type="direct" units="micron">4.69 100.8 0.0</position>
+					</state>
+				</cell>
+				<cell ID="4">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.8374048</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.76198651</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.54658321</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">7.8135</diameter>
+											<major_axis measurement_type="direct" units="micron">8.8625</major_axis>
+											<minor_axis measurement_type="direct" units="micron">7.4215</minor_axis>
+											<perimeter measurement_type="direct" units="micron">28.117</perimeter>
+											<radius measurement_type="direct" units="micron">3.90675</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">47.9375</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.8653 0.5012</orientation>
+						<position measurement_type="direct" units="micron">7.2 41.6 0.0</position>
+					</state>
+				</cell>
+				<cell ID="5">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.54683226</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.64469573</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.83724219</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.283</diameter>
+											<major_axis measurement_type="direct" units="micron">9.139</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.9975</minor_axis>
+											<perimeter measurement_type="direct" units="micron">24.5815</perimeter>
+											<radius measurement_type="direct" units="micron">3.1415</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">31.0</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9074 0.4202</orientation>
+						<position measurement_type="direct" units="micron">11.13 73.6 0.0</position>
+					</state>
+				</cell>
+				<cell ID="6">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.87641474</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.91720882</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.48155706</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">8.714</diameter>
+											<major_axis measurement_type="direct" units="micron">9.3215</major_axis>
+											<minor_axis measurement_type="direct" units="micron">8.1695</minor_axis>
+											<perimeter measurement_type="direct" units="micron">28.5815</perimeter>
+											<radius measurement_type="direct" units="micron">4.357</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">59.625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9931 -0.117</orientation>
+						<position measurement_type="direct" units="micron">15.3 10.03 0.0</position>
+					</state>
+				</cell>
+				<cell ID="7">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.6705969</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.6711862</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.74182194</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.5255</diameter>
+											<major_axis measurement_type="direct" units="micron">8.142</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.46</minor_axis>
+											<perimeter measurement_type="direct" units="micron">25.02075</perimeter>
+											<radius measurement_type="direct" units="micron">3.26275</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">33.4375</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.442 0.897</orientation>
+						<position measurement_type="direct" units="micron">16.39 23.9 0.0</position>
+					</state>
+				</cell>
+				<cell ID="8">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.8685855</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.90163044</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.49553934</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.8945</diameter>
+											<major_axis measurement_type="direct" units="micron">5.281</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.587</minor_axis>
+											<perimeter measurement_type="direct" units="micron">16.1925</perimeter>
+											<radius measurement_type="direct" units="micron">2.44725</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">18.8125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9853 -0.171</orientation>
+						<position measurement_type="direct" units="micron">14.89 64.8 0.0</position>
+					</state>
+				</cell>
+				<cell ID="9">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.69561115</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.81631052</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.71841849</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.765</diameter>
+											<major_axis measurement_type="direct" units="micron">8.214</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.71375</minor_axis>
+											<perimeter measurement_type="direct" units="micron">23.52075</perimeter>
+											<radius measurement_type="direct" units="micron">3.3825</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">35.9375</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9915 -0.1299</orientation>
+						<position measurement_type="direct" units="micron">15.29 110.08 0.0</position>
+					</state>
+				</cell>
+				<cell ID="10">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.77042227</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.86384989</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.63753394</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.747</diameter>
+											<major_axis measurement_type="direct" units="micron">6.60125</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.08575</minor_axis>
+											<perimeter measurement_type="direct" units="micron">19.4245</perimeter>
+											<radius measurement_type="direct" units="micron">2.8735</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">25.9375</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9879 -0.155</orientation>
+						<position measurement_type="direct" units="micron">18.39 102.86 0.0</position>
+					</state>
+				</cell>
+				<cell ID="11">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.62682338</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.81503787</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.77916138</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.031</diameter>
+											<major_axis measurement_type="direct" units="micron">7.76375</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.8665</minor_axis>
+											<perimeter measurement_type="direct" units="micron">20.98525</perimeter>
+											<radius measurement_type="direct" units="micron">3.0155</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">28.5625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9985 -0.054</orientation>
+						<position measurement_type="direct" units="micron">22.07 65.21 0.0</position>
+					</state>
+				</cell>
+				<cell ID="12">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.4673485</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.70693565</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.88407317</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">6.129</diameter>
+											<major_axis measurement_type="direct" units="micron">9.142</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.2725</minor_axis>
+											<perimeter measurement_type="direct" units="micron">22.8995</perimeter>
+											<radius measurement_type="direct" units="micron">3.0645</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">29.5</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.4259 0.9048</orientation>
+						<position measurement_type="direct" units="micron">25.34 99.95 0.0</position>
+					</state>
+				</cell>
+				<cell ID="13">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.48285878</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.75508277</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.87569823</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.763</diameter>
+											<major_axis measurement_type="direct" units="micron">6.9715</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.36625</minor_axis>
+											<perimeter measurement_type="direct" units="micron">17.2175</perimeter>
+											<radius measurement_type="direct" units="micron">2.3815</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">17.8125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.1959 0.9806</orientation>
+						<position measurement_type="direct" units="micron">24.73 1.38 0.0</position>
+					</state>
+				</cell>
+				<cell ID="14">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.69306721</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.8365236</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.72087297</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.8365</diameter>
+											<major_axis measurement_type="direct" units="micron">7.0895</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.9135</minor_axis>
+											<perimeter measurement_type="direct" units="micron">20.046</perimeter>
+											<radius measurement_type="direct" units="micron">2.91825</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">26.75</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.484 -0.8751</orientation>
+						<position measurement_type="direct" units="micron">24.63 37.08 0.0</position>
+					</state>
+				</cell>
+				<cell ID="15">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.63609525</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.53435101</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.77161054</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.8365</diameter>
+											<major_axis measurement_type="direct" units="micron">7.706</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.90175</minor_axis>
+											<perimeter measurement_type="direct" units="micron">25.0815</perimeter>
+											<radius measurement_type="direct" units="micron">2.91825</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">26.75</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.5108 0.8597</orientation>
+						<position measurement_type="direct" units="micron">26.86 108.43 0.0</position>
+					</state>
+				</cell>
+				<cell ID="16">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.84855547</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.820088</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.52910642</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">9.4205</diameter>
+											<major_axis measurement_type="direct" units="micron">10.2975</major_axis>
+											<minor_axis measurement_type="direct" units="micron">8.738</minor_axis>
+											<perimeter measurement_type="direct" units="micron">32.67775</perimeter>
+											<radius measurement_type="direct" units="micron">4.71025</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">69.6875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.184 0.9829</orientation>
+						<position measurement_type="direct" units="micron">33.89 4.97 0.0</position>
+					</state>
+				</cell>
+				<cell ID="17">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.5364321</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.75114096</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.84394348</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">7.27</diameter>
+											<major_axis measurement_type="direct" units="micron">10.0255</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.378</minor_axis>
+											<perimeter measurement_type="direct" units="micron">26.34925</perimeter>
+											<radius measurement_type="direct" units="micron">3.635</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">41.5</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.8678 0.4969</orientation>
+						<position measurement_type="direct" units="micron">36.93 36.37 0.0</position>
+					</state>
+				</cell>
+				<cell ID="18">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.89403757</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.86601413</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.44799198</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">10.0815</diameter>
+											<major_axis measurement_type="direct" units="micron">10.7255</major_axis>
+											<minor_axis measurement_type="direct" units="micron">9.589</minor_axis>
+											<perimeter measurement_type="direct" units="micron">34.03125</perimeter>
+											<radius measurement_type="direct" units="micron">5.04075</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">79.8125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7673 -0.6413</orientation>
+						<position measurement_type="direct" units="micron">38.76 53.61 0.0</position>
+					</state>
+				</cell>
+				<cell ID="19">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.43546664</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.66084918</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.90020487</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.478</diameter>
+											<major_axis measurement_type="direct" units="micron">8.422</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.6675</minor_axis>
+											<perimeter measurement_type="direct" units="micron">21.16725</perimeter>
+											<radius measurement_type="direct" units="micron">2.739</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">23.5625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.3662 0.9305</orientation>
+						<position measurement_type="direct" units="micron">42.13 113.04 0.0</position>
+					</state>
+				</cell>
+				<cell ID="20">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.48005106</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.65371564</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.87724055</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">8.069</diameter>
+											<major_axis measurement_type="direct" units="micron">12.1435</major_axis>
+											<minor_axis measurement_type="direct" units="micron">5.8295</minor_axis>
+											<perimeter measurement_type="direct" units="micron">31.34925</perimeter>
+											<radius measurement_type="direct" units="micron">4.0345</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">51.125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9917 -0.129</orientation>
+						<position measurement_type="direct" units="micron">41.44 87.45 0.0</position>
+					</state>
+				</cell>
+				<cell ID="21">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.42066383</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.70305827</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.90721659</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.729</diameter>
+											<major_axis measurement_type="direct" units="micron">7.34375</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.08925</minor_axis>
+											<perimeter measurement_type="direct" units="micron">17.7175</perimeter>
+											<radius measurement_type="direct" units="micron">2.3645</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">17.5625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.989 0.148</orientation>
+						<position measurement_type="direct" units="micron">41.03 13.74 0.0</position>
+					</state>
+				</cell>
+				<cell ID="22">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.64913844</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.49110226</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.76067028</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">9.159</diameter>
+											<major_axis measurement_type="direct" units="micron">11.781</major_axis>
+											<minor_axis measurement_type="direct" units="micron">7.6475</minor_axis>
+											<perimeter measurement_type="direct" units="micron">41.05625</perimeter>
+											<radius measurement_type="direct" units="micron">4.5795</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">65.875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.8859 0.4639</orientation>
+						<position measurement_type="direct" units="micron">47.64 83.77 0.0</position>
+					</state>
+				</cell>
+				<cell ID="23">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.59337125</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.82285113</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.80492891</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">8.764</diameter>
+											<major_axis measurement_type="direct" units="micron">11.4275</major_axis>
+											<minor_axis measurement_type="direct" units="micron">6.78075</minor_axis>
+											<perimeter measurement_type="direct" units="micron">30.34925</perimeter>
+											<radius measurement_type="direct" units="micron">4.382</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">60.3125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.4631 0.8863</orientation>
+						<position measurement_type="direct" units="micron">54.34 57.43 0.0</position>
+					</state>
+				</cell>
+				<cell ID="24">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.42442017</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.51688532</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.90546536</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.452</diameter>
+											<major_axis measurement_type="direct" units="micron">7.416</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.1475</minor_axis>
+											<perimeter measurement_type="direct" units="micron">19.45125</perimeter>
+											<radius measurement_type="direct" units="micron">2.226</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">15.5625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.5051 0.8631</orientation>
+						<position measurement_type="direct" units="micron">54.67 18.37 0.0</position>
+					</state>
+				</cell>
+				<cell ID="25">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.62210495</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.75479679</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.78293386</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.308</diameter>
+											<major_axis measurement_type="direct" units="micron">6.822</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.244</minor_axis>
+											<perimeter measurement_type="direct" units="micron">19.1925</perimeter>
+											<radius measurement_type="direct" units="micron">2.654</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">22.125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9224 -0.3862</orientation>
+						<position measurement_type="direct" units="micron">55.7 73.51 0.0</position>
+					</state>
+				</cell>
+				<cell ID="26">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.73145598</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.82847733</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.68188866</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.452</diameter>
+											<major_axis measurement_type="direct" units="micron">5.2645</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.85075</minor_axis>
+											<perimeter measurement_type="direct" units="micron">15.364</perimeter>
+											<radius measurement_type="direct" units="micron">2.226</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">15.5625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.41 0.9121</orientation>
+						<position measurement_type="direct" units="micron">59.98 17.49 0.0</position>
+					</state>
+				</cell>
+				<cell ID="27">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.59769846</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.79942134</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.80172099</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.935</diameter>
+											<major_axis measurement_type="direct" units="micron">6.40875</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.8305</minor_axis>
+											<perimeter measurement_type="direct" units="micron">17.33875</perimeter>
+											<radius measurement_type="direct" units="micron">2.4675</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">19.125</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7878 0.6159</orientation>
+						<position measurement_type="direct" units="micron">61.16 21.62 0.0</position>
+					</state>
+				</cell>
+				<cell ID="28">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.84304708</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.77953706</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.53783977</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.8785</diameter>
+											<major_axis measurement_type="direct" units="micron">5.4905</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.62875</minor_axis>
+											<perimeter measurement_type="direct" units="micron">17.3565</perimeter>
+											<radius measurement_type="direct" units="micron">2.43925</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">18.6875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.3981 -0.9173</orientation>
+						<position measurement_type="direct" units="micron">62.44 70.36 0.0</position>
+					</state>
+				</cell>
+				<cell ID="29">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.71617746</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.82774843</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.69791822</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">8.3455</diameter>
+											<major_axis measurement_type="direct" units="micron">10.02475</major_axis>
+											<minor_axis measurement_type="direct" units="micron">7.1795</minor_axis>
+											<perimeter measurement_type="direct" units="micron">28.81375</perimeter>
+											<radius measurement_type="direct" units="micron">4.17275</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">54.6875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9504 0.3111</orientation>
+						<position measurement_type="direct" units="micron">63.92 28.8 0.0</position>
+					</state>
+				</cell>
+				<cell ID="30">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.3236964</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.59409551</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.946161</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.999</diameter>
+											<major_axis measurement_type="direct" units="micron">9.071</major_axis>
+											<minor_axis measurement_type="direct" units="micron">2.93625</minor_axis>
+											<perimeter measurement_type="direct" units="micron">20.37425</perimeter>
+											<radius measurement_type="direct" units="micron">2.4995</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">19.625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7581 0.6521</orientation>
+						<position measurement_type="direct" units="micron">64.95 107.19 0.0</position>
+					</state>
+				</cell>
+				<cell ID="31">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.66946404</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.86918262</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.74284447</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">10.046</diameter>
+											<major_axis measurement_type="direct" units="micron">12.333</major_axis>
+											<minor_axis measurement_type="direct" units="micron">8.2565</minor_axis>
+											<perimeter measurement_type="direct" units="micron">33.84925</perimeter>
+											<radius measurement_type="direct" units="micron">5.023</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">79.25</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.9846 0.1751</orientation>
+						<position measurement_type="direct" units="micron">67.25 44.81 0.0</position>
+					</state>
+				</cell>
+				<cell ID="32">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.6270602</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.6235717</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.7789708</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.5355</diameter>
+											<major_axis measurement_type="direct" units="micron">7.2505</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.5465</minor_axis>
+											<perimeter measurement_type="direct" units="micron">22.02075</perimeter>
+											<radius measurement_type="direct" units="micron">2.76775</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">24.0625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.2009 -0.9796</orientation>
+						<position measurement_type="direct" units="micron">66.86 65.98 0.0</position>
+					</state>
+				</cell>
+				<cell ID="33">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.83886324</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.9153277</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.54434223</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">7.9695</diameter>
+											<major_axis measurement_type="direct" units="micron">8.71775</major_axis>
+											<minor_axis measurement_type="direct" units="micron">7.313</minor_axis>
+											<perimeter measurement_type="direct" units="micron">26.16725</perimeter>
+											<radius measurement_type="direct" units="micron">3.98475</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">49.875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.7317 -0.6817</orientation>
+						<position measurement_type="direct" units="micron">69.47 17.53 0.0</position>
+					</state>
+				</cell>
+				<cell ID="34">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.78785474</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.95642819</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.61586111</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">4.7375</diameter>
+											<major_axis measurement_type="direct" units="micron">5.356</major_axis>
+											<minor_axis measurement_type="direct" units="micron">4.21975</minor_axis>
+											<perimeter measurement_type="direct" units="micron">15.2175</perimeter>
+											<radius measurement_type="direct" units="micron">2.36875</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">17.625</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.16 0.9871</orientation>
+						<position measurement_type="direct" units="micron">69.83 86.57 0.0</position>
+					</state>
+				</cell>
+				<cell ID="35">
+					<phenotype_dataset>
+						<cell_part name="nucleus">
+							<phenotype>
+								<geometrical_properties>
+									<cross_section>
+										<parameters>
+											<aspect_ratio measurement_type="direct" units="dimensionless">0.51147552</aspect_ratio>
+											<circularity measurement_type="direct" units="dimensionless">0.6866265</circularity>
+											<eccentricity measurement_type="direct" units="dimensionless">0.85929785</eccentricity>
+										</parameters>
+										<lengths>
+											<diameter measurement_type="direct" units="micron">5.156</diameter>
+											<major_axis measurement_type="direct" units="micron">7.59225</major_axis>
+											<minor_axis measurement_type="direct" units="micron">3.88325</minor_axis>
+											<perimeter measurement_type="direct" units="micron">19.546</perimeter>
+											<radius measurement_type="direct" units="micron">2.578</radius>
+										</lengths>
+										<areas>
+											<total_area measurement_type="direct" units="micron^2">20.875</total_area>
+										</areas>
+									</cross_section>
+								</geometrical_properties>
+							</phenotype>
+						</cell_part>
+					</phenotype_dataset>
+					<state>
+						<orientation formalism="Unit Vector" measurement_type="direct" units="dimensionless">0.3899 0.9208</orientation>
+						<position measurement_type="direct" units="micron">71.75 99.35 0.0</position>
+					</state>
+				</cell>
+			</cell_population>
+		</cell_populations>
+	</cellular_information>
+</MultiCellDS>
